@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Armaloft - Договор</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700;800;900&family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: #3A3A3A;
+            color: #2C2C2C;
+            overflow-x: hidden;
+            font-weight: 400;
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 35px 60px;
+            transition: all 0.3s ease;
+            background: rgba(44, 44, 44, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        header.scrolled {
+            background: rgba(44, 44, 44, 0.98);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header-logo {
+            height: auto;
+            width: 150px;
+            max-width: 150px;
+        }
+
+        .header-logo img {
+            width: 100%;
+            height: auto;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .nav-item {
+            position: relative;
+        }
+
+        .nav-link {
+            color: #FFFFF0;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 400;
+            transition: color 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-transform: uppercase;
+        }
+
+        .nav-link:hover {
+            color: #CC7A6F;
+        }
+
+        .nav-link::after {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 7px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 7'%3E%3Cpath d='M4 7L0.5 0.5L7.5 0.5Z' fill='%23FFFFF0' stroke='%23FFFFF0' stroke-width='0.3' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            margin-left: 5px;
+            transition: transform 0.3s ease;
+            vertical-align: middle;
+        }
+
+        .nav-item:not(.has-dropdown) .nav-link::after {
+            display: none;
+        }
+
+        .nav-link:hover::after {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 7'%3E%3Cpath d='M4 7L0.5 0.5L7.5 0.5Z' fill='%23CC7A6F' stroke='%23CC7A6F' stroke-width='0.3' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E");
+        }
+
+        .dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: rgba(58, 58, 58, 0.98);
+            backdrop-filter: blur(10px);
+            min-width: 200px;
+            padding: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            list-style: none;
+        }
+
+        .nav-item:hover .dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            display: block;
+            padding: 12px 20px;
+            color: #FFFFF0;
+            text-decoration: none;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(204, 122, 111, 0.2);
+            color: #CC7A6F;
+            padding-left: 25px;
+        }
+
+        /* Основной контент */
+        .contract-page {
+            padding-top: 120px;
+            min-height: 100vh;
+            background: #FFFFF0;
+        }
+
+        .contract-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px;
+        }
+
+        .contract-images {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+
+        .contract-image {
+            width: 50%;
+            max-width: 50%;
+            height: auto;
+            margin: 0 auto;
+            display: block;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .contract-image:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Футер */
+        footer {
+            background: #2C2C2C;
+            padding: 60px 60px 40px;
+            color: #FFFFF0;
+        }
+
+        .footer-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 60px;
+            align-items: start;
+        }
+
+        .footer-logo {
+            width: 150px;
+            height: auto;
+            margin-left: 100px;
+            margin-top: 40px;
+        }
+
+        .footer-logo img {
+            width: 100%;
+            height: auto;
+        }
+
+        .footer-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .footer-nav-link {
+            color: #FFFFF0;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 400;
+            font-family: 'Montserrat', sans-serif;
+            text-transform: uppercase;
+            transition: color 0.3s ease;
+            display: inline-block;
+        }
+
+        .footer-nav-link:hover {
+            color: #CC7A6F;
+        }
+
+        .footer-right {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .footer-contact {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .footer-phone {
+            font-size: 18px;
+            color: #FFFFF0;
+            font-weight: 600;
+            font-family: 'Montserrat', sans-serif;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-phone:hover {
+            color: #CC7A6F;
+        }
+
+        .footer-address {
+            font-size: 14px;
+            color: #FFFFF0;
+            line-height: 1.6;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .footer-bottom {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 240, 0.2);
+            text-align: center;
+        }
+
+        .footer-copyright {
+            font-size: 12px;
+            color: #FFFFF0;
+            font-family: 'Montserrat', sans-serif;
+            opacity: 0.7;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 1024px) {
+            .footer-container {
+                grid-template-columns: 1fr;
+                gap: 40px;
+                text-align: center;
+            }
+
+            .footer-logo {
+                margin: 0 auto;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 20px 20px;
+            }
+
+            .contract-container {
+                padding: 40px 20px;
+            }
+
+            footer {
+                padding: 40px 20px 30px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .contract-container {
+                padding: 30px 15px;
+            }
+
+            .contract-images {
+                gap: 20px;
+            }
+
+            footer {
+                padding: 30px 15px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header id="header">
+        <div class="header-content">
+            <div class="header-logo">
+                <a href="index.html"><img src="images/logo.png" alt="ARMALOFT"></a>
+            </div>
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item has-dropdown">
+                        <a href="#" class="nav-link">Аренда</a>
+                        <ul class="dropdown">
+                            <li><a href="index.html" class="dropdown-item">Залы</a></li>
+                            <li><a href="https://example.com" target="_blank" class="dropdown-item">Антикафе</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item has-dropdown">
+                        <a href="#" class="nav-link">Услуги</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="dogovor.html" class="nav-link">Договор</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="index.html#location" class="nav-link">Контакты</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="contract-page">
+        <div class="contract-container">
+            <div class="contract-images">
+                <img src="images/contract/dogovor1.png" alt="Договор страница 1" class="contract-image">
+                <img src="images/contract/dogovor2.png" alt="Договор страница 2" class="contract-image">
+                <img src="images/contract/dogovor3.png" alt="Договор страница 3" class="contract-image">
+                <img src="images/contract/dogovor4.png" alt="Договор страница 4" class="contract-image">
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-logo">
+                <img src="images/logo.png" alt="ARMALOFT">
+            </div>
+            <nav class="footer-nav">
+                <a href="index.html" class="footer-nav-link">Главная</a>
+                <a href="#" class="footer-nav-link">Правила</a>
+                <a href="dogovor.html" class="footer-nav-link">Договор</a>
+                <a href="index.html#location" class="footer-nav-link">Контакты</a>
+            </nav>
+            <div class="footer-right">
+                <div class="footer-contact">
+                    <a href="tel:+79296535982" class="footer-phone">+79296535982</a>
+                    <div class="footer-address">
+                        м. Курская, Нижний Сусальный пер 5 стр 10
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p class="footer-copyright">© 2025 Armaloft All Rights Reserved</p>
+        </div>
+    </footer>
+
+    <script>
+        // Скролл хедера
+        const header = document.getElementById('header');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+    </script>
+</body>
+</html>
+

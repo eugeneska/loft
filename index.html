@@ -1,0 +1,3442 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Armaloft - Готовые локации</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700;800;900&family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: #3A3A3A;
+            color: #2C2C2C;
+            overflow-x: hidden;
+            font-weight: 400;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 35px 60px;
+            transition: all 0.3s ease;
+            background: rgba(44, 44, 44, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        header.scrolled {
+            background: rgba(44, 44, 44, 0.98);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header-logo {
+            height: auto;
+            width: 150px;
+            max-width: 150px;
+        }
+
+        .header-logo img {
+            width: 100%;
+            height: auto;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .nav-item {
+            position: relative;
+        }
+
+        .nav-link {
+            color: #FFFFF0;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 400;
+            transition: color 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-transform: uppercase;
+        }
+
+        .nav-link:hover {
+            color: #CC7A6F;
+        }
+
+        .nav-link:hover::after {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 7'%3E%3Cpath d='M4 7L0.5 0.5L7.5 0.5Z' fill='%23CC7A6F' stroke='%23CC7A6F' stroke-width='0.3' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E");
+        }
+
+        .nav-link::after {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 7px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 7'%3E%3Cpath d='M4 7L0.5 0.5L7.5 0.5Z' fill='%23FFFFF0' stroke='%23FFFFF0' stroke-width='0.3' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            margin-left: 5px;
+            transition: transform 0.3s ease;
+            vertical-align: middle;
+        }
+
+        .nav-item:not(.has-dropdown) .nav-link::after {
+            display: none;
+        }
+
+        .dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: rgba(58, 58, 58, 0.98);
+            backdrop-filter: blur(10px);
+            min-width: 200px;
+            padding: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .nav-item:hover .dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            display: block;
+            padding: 12px 20px;
+            color: #FFFFF0;
+            text-decoration: none;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(204, 122, 111, 0.2);
+            color: #CC7A6F;
+            padding-left: 25px;
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 5px;
+            z-index: 1002;
+        }
+
+        .mobile-menu-toggle span {
+            width: 25px;
+            height: 3px;
+            background: #FFFFF0;
+            transition: all 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .mobile-menu-toggle.active span:nth-child(1) {
+            transform: rotate(45deg) translate(8px, 8px);
+        }
+
+        .mobile-menu-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .mobile-menu-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -7px);
+        }
+
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 80%;
+            max-width: 300px;
+            height: 100vh;
+            background: rgba(58, 58, 58, 0.98);
+            backdrop-filter: blur(10px);
+            padding: 100px 30px 30px;
+            transition: right 0.3s ease;
+            z-index: 1001;
+            overflow-y: auto;
+        }
+
+        .mobile-menu.active {
+            right: 0;
+        }
+
+        .mobile-menu-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1002;
+            padding: 0;
+        }
+
+        .mobile-menu-close span {
+            position: absolute;
+            width: 25px;
+            height: 3px;
+            background: #FFFFF0;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-menu-close span:nth-child(1) {
+            transform: rotate(45deg);
+        }
+
+        .mobile-menu-close span:nth-child(2) {
+            transform: rotate(-45deg);
+        }
+
+        .mobile-menu-close:hover span {
+            background: #CC7A6F;
+        }
+
+        .mobile-menu ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .mobile-menu .nav-item {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 15px;
+        }
+
+        .mobile-menu .nav-link {
+            font-size: 18px;
+            padding: 10px 0;
+            text-transform: uppercase;
+        }
+
+        .mobile-menu .dropdown {
+            position: static;
+            opacity: 1;
+            visibility: visible;
+            transform: none;
+            background: transparent;
+            box-shadow: none;
+            margin-top: 10px;
+            padding: 0;
+            display: none;
+        }
+
+        .mobile-menu .nav-item.active .dropdown {
+            display: block;
+        }
+
+        .mobile-menu .dropdown-item {
+            padding: 10px 20px;
+            font-size: 16px;
+            text-transform: uppercase;
+        }
+
+        .mobile-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .mobile-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .hero {
+            min-height: 100vh;
+            background-image: linear-gradient(to right, #2C2C2C 0%, rgba(44, 44, 44, 0) 100%), url('images/bg.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            padding: 140px 60px 40px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .hero-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+            flex: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            margin-top: 70px;
+        }
+
+        .text-content {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .hero-location {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 400;
+            color: #FFFFF0;
+            text-transform: uppercase;
+            font-family: 'Jost', sans-serif;
+            margin-bottom: 20px;
+            margin-top: -110px;
+        }
+
+        .hero-location img {
+            width: 24px;
+            height: 24px;
+        }
+
+        .heading {
+            font-size: 48px;
+            font-weight: 700;
+            line-height: 1.5;
+            color: #FFFFF0;
+            font-family: 'Jost', sans-serif;
+            text-transform: uppercase;
+            margin-top: -50px;
+        }
+
+        .heading-line {
+            display: block;
+        }
+
+        .accent {
+            color: #CC7A6F;
+        }
+
+        .hero-capacity {
+            font-size: 42px;
+            font-weight: 700;
+            line-height: 1.2;
+            color: #f8f8f8;
+            text-transform: uppercase;
+            font-family: 'Jost', sans-serif;
+            margin-top: 10px;
+        }
+
+        .contact-buttons {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .contact-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #CC7A6F;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(204, 122, 111, 0.4);
+            text-decoration: none;
+        }
+
+        .contact-button:hover {
+            background: #b86a60;
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(204, 122, 111, 0.6);
+        }
+
+        .contact-button svg {
+            width: 28px;
+            height: 28px;
+            fill: #3A3A3A;
+        }
+
+        .cta-button {
+            background: #CC7A6F;
+            color: #3A3A3A;
+            border: none;
+            padding: 16px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border-radius: 8px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            width: fit-content;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .cta-button:hover {
+            background: #b86a60;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(204, 122, 111, 0.3);
+        }
+
+        .hero-form-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            justify-self: end;
+            margin-top: -110px;
+        }
+
+        .hero-form {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .hero-form-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #FFFFF0;
+            text-transform: uppercase;
+            text-align: center;
+            font-family: 'Jost', sans-serif;
+            margin-bottom: 10px;
+        }
+
+        .hero-form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .hero-form-time-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .hero-form-time-group > label {
+            font-size: 14px;
+            font-weight: 400;
+            color: #FFFFF0;
+            text-transform: uppercase;
+            font-family: 'Jost', sans-serif;
+        }
+
+        .hero-form-time-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .hero-form-group label {
+            font-size: 14px;
+            font-weight: 400;
+            color: #FFFFF0;
+            text-transform: uppercase;
+            font-family: 'Jost', sans-serif;
+        }
+
+        .hero-form-group input,
+        .hero-form-group select {
+            width: 100%;
+            padding: 14px 45px 14px 18px;
+            border: 2px solid rgba(255, 255, 240, 0.3);
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: 'Jost', sans-serif;
+            color: #2C2C2C;
+            background: #FFFFF0;
+            transition: all 0.3s ease;
+            position: relative;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
+
+        .hero-form-group input[type="date"]::-webkit-calendar-picker-indicator {
+            opacity: 0;
+            position: absolute;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .hero-form-group select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M6 8L0 0h12z' fill='%232C2C2C'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            padding-right: 45px;
+            cursor: pointer;
+        }
+
+        .hero-form-group select option {
+            background: #FFFFF0;
+            color: #2C2C2C;
+            padding: 10px;
+        }
+
+        .hero-form-group input:focus,
+        .hero-form-group select:focus {
+            outline: none;
+            border-color: #CC7A6F;
+            box-shadow: 0 0 0 3px rgba(204, 122, 111, 0.2);
+        }
+
+        .hero-form-group input::placeholder {
+            color: rgba(44, 44, 44, 0.5);
+        }
+
+        .hero-form-input-wrapper {
+            position: relative;
+        }
+
+        .hero-form-input-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            pointer-events: none;
+        }
+
+        .hero-form-button {
+            padding: 16px 32px;
+            background: #CC7A6F;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            font-family: 'Jost', sans-serif;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .hero-form-button:hover {
+            background: #b86a60;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(204, 122, 111, 0.3);
+        }
+
+        .halls-section {
+            background: #ffffff;
+            padding: 100px 60px;
+            min-height: 100vh;
+        }
+
+        .halls-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .halls-title {
+            font-size: 42px;
+            font-weight: 700;
+            color: #3A3A3A;
+            text-align: center;
+            margin-bottom: 60px;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .filter-form {
+            background: #f8f8f8;
+            padding: 40px;
+            border-radius: 16px;
+            margin-bottom: 60px;
+            display: flex;
+            gap: 30px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 400;
+            color: #3A3A3A;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: 'Montserrat', sans-serif;
+            color: #3A3A3A;
+            background: #ffffff;
+            transition: all 0.3s ease;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: #CC7A6F;
+            box-shadow: 0 0 0 3px rgba(204, 122, 111, 0.1);
+        }
+
+        .filter-button {
+            padding: 14px 40px;
+            background: #CC7A6F;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .filter-button:hover {
+            background: #b86a60;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(204, 122, 111, 0.3);
+        }
+
+        .halls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 40px;
+        }
+
+        .hall-card {
+            background: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .hall-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .hall-image {
+            width: 100%;
+            height: 250px;
+            background: #e0e0e0;
+            object-fit: cover;
+            display: block;
+        }
+
+        .hall-image:not([src]),
+        .hall-image[src=""] {
+            background: linear-gradient(135deg, #e0e0e0 0%, #d0d0d0 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hall-image:not([src])::after,
+        .hall-image[src=""]::after {
+            content: 'Фото зала';
+            color: #999999;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .hall-content {
+            padding: 30px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .hall-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #3A3A3A;
+            margin-bottom: 15px;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .hall-description {
+            font-size: 16px;
+            color: #666666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            flex: 1;
+        }
+
+        .hall-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .hall-feature {
+            background: #f8f8f8;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #3A3A3A;
+            font-weight: 400;
+        }
+
+        .hall-button {
+            padding: 12px 24px;
+            background: #CC7A6F;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            font-family: 'Montserrat', sans-serif;
+            width: 100%;
+        }
+
+        .hall-button:hover {
+            background: #b86a60;
+        }
+
+        @media (max-width: 1024px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                gap: 60px;
+            }
+
+            .heading {
+                font-size: 40px;
+            }
+
+            .hero-capacity {
+                font-size: 36px;
+            }
+
+            .hero-form-container {
+                justify-self: center;
+            }
+        }
+
+        @media (max-width: 768px) {
+            /* Оптимизация для touch-устройств */
+            * {
+                -webkit-tap-highlight-color: transparent;
+            }
+
+            button, a, input, select {
+                touch-action: manipulation;
+            }
+
+            header {
+                padding: 15px 20px;
+            }
+
+            .header-logo {
+                width: 90px;
+            }
+
+            .nav-menu {
+                display: none;
+            }
+
+            .mobile-menu-toggle {
+                display: flex;
+            }
+
+            .hero {
+                padding: 110px 20px 30px;
+                min-height: auto;
+            }
+
+            .hero-content {
+                margin-top: 0;
+                gap: 35px;
+            }
+
+            .text-content {
+                gap: 25px;
+                text-align: center;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+
+            .hero-location {
+                font-size: 16px;
+                margin-top: 0;
+                margin-bottom: 15px;
+            }
+
+            .hero-location img {
+                width: 20px;
+                height: 20px;
+            }
+
+            .heading {
+                font-size: 24px;
+                line-height: 1.4;
+                margin-top: 0;
+                text-align: center;
+            }
+
+            .hero-capacity {
+                font-size: 24px;
+                text-align: center;
+            }
+
+            .contact-buttons {
+                bottom: 20px;
+                right: 20px;
+            }
+
+            .contact-button {
+                width: 50px;
+                height: 50px;
+            }
+
+            .contact-button svg {
+                width: 22px;
+                height: 22px;
+            }
+
+            .hero-form-container {
+                margin-top: 0;
+            }
+
+            .hero-form {
+                padding: 25px 20px;
+                gap: 20px;
+            }
+
+            .hero-form-title {
+                font-size: 16px;
+                margin-bottom: 5px;
+            }
+
+            .hero-form-group label {
+                font-size: 13px;
+            }
+
+            .hero-form-group input,
+            .hero-form-group select {
+                padding: 12px 40px 12px 15px;
+                font-size: 15px;
+            }
+
+            .hero-form-time-row {
+                gap: 10px;
+            }
+
+            .hero-form-button {
+                padding: 14px 28px;
+                font-size: 15px;
+                margin-top: 5px;
+            }
+
+            .halls-section {
+                padding: 50px 20px;
+            }
+
+            .halls-title {
+                font-size: 28px;
+                margin-bottom: 30px;
+            }
+
+            .filter-form {
+                padding: 25px 20px;
+                flex-direction: column;
+                gap: 18px;
+            }
+
+            .filter-group {
+                width: 100%;
+            }
+
+            .filter-group label {
+                font-size: 14px;
+            }
+
+            .filter-group input,
+            .filter-group select {
+                padding: 12px 15px;
+                font-size: 15px;
+            }
+
+            .filter-button {
+                width: 100%;
+                padding: 14px 24px;
+                font-size: 15px;
+            }
+
+            .halls-grid {
+                grid-template-columns: 1fr;
+                gap: 25px;
+            }
+
+            .hall-card {
+                border-radius: 12px;
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25) !important;
+            }
+
+
+            .hall-content {
+                padding: 25px;
+            }
+
+            .hall-name {
+                font-size: 22px;
+            }
+
+            .hall-description {
+                font-size: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header {
+                padding: 12px 15px;
+            }
+
+            .header-logo {
+                width: 75px;
+            }
+
+            .hero {
+                padding: 100px 15px 25px;
+                min-height: auto;
+            }
+
+            .hero-content {
+                gap: 25px;
+                margin-top: 0;
+            }
+
+            .text-content {
+                gap: 20px;
+                text-align: center;
+                align-items: center;
+                margin-bottom: 15px;
+            }
+
+            .hero-location {
+                font-size: 14px;
+                margin-top: 0;
+                margin-bottom: 12px;
+                gap: 8px;
+            }
+
+            .hero-location img {
+                width: 18px;
+                height: 18px;
+            }
+
+            .heading {
+                font-size: 20px;
+                line-height: 1.3;
+                text-align: center;
+                margin-top: 0;
+            }
+
+            .hero-capacity {
+                font-size: 18px;
+                text-align: center;
+            }
+
+            .contact-buttons {
+                bottom: 15px;
+                right: 15px;
+                gap: 10px;
+            }
+
+            .contact-button {
+                width: 45px;
+                height: 45px;
+            }
+
+            .contact-button svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            .hero-form-container {
+                margin-top: 0;
+            }
+
+            .hero-form {
+                padding: 20px 15px;
+                gap: 18px;
+                border-radius: 12px;
+            }
+
+            .hero-form-title {
+                font-size: 14px;
+                margin-bottom: 5px;
+            }
+
+            .hero-form-group {
+                gap: 8px;
+            }
+
+            .hero-form-group label {
+                font-size: 12px;
+            }
+
+            .hero-form-group input,
+            .hero-form-group select {
+                padding: 11px 35px 11px 12px;
+                font-size: 14px;
+                border-radius: 6px;
+            }
+
+            .hero-form-input-icon {
+                width: 18px;
+                height: 18px;
+                right: 12px;
+            }
+
+            .hero-form-time-row {
+                gap: 8px;
+            }
+
+            .hero-form-button {
+                padding: 13px 24px;
+                font-size: 14px;
+                margin-top: 5px;
+                border-radius: 6px;
+            }
+
+            .mobile-menu {
+                width: 90%;
+                padding: 70px 20px 20px;
+            }
+
+            .mobile-menu-close {
+                top: 15px;
+                right: 15px;
+                width: 35px;
+                height: 35px;
+            }
+
+            .mobile-menu-close span {
+                width: 22px;
+            }
+
+            .halls-section {
+                padding: 40px 15px;
+            }
+
+            .halls-title {
+                font-size: 24px;
+                margin-bottom: 25px;
+            }
+
+            .filter-form {
+                padding: 20px 15px;
+                gap: 15px;
+            }
+
+            .filter-group label {
+                font-size: 13px;
+            }
+
+            .filter-group input,
+            .filter-group select {
+                padding: 11px 12px;
+                font-size: 14px;
+            }
+
+            .filter-button {
+                padding: 13px 20px;
+                font-size: 14px;
+            }
+
+            .halls-grid {
+                gap: 20px;
+            }
+
+            .hall-card {
+                border-radius: 10px;
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25) !important;
+            }
+
+            .hall-card:hover {
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25) !important;
+            }
+
+            .hall-content {
+                padding: 20px;
+            }
+
+            .hall-name {
+                font-size: 20px;
+                margin-bottom: 12px;
+            }
+
+            .hall-description {
+                font-size: 14px;
+                line-height: 1.5;
+                margin-bottom: 15px;
+            }
+
+            .hall-features {
+                gap: 8px;
+                margin-bottom: 15px;
+            }
+
+            .hall-feature {
+                padding: 5px 10px;
+                font-size: 12px;
+            }
+
+            .hall-button {
+                padding: 11px 20px;
+                font-size: 13px;
+            }
+        }
+
+        /* Секция "Наши помещения" */
+        .rooms-section {
+            background: #FFFFF0;
+            padding: 100px 60px;
+            min-height: 100vh;
+        }
+
+        .rooms-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .rooms-header {
+            width: 100%;
+            margin-bottom: 60px;
+            text-align: center;
+        }
+
+        .rooms-cards-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .rooms-subtitle-wrapper {
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 40px;
+            margin-left: 0;
+            padding-left: 40px;
+            text-align: left;
+        }
+
+        .rooms-cards-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            justify-content: center;
+            width: 100%;
+            align-self: center;
+        }
+
+        .rooms-title {
+            font-size: 42px;
+            font-weight: 700;
+            color: #3A3A3A;
+            text-transform: uppercase;
+            font-family: 'Jost', sans-serif;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        .rooms-subtitle {
+            font-size: 16px;
+            font-weight: 400;
+            color: #666666;
+            font-family: 'Montserrat', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .room-card {
+            background: transparent;
+            border-radius: 16px;
+            overflow: hidden;
+            flex: 0 0 calc(33.333% - 27px);
+            min-width: 350px;
+            max-width: 400px;
+        }
+
+        /* Слайдер */
+        .room-slider {
+            position: relative;
+            width: 100%;
+            margin-bottom: 40px;
+        }
+
+        .room-slider-wrapper {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            border-radius: 16px;
+        }
+
+        .room-slider-track {
+            display: flex;
+            transition: transform 0.5s ease;
+        }
+
+        .room-slide {
+            min-width: 100%;
+            height: 400px;
+            position: relative;
+        }
+
+        .room-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .room-slider-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 10;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .room-slider-nav:hover {
+            background: #CC7A6F;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .room-slider-nav:hover svg {
+            fill: #FFFFF0;
+        }
+
+        .room-slider-nav.prev {
+            left: 20px;
+        }
+
+        .room-slider-nav.next {
+            right: 20px;
+        }
+
+        .room-slider-nav svg {
+            width: 24px;
+            height: 24px;
+            fill: #3A3A3A;
+            transition: fill 0.3s ease;
+        }
+
+        .room-slider-indicators {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .room-slider-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(58, 58, 58, 0.3);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 0;
+        }
+
+        .room-slider-indicator.active {
+            background: #CC7A6F;
+            transform: scale(1.2);
+        }
+
+        /* Информация о помещении */
+        .room-info {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .room-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .room-name {
+            font-size: 32px;
+            font-weight: 700;
+            color: #3A3A3A;
+            text-transform: uppercase;
+            font-family: 'Jost', sans-serif;
+            letter-spacing: 2px;
+        }
+
+        .room-feature {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .room-feature-icon {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+            margin-left:20px;
+            margin-bottom:10px;
+        }
+
+        .room-feature-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .room-feature-text {
+            font-size: 16px;
+            color: #3A3A3A;
+            font-weight: 400;
+            line-height: 1.5;
+            font-family: 'Montserrat', sans-serif;
+            text-transform: uppercase;
+        }
+
+        .room-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: #CC7A6F;
+            font-size: 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-family: 'Montserrat', sans-serif;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid #CC7A6F;
+            padding-bottom: 2px;
+        }
+
+        .room-link:hover {
+            color: #b86a60;
+            border-bottom-color: #b86a60;
+            transform: translateX(5px);
+        }
+
+        .room-link-icon {
+            width: 20px;
+            height: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .room-link:hover .room-link-icon {
+            transform: translate(3px, -3px);
+        }
+
+        .room-link-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .room-link-icon svg path {
+            stroke: #CC7A6F;
+            transition: stroke 0.3s ease;
+        }
+
+        .room-link:hover .room-link-icon svg path {
+            stroke: #b86a60;
+        }
+
+        @media (max-width: 1400px) {
+            .rooms-cards-grid {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .room-card {
+                flex: 0 0 100%;
+                min-width: auto;
+                max-width: 600px;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .rooms-section {
+                padding: 80px 40px;
+            }
+
+            .rooms-header {
+                margin-bottom: 50px;
+            }
+
+            .rooms-title {
+                font-size: 36px;
+            }
+
+            .room-slide {
+                height: 350px;
+            }
+
+            .room-name {
+                font-size: 28px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .rooms-section {
+                padding: 60px 20px;
+            }
+
+            .rooms-header {
+                margin-bottom: 40px;
+            }
+
+            .rooms-title {
+                font-size: 28px;
+            }
+
+            .rooms-subtitle {
+                font-size: 14px;
+            }
+
+            .rooms-subtitle-wrapper {
+                margin-bottom: 30px;
+            }
+
+            .rooms-cards-grid {
+                flex-direction: column;
+                gap: 40px;
+            }
+
+            .room-card {
+                flex: 0 0 100%;
+                min-width: auto;
+                max-width: 100%;
+            }
+
+            .room-header-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .room-name {
+                font-size: 28px;
+            }
+
+            .room-slide {
+                height: 250px;
+            }
+
+            .room-slider-nav {
+                width: 40px;
+                height: 40px;
+            }
+
+            .room-slider-nav svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            .room-slider-nav.prev {
+                left: 10px;
+            }
+
+            .room-slider-nav.next {
+                right: 10px;
+            }
+
+            .room-info {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .room-info-right {
+                justify-content: flex-start;
+            }
+
+            .room-name {
+                font-size: 28px;
+            }
+
+            .room-feature-text {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .rooms-section {
+                padding: 40px 15px;
+            }
+
+            .rooms-header {
+                margin-bottom: 30px;
+            }
+
+            .rooms-title {
+                font-size: 24px;
+            }
+
+            .rooms-subtitle {
+                font-size: 13px;
+            }
+
+            .rooms-subtitle-wrapper {
+                margin-bottom: 25px;
+            }
+
+            .rooms-cards-grid {
+                gap: 30px;
+            }
+
+            .room-card {
+                flex: 0 0 100%;
+                min-width: auto;
+                max-width: 100%;
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); 
+            }
+
+            .room-header-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .room-name {
+                font-size: 24px;
+            }
+
+            .room-link {
+                font-size: 14px;
+            }
+
+            .room-slide {
+                height: 200px;
+            }
+
+            .room-slider-nav {
+                width: 35px;
+                height: 35px;
+            }
+
+            .room-slider-nav svg {
+                width: 18px;
+                height: 18px;
+            }
+
+            .room-name {
+                font-size: 24px;
+                margin-left:20px;
+            }
+
+            .room-feature {
+                gap: 12px;
+            }
+
+            .room-feature-icon {
+                width: 20px;
+                height: 20px;
+            }
+
+            .room-feature-text {
+                font-size: 13px;
+                margin-bottom:10px;
+            }
+
+            .room-link {
+                font-size: 14px;
+                margin-left:20px;
+            }
+        }
+
+        /* Секция "Как нас найти" */
+        .location-section {
+            background: #FFFFF0;
+            padding: 100px 60px;
+            min-height: 100vh;
+        }
+
+        .location-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: start;
+        }
+
+        .location-info {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        .location-title {
+            font-size: 42px;
+            font-weight: 700;
+            color: #3A3A3A;
+            text-transform: uppercase;
+            font-family: 'Jost', sans-serif;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
+
+        .location-item {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .location-item-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .location-icon {
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+        }
+
+        .location-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: #CC7A6F;
+        }
+
+        .location-item-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #3A3A3A;
+            text-transform: uppercase;
+            font-family: 'Jost', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        .location-item-content {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-left: 47px;
+        }
+
+        .location-address {
+            font-size: 16px;
+            color: #3A3A3A;
+            line-height: 1.6;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .location-address-line {
+            display: block;
+        }
+
+        .location-features {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .location-feature-item {
+            font-size: 16px;
+            color: #3A3A3A;
+            line-height: 1.6;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .location-phone {
+            font-size: 18px;
+            color: #3A3A3A;
+            font-weight: 600;
+            font-family: 'Montserrat', sans-serif;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .location-phone:hover {
+            color: #CC7A6F;
+        }
+
+        .location-disclaimer {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #e0e0e0;
+            font-size: 12px;
+            color: #666666;
+            font-family: 'Montserrat', sans-serif;
+            line-height: 1.5;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .location-map {
+            width: 100%;
+            height: 600px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .location-map iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        @media (max-width: 1024px) {
+            .location-container {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .location-map {
+                height: 500px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .location-section {
+                padding: 60px 20px;
+            }
+
+            .location-title {
+                font-size: 28px;
+            }
+
+            .location-info {
+                gap: 30px;
+            }
+
+            .location-item {
+                gap: 15px;
+            }
+
+            .location-icon {
+                width: 28px;
+                height: 28px;
+            }
+
+            .location-item-title {
+                font-size: 18px;
+            }
+
+            .location-item-content {
+                padding-left: 43px;
+            }
+
+            .location-address,
+            .location-feature-item {
+                font-size: 15px;
+            }
+
+            .location-phone {
+                font-size: 16px;
+            }
+
+            .location-map {
+                height: 400px;
+            }
+
+            .location-disclaimer {
+                font-size: 11px;
+                margin-top: 30px;
+                padding-top: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .location-section {
+                padding: 40px 15px;
+            }
+
+            .location-title {
+                font-size: 24px;
+            }
+
+            .location-info {
+                gap: 25px;
+            }
+
+            .location-item {
+                gap: 12px;
+            }
+
+            .location-icon {
+                width: 24px;
+                height: 24px;
+            }
+
+            .location-item-title {
+                font-size: 16px;
+            }
+
+            .location-item-content {
+                padding-left: 39px;
+            }
+
+            .location-address,
+            .location-feature-item {
+                font-size: 14px;
+            }
+
+            .location-phone {
+                font-size: 15px;
+            }
+
+            .location-map {
+                height: 300px;
+            }
+
+            .location-disclaimer {
+                font-size: 10px;
+                margin-top: 25px;
+                padding-top: 15px;
+            }
+        }
+
+        /* Футер */
+        footer {
+            background: #2C2C2C;
+            padding: 60px 60px 40px;
+            color: #FFFFF0;
+        }
+
+        .footer-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 60px;
+            align-items: start;
+        }
+
+        .footer-logo {
+            width: 150px;
+            height: auto;
+            margin-left: 100px;
+            margin-top: 40px;
+        }
+
+        .footer-logo img {
+            width: 100%;
+            height: auto;
+        }
+
+        .footer-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .footer-nav-link {
+            color: #FFFFF0;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 400;
+            font-family: 'Montserrat', sans-serif;
+            text-transform: uppercase;
+            transition: color 0.3s ease;
+            display: inline-block;
+        }
+
+        .footer-nav-link:hover {
+            color: #CC7A6F;
+        }
+
+        .footer-right {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .footer-contact {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .footer-phone {
+            font-size: 18px;
+            color: #FFFFF0;
+            font-weight: 600;
+            font-family: 'Montserrat', sans-serif;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-phone:hover {
+            color: #CC7A6F;
+        }
+
+        .footer-address {
+            font-size: 14px;
+            color: #FFFFF0;
+            line-height: 1.6;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .footer-bottom {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 240, 0.2);
+            text-align: center;
+        }
+
+        .footer-copyright {
+            font-size: 12px;
+            color: #FFFFF0;
+            font-family: 'Montserrat', sans-serif;
+            opacity: 0.7;
+        }
+
+        @media (max-width: 1024px) {
+            .footer-container {
+                grid-template-columns: 1fr;
+                gap: 40px;
+                text-align: center;
+            }
+
+            .footer-logo {
+                margin: 0 auto;
+            }
+
+            .footer-nav {
+                align-items: center;
+            }
+
+            .footer-right {
+                align-items: center;
+            }
+        }
+
+        @media (max-width: 768px) {
+            footer {
+                padding: 40px 20px 30px;
+            }
+
+            .footer-container {
+                gap: 30px;
+            }
+
+            .footer-logo {
+                width: 120px;
+            }
+
+            .footer-nav-link {
+                font-size: 15px;
+            }
+
+            .footer-phone {
+                font-size: 16px;
+            }
+
+            .footer-address {
+                font-size: 13px;
+            }
+
+            .footer-bottom {
+                margin-top: 30px;
+                padding-top: 20px;
+            }
+
+            .footer-copyright {
+                font-size: 11px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            footer {
+                padding: 30px 15px 20px;
+            }
+
+            .footer-container {
+                gap: 25px;
+            }
+
+            .footer-logo {
+                width: 100px;
+            }
+
+            .footer-nav-link {
+                font-size: 14px;
+            }
+
+            .footer-phone {
+                font-size: 15px;
+            }
+
+            .footer-address {
+                font-size: 12px;
+            }
+
+            .footer-bottom {
+                margin-top: 25px;
+                padding-top: 15px;
+            }
+
+            .footer-copyright {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header id="header">
+        <div class="header-content">
+            <div class="header-logo">
+                <img src="images/logo.png" alt="ARMALOFT">
+            </div>
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item has-dropdown">
+                        <a href="#" class="nav-link">Аренда</a>
+                        <ul class="dropdown">
+                            <li><a href="halls.html" class="dropdown-item">Залы</a></li>
+                            <li><a href="https://example.com" target="_blank" class="dropdown-item">Антикафе</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item has-dropdown">
+                        <a href="#" class="nav-link">Услуги</a>
+                        <ul class="dropdown">
+                            <li><a href="#cafe" class="dropdown-item">Кафе</a></li>
+                            <li><a href="#catering" class="dropdown-item">Кейтеринг</a></li>
+                            <li><a href="#photo" class="dropdown-item">Видео и фотосъемки</a></li>
+                            <li><a href="#pylon" class="dropdown-item">Пилон</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a href="dogovor.html" class="nav-link">Договор</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="kontakty.html" class="nav-link">Контакты</a>
+                    </li>
+                </ul>
+                <button class="mobile-menu-toggle" aria-label="Меню">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+    <div class="mobile-menu" id="mobileMenu">
+        <button class="mobile-menu-close" aria-label="Закрыть меню">
+            <span></span>
+            <span></span>
+        </button>
+        <ul>
+            <li class="nav-item has-dropdown">
+                <a href="#" class="nav-link">Аренда</a>
+                <ul class="dropdown">
+                    <li><a href="halls.html" class="dropdown-item">Залы</a></li>
+                    <li><a href="https://example.com" target="_blank" class="dropdown-item">Антикафе</a></li>
+                </ul>
+            </li>
+            <li class="nav-item has-dropdown">
+                <a href="#" class="nav-link">Услуги</a>
+                <ul class="dropdown">
+                    <li><a href="#cafe" class="dropdown-item">Кафе</a></li>
+                    <li><a href="#catering" class="dropdown-item">Кейтеринг</a></li>
+                    <li><a href="#photo" class="dropdown-item">Видео и фотосъемки</a></li>
+                    <li><a href="#pylon" class="dropdown-item">Пилон</a></li>
+                </ul>
+            </li>
+            <li class="nav-item">
+                <a href="#contract" class="nav-link">Договор</a>
+            </li>
+            <li class="nav-item">
+                <a href="#location" class="nav-link">Контакты</a>
+            </li>
+        </ul>
+    </div>
+
+    <section class="hero">
+        <div class="hero-content">
+            <div class="text-content">
+                <div class="hero-location">
+                    <img src="images/icons/geo.png" alt="Локация">
+                    <span>ЛОКАЦИЯ: АРМА, М КУРСКАЯ</span>
+                </div>
+                
+                <h1 class="heading">
+                    <span class="heading-line"><span class="accent">5 ЗАЛОВ</span> ДЛЯ ЛЮБЫХ</span>
+                    <span class="heading-line">МЕРОПРИЯТИЙ И КОМПАНИЙ</span>
+                    <span class="heading-line">ОТ 3 ДО 150 ЧЕЛОВЕК</span>
+                </h1>
+            </div>
+
+            <div class="hero-form-container">
+                <form class="hero-form" id="heroForm">
+                    <h3 class="hero-form-title">ПРОВЕРИТЬ ДОСТУПНОСТЬ И СТОИМОСТЬ ОНЛАЙН:</h3>
+                    
+                    <div class="hero-form-group">
+                        <label for="hero-hall-select">ВЫБОР ЗАЛА</label>
+                        <select id="hero-hall-select" name="hero-hall-select">
+                            <option value="all">ВСЕ ЗАЛЫ</option>
+                            <option value="armaloft">ЗАЛ "АРМАЛОФТ"</option>
+                            <option value="mercury">ЗАЛ «МЕРКУРИ»</option>
+                            <option value="airplane">ЗАЛ «САМОЛЕТ»</option>
+                            <option value="rufer">ЗАЛ «РУФЕР»</option>
+                            <option value="pulka">ЗАЛ «ПУЛЬКА»</option>
+                        </select>
+            </div>
+
+                    <div class="hero-form-group">
+                        <label for="hero-event-date">ДАТА</label>
+                        <div class="hero-form-input-wrapper">
+                            <input type="date" id="hero-event-date" name="hero-event-date" lang="ru" required>
+                            <img src="images/icons/calendar.png" alt="Календарь" class="hero-form-input-icon">
+                        </div>
+                    </div>
+                    
+                    <div class="hero-form-time-group">
+                        <label>ВРЕМЯ</label>
+                        <div class="hero-form-time-row">
+                            <div class="hero-form-group">
+                                <label for="hero-time-from">ОТ</label>
+                                <div class="hero-form-input-wrapper">
+                                    <select id="hero-time-from" name="hero-time-from" required>
+                                        <option value="">Выберите час</option>
+                                        <option value="00:00">00:00</option>
+                                        <option value="01:00">01:00</option>
+                                        <option value="02:00">02:00</option>
+                                        <option value="03:00">03:00</option>
+                                        <option value="04:00">04:00</option>
+                                        <option value="05:00">05:00</option>
+                                        <option value="06:00">06:00</option>
+                                        <option value="07:00">07:00</option>
+                                        <option value="08:00">08:00</option>
+                                        <option value="09:00">09:00</option>
+                                        <option value="10:00">10:00</option>
+                                        <option value="11:00">11:00</option>
+                                        <option value="12:00">12:00</option>
+                                        <option value="13:00">13:00</option>
+                                        <option value="14:00">14:00</option>
+                                        <option value="15:00">15:00</option>
+                                        <option value="16:00">16:00</option>
+                                        <option value="17:00">17:00</option>
+                                        <option value="18:00">18:00</option>
+                                        <option value="19:00">19:00</option>
+                                        <option value="20:00">20:00</option>
+                                        <option value="21:00">21:00</option>
+                                        <option value="22:00">22:00</option>
+                                        <option value="23:00">23:00</option>
+                                    </select>
+                                    <img src="images/icons/time.png" alt="Время" class="hero-form-input-icon">
+                                </div>
+                            </div>
+                            <div class="hero-form-group">
+                                <label for="hero-time-to">ДО</label>
+                                <div class="hero-form-input-wrapper">
+                                    <select id="hero-time-to" name="hero-time-to" required>
+                                        <option value="">Выберите час</option>
+                                        <option value="00:00">00:00</option>
+                                        <option value="01:00">01:00</option>
+                                        <option value="02:00">02:00</option>
+                                        <option value="03:00">03:00</option>
+                                        <option value="04:00">04:00</option>
+                                        <option value="05:00">05:00</option>
+                                        <option value="06:00">06:00</option>
+                                        <option value="07:00">07:00</option>
+                                        <option value="08:00">08:00</option>
+                                        <option value="09:00">09:00</option>
+                                        <option value="10:00">10:00</option>
+                                        <option value="11:00">11:00</option>
+                                        <option value="12:00">12:00</option>
+                                        <option value="13:00">13:00</option>
+                                        <option value="14:00">14:00</option>
+                                        <option value="15:00">15:00</option>
+                                        <option value="16:00">16:00</option>
+                                        <option value="17:00">17:00</option>
+                                        <option value="18:00">18:00</option>
+                                        <option value="19:00">19:00</option>
+                                        <option value="20:00">20:00</option>
+                                        <option value="21:00">21:00</option>
+                                        <option value="22:00">22:00</option>
+                                        <option value="23:00">23:00</option>
+                                    </select>
+                                    <img src="images/icons/time.png" alt="Время" class="hero-form-input-icon">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="hero-form-group">
+                        <label for="hero-guests-count">КОЛИЧЕСТВО ГОСТЕЙ</label>
+                        <select id="hero-guests-count" name="hero-guests-count" required>
+                            <option value="">Выберите количество</option>
+                            <option value="3-12">3-12</option>
+                            <option value="12-18">12-18</option>
+                            <option value="18-25">18-25</option>
+                            <option value="25-50">25-50</option>
+                            <option value="50-80">50-80</option>
+                            <option value="80-150">80-150</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="hero-form-button">НАЙТИ ЗАЛЫ</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <section class="rooms-section">
+        <div class="rooms-container">
+            <div class="rooms-header">
+                <h2 class="rooms-title">Наши помещения</h2>
+            </div>
+            <div class="rooms-cards-wrapper">
+                <div class="rooms-subtitle-wrapper">
+                    <p class="rooms-subtitle">Предложено 5 из 5 залов</p>
+                </div>
+                <div class="rooms-cards-grid">
+            <div class="room-card">
+                <div class="room-slider" id="armaloftSlider">
+                    <div class="room-slider-wrapper">
+                        <div class="room-slider-track" id="armaloftTrack">
+                            <div class="room-slide">
+                                <img src="photos/armaloft/armaloft1.jpg" alt="Зал Армалофт - фото 1">
+                            </div>
+                            <div class="room-slide">
+                                <img src="photos/armaloft/armaloft2.jpg" alt="Зал Армалофт - фото 2">
+                            </div>
+                            <div class="room-slide">
+                                <img src="photos/armaloft/armaloft3.jpg" alt="Зал Армалофт - фото 3">
+                            </div>
+                            <div class="room-slide">
+                                <img src="photos/armaloft/armaloft4.jpg" alt="Зал Армалофт - фото 4">
+                            </div>
+                            <div class="room-slide">
+                                <img src="photos/armaloft/armaloft5.jpg" alt="Зал Армалофт - фото 5">
+                            </div>
+                            <div class="room-slide">
+                                <img src="photos/armaloft/armaloft6.jpg" alt="Зал Армалофт - фото 6">
+                            </div>
+                            <div class="room-slide">
+                                <img src="photos/armaloft/armaloft7.jpg" alt="Зал Армалофт - фото 7">
+                            </div>
+                            <div class="room-slide">
+                                <img src="photos/armaloft/armaloft8.jpg" alt="Зал Армалофт - фото 8">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="room-slider-nav prev" aria-label="Предыдущее фото">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                        </svg>
+                    </button>
+                    <button class="room-slider-nav next" aria-label="Следующее фото">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                        </svg>
+                    </button>
+                    <div class="room-slider-indicators" id="armaloftIndicators"></div>
+                </div>
+                
+                <div class="room-info">
+                    <div class="room-header-row">
+                        <h2 class="room-name">АРМАЛОФТ</h2>
+                        <a href="armaloft.html" class="room-link">
+                            <span>ПОДРОБНЕЕ</span>
+                            <div class="room-link-icon">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M7 17L17 7M17 7H9M17 7V15" stroke="#CC7A6F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                </svg>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="room-feature">
+                        <div class="room-feature-icon">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z" fill="#CC7A6F"/>
+                            </svg>
+                        </div>
+                        <p class="room-feature-text">ДВУХУРОВНЕВЫЙ ЗАЛ. НИЖНИЙ УРОВЕНЬ - 120M2, ВЕРХНИЙ 50M2</p>
+                    </div>
+                    <div class="room-feature">
+                        <div class="room-feature-icon">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="#CC7A6F"/>
+                            </svg>
+                        </div>
+                        <p class="room-feature-text">ДО 120 ЧЕЛОВЕК</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="room-card">
+                <div class="room-slider" id="merkuriSlider">
+                    <div class="room-slider-wrapper">
+                        <div class="room-slider-track" id="merkuriTrack">
+                            <div class="room-slide">
+                                <img src="photos/merkuri/merkuri1.jpg" alt="Зал Меркури - фото 1">
+                            </div>
+                            <div class="room-slide">
+                                <img src="photos/merkuri/merkuri2.jpg" alt="Зал Меркури - фото 2">
+                            </div>
+                            <div class="room-slide">
+                                <img src="photos/merkuri/merkuri3.jpg" alt="Зал Меркури - фото 3">
+                            </div>
+                            <div class="room-slide">
+                                <img src="photos/merkuri/merkuri4.jpg" alt="Зал Меркури - фото 4">
+                            </div>
+                            <div class="room-slide">
+                                <img src="photos/merkuri/merkuri5.jpg" alt="Зал Меркури - фото 5">
+                            </div>
+                            <div class="room-slide">
+                                <img src="photos/merkuri/merkuri6.jpg" alt="Зал Меркури - фото 6">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="room-slider-nav prev" aria-label="Предыдущее фото">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                        </svg>
+                    </button>
+                    <button class="room-slider-nav next" aria-label="Следующее фото">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                        </svg>
+                    </button>
+                    <div class="room-slider-indicators" id="merkuriIndicators"></div>
+                </div>
+                
+                <div class="room-info">
+                    <div class="room-header-row">
+                        <h2 class="room-name">МЕРКУРИ</h2>
+                        <a href="merkuri.html" class="room-link">
+                            <span>ПОДРОБНЕЕ</span>
+                            <div class="room-link-icon">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M7 17L17 7M17 7H9M17 7V15" stroke="#CC7A6F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                </svg>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="room-feature">
+                        <div class="room-feature-icon">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z" fill="#CC7A6F"/>
+                            </svg>
+                        </div>
+                        <p class="room-feature-text">ПЛОЩАДЬ 70 М2</p>
+                    </div>
+                    <div class="room-feature">
+                        <div class="room-feature-icon">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="#CC7A6F"/>
+                            </svg>
+                        </div>
+                        <p class="room-feature-text">ДО 50 ЧЕЛОВЕК</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="room-card">
+                <div class="room-slider" id="samoletSlider">
+                    <div class="room-slider-wrapper">
+                        <div class="room-slider-track" id="samoletTrack">
+                            <div class="room-slide">
+                                <img src="photos/samolet/samolet1.jpg" alt="Зал Самолет - фото 1">
+                            </div>
+                            <div class="room-slide">
+                                <img src="photos/samolet/samolet2.jpg" alt="Зал Самолет - фото 2">
+                            </div>
+                            <div class="room-slide">
+                                <img src="photos/samolet/samolet3.jpg" alt="Зал Самолет - фото 3">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="room-slider-nav prev" aria-label="Предыдущее фото">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                        </svg>
+                    </button>
+                    <button class="room-slider-nav next" aria-label="Следующее фото">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                        </svg>
+                    </button>
+                    <div class="room-slider-indicators" id="samoletIndicators"></div>
+                </div>
+                
+                <div class="room-info">
+                    <div class="room-header-row">
+                        <h2 class="room-name">САМОЛЕТ</h2>
+                        <a href="samolet.html" class="room-link">
+                            <span>ПОДРОБНЕЕ</span>
+                            <div class="room-link-icon">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M7 17L17 7M17 7H9M17 7V15" stroke="#CC7A6F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                </svg>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="room-feature">
+                        <div class="room-feature-icon">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z" fill="#CC7A6F"/>
+                            </svg>
+                        </div>
+                        <p class="room-feature-text">ПЛОЩАДЬ 42 М2</p>
+                    </div>
+                    <div class="room-feature">
+                        <div class="room-feature-icon">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="#CC7A6F"/>
+                            </svg>
+                        </div>
+                        <p class="room-feature-text">ДО 20 ЧЕЛОВЕК</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="room-card">
+                <div class="room-slider" id="ruferSlider">
+                    <div class="room-slider-wrapper">
+                        <div class="room-slider-track" id="ruferTrack">
+                            <div class="room-slide">
+                                <img src="photos/rufer/rufer1.jpg" alt="Зал Руфер - фото 1">
+                            </div>
+                            <div class="room-slide">
+                                <img src="photos/rufer/rufer2.jpg" alt="Зал Руфер - фото 2">
+                            </div>
+                            <div class="room-slide">
+                                <img src="photos/rufer/rufer3.jpg" alt="Зал Руфер - фото 3">
+                            </div>
+                            <div class="room-slide">
+                                <img src="photos/rufer/rufer4.jpg" alt="Зал Руфер - фото 4">
+                            </div>
+                            <div class="room-slide">
+                                <img src="photos/rufer/rufer5.jpg" alt="Зал Руфер - фото 5">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="room-slider-nav prev" aria-label="Предыдущее фото">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                        </svg>
+                    </button>
+                    <button class="room-slider-nav next" aria-label="Следующее фото">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                        </svg>
+                    </button>
+                    <div class="room-slider-indicators" id="ruferIndicators"></div>
+                </div>
+                
+                <div class="room-info">
+                    <div class="room-header-row">
+                        <h2 class="room-name">РУФЕР</h2>
+                        <a href="rufer.html" class="room-link">
+                            <span>ПОДРОБНЕЕ</span>
+                            <div class="room-link-icon">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M7 17L17 7M17 7H9M17 7V15" stroke="#CC7A6F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                </svg>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="room-feature">
+                        <div class="room-feature-icon">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z" fill="#CC7A6F"/>
+                            </svg>
+                        </div>
+                        <p class="room-feature-text">ПЛОЩАДЬ 40 М2</p>
+                    </div>
+                    <div class="room-feature">
+                        <div class="room-feature-icon">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="#CC7A6F"/>
+                            </svg>
+                        </div>
+                        <p class="room-feature-text">ДО 25 ЧЕЛОВЕК</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="room-card">
+                <div class="room-slider" id="pulkaSlider">
+                    <div class="room-slider-wrapper">
+                        <div class="room-slider-track" id="pulkaTrack">
+                            <div class="room-slide">
+                                <img src="photos/pulka/pulka1.jpg" alt="Зал Пулька - фото 1">
+                            </div>
+                            <div class="room-slide">
+                                <img src="photos/pulka/pulka2.jpg" alt="Зал Пулька - фото 2">
+                            </div>
+                            <div class="room-slide">
+                                <img src="photos/pulka/pulka3.jpg" alt="Зал Пулька - фото 3">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="room-slider-nav prev" aria-label="Предыдущее фото">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                        </svg>
+                    </button>
+                    <button class="room-slider-nav next" aria-label="Следующее фото">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                        </svg>
+                    </button>
+                    <div class="room-slider-indicators" id="pulkaIndicators"></div>
+                </div>
+                
+                <div class="room-info">
+                    <div class="room-header-row">
+                        <h2 class="room-name">ПУЛЬКА</h2>
+                        <a href="pulka.html" class="room-link">
+                            <span>ПОДРОБНЕЕ</span>
+                            <div class="room-link-icon">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M7 17L17 7M17 7H9M17 7V15" stroke="#CC7A6F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                </svg>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="room-feature">
+                        <div class="room-feature-icon">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z" fill="#CC7A6F"/>
+                            </svg>
+                        </div>
+                        <p class="room-feature-text">ПЛОЩАДЬ 18 М2</p>
+                    </div>
+                    <div class="room-feature">
+                        <div class="room-feature-icon">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="#CC7A6F"/>
+                            </svg>
+                        </div>
+                        <p class="room-feature-text">ДО 15 ЧЕЛОВЕК</p>
+                    </div>
+                </div>
+            </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="location-section" id="location">
+        <div class="location-container">
+            <div class="location-info">
+                <h2 class="location-title">Как нас найти</h2>
+                <div class="location-item">
+                    <div class="location-item-header">
+                        <div class="location-icon">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                            </svg>
+                        </div>
+                        <h3 class="location-item-title">Адрес</h3>
+                    </div>
+                    <div class="location-item-content">
+                        <div class="location-address">
+                            <span class="location-address-line">Москва м. Курская,</span>
+                            <span class="location-address-line">Нижний Сусальный пер 5 стр 10.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="location-item">
+                    <div class="location-item-header">
+                        <div class="location-icon">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+                            </svg>
+                        </div>
+                        <h3 class="location-item-title">Удобства</h3>
+                    </div>
+                    <div class="location-item-content">
+                        <div class="location-features">
+                            <div class="location-feature-item">Рядом с метро</div>
+                            <div class="location-feature-item">Рядом бесплатный паркинг</div>
+                            <div class="location-feature-item">Легко найти</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="location-item">
+                    <div class="location-item-header">
+                        <div class="location-icon">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                            </svg>
+                        </div>
+                        <h3 class="location-item-title">Телефон</h3>
+                    </div>
+                    <div class="location-item-content">
+                        <a href="tel:+79296535982" class="location-phone">+7 (929) 653-59-82</a>
+                    </div>
+                </div>
+
+                <div class="location-disclaimer">
+                    ИНФОРМАЦИЯ НА САЙТЕ НЕ ЯВЛЯЕТСЯ ПУБЛИЧНОЙ ОФЕРТОЙ
+                </div>
+            </div>
+
+            <div class="location-map">
+                <iframe 
+                    src="https://www.google.com/maps?q=Москва,+Нижний+Сусальный+переулок,+5,+стр.+10&output=embed&zoom=16"
+                    allowfullscreen="" 
+                    loading="lazy" 
+                    referrerpolicy="no-referrer-when-downgrade"
+                    title="Карта расположения">
+                </iframe>
+            </div>
+        </div>
+    </section>
+
+    <div class="contact-buttons">
+        <a href="https://wa.me/79999999999" target="_blank" class="contact-button" aria-label="Написать в WhatsApp">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+            </svg>
+        </a>
+        <a href="tel:+79999999999" class="contact-button" aria-label="Позвонить">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+            </svg>
+        </a>
+    </div>
+
+    <script>
+        // Локализация календаря и времени
+        document.addEventListener('DOMContentLoaded', function() {
+            // Установка локали для календаря
+            const dateInputs = document.querySelectorAll('input[type="date"]');
+            dateInputs.forEach(input => {
+                input.setAttribute('lang', 'ru');
+                // Для некоторых браузеров нужно установить локаль через JavaScript
+                if (input.value) {
+                    const date = new Date(input.value);
+                    // Форматирование даты для отображения
+                }
+            });
+
+            // Время теперь выбирается через select, только круглые часы
+        });
+
+        // Эффект появления фона при скролле
+        window.addEventListener('scroll', function() {
+            const header = document.getElementById('header');
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+
+        // Плавная прокрутка к секциям с учетом фиксированного хедера
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const href = this.getAttribute('href');
+                if (href !== '#' && href !== '') {
+                    const target = document.querySelector(href);
+                    if (target) {
+                        e.preventDefault();
+                        const headerHeight = 120; // Высота фиксированного хедера
+                        const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                }
+            });
+        });
+
+        // Мобильное меню
+        const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+        const mobileNavItems = mobileMenu.querySelectorAll('.nav-item.has-dropdown');
+
+        function toggleMobileMenu() {
+            mobileMenuToggle.classList.toggle('active');
+            mobileMenu.classList.toggle('active');
+            mobileOverlay.classList.toggle('active');
+            document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
+        }
+
+        mobileMenuToggle.addEventListener('click', toggleMobileMenu);
+        mobileOverlay.addEventListener('click', toggleMobileMenu);
+
+        // Кнопка закрытия мобильного меню
+        const mobileMenuClose = document.querySelector('.mobile-menu-close');
+        if (mobileMenuClose) {
+            mobileMenuClose.addEventListener('click', toggleMobileMenu);
+        }
+
+        // Открытие/закрытие подменю в мобильной версии
+        mobileNavItems.forEach(item => {
+            const link = item.querySelector('.nav-link');
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                item.classList.toggle('active');
+            });
+        });
+
+        // Закрытие меню при клике на ссылку
+        const mobileLinks = mobileMenu.querySelectorAll('a');
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                // Не закрываем меню, если это ссылка с dropdown (подменю)
+                const parentItem = this.closest('.nav-item.has-dropdown');
+                if (!parentItem) {
+                    // Закрываем только если это не ссылка с подменю
+                    toggleMobileMenu();
+                }
+            });
+        });
+
+        // Обработка формы фильтрации залов
+        const filterForm = document.getElementById('filterForm');
+        if (filterForm) {
+            filterForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const date = document.getElementById('event-date').value;
+                const time = document.getElementById('event-time').value;
+                const guests = document.getElementById('guests-count').value;
+                
+                // Здесь можно добавить логику фильтрации залов
+                console.log('Фильтр:', { date, time, guests });
+                
+                // Пример: можно скрыть/показать карточки в зависимости от фильтров
+                // const hallCards = document.querySelectorAll('.hall-card');
+                // hallCards.forEach(card => {
+                //     // Логика фильтрации
+                // });
+                
+                alert('Фильтрация применена! Дата: ' + date + ', Время: ' + time + ', Гостей: ' + guests);
+            });
+        }
+
+        // Обработка формы hero
+        const heroForm = document.getElementById('heroForm');
+        if (heroForm) {
+            heroForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const hall = document.getElementById('hero-hall-select').value;
+                const date = document.getElementById('hero-event-date').value;
+                const timeFrom = document.getElementById('hero-time-from').value;
+                const timeTo = document.getElementById('hero-time-to').value;
+                const guests = document.getElementById('hero-guests-count').value;
+                
+                // Здесь можно добавить логику поиска залов
+                console.log('Hero форма:', { hall, date, timeFrom, timeTo, guests });
+                
+                // Можно прокрутить к секции с залами
+                const hallsSection = document.querySelector('.halls-section');
+                if (hallsSection) {
+                    hallsSection.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        }
+
+        // Слайдер для зала Армалофт
+        const armaloftSlider = document.getElementById('armaloftSlider');
+        if (armaloftSlider) {
+            const track = document.getElementById('armaloftTrack');
+            const slides = track.querySelectorAll('.room-slide');
+            const prevBtn = armaloftSlider.querySelector('.prev');
+            const nextBtn = armaloftSlider.querySelector('.next');
+            const indicatorsContainer = document.getElementById('armaloftIndicators');
+            
+            let currentSlide = 0;
+            const totalSlides = slides.length;
+
+            // Создание индикаторов
+            for (let i = 0; i < totalSlides; i++) {
+                const indicator = document.createElement('button');
+                indicator.className = 'room-slider-indicator';
+                if (i === 0) indicator.classList.add('active');
+                indicator.setAttribute('aria-label', `Перейти к слайду ${i + 1}`);
+                indicator.addEventListener('click', () => goToSlide(i));
+                indicatorsContainer.appendChild(indicator);
+            }
+
+            const indicators = indicatorsContainer.querySelectorAll('.room-slider-indicator');
+
+            function updateSlider() {
+                track.style.transform = `translateX(-${currentSlide * 100}%)`;
+                
+                // Обновление индикаторов
+                indicators.forEach((indicator, index) => {
+                    if (index === currentSlide) {
+                        indicator.classList.add('active');
+                    } else {
+                        indicator.classList.remove('active');
+                    }
+                });
+            }
+
+            function nextSlide() {
+                currentSlide = (currentSlide + 1) % totalSlides;
+                updateSlider();
+            }
+
+            function prevSlide() {
+                currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+                updateSlider();
+            }
+
+            function goToSlide(index) {
+                currentSlide = index;
+                updateSlider();
+            }
+
+            // Обработчики событий
+            if (nextBtn) {
+                nextBtn.addEventListener('click', nextSlide);
+            }
+
+            if (prevBtn) {
+                prevBtn.addEventListener('click', prevSlide);
+            }
+
+            // Автопрокрутка (опционально)
+            let autoplayInterval;
+            function startAutoplay() {
+                autoplayInterval = setInterval(nextSlide, 5000);
+            }
+
+            function stopAutoplay() {
+                if (autoplayInterval) {
+                    clearInterval(autoplayInterval);
+                }
+            }
+
+            // Остановка автопрокрутки при наведении
+            armaloftSlider.addEventListener('mouseenter', stopAutoplay);
+            armaloftSlider.addEventListener('mouseleave', startAutoplay);
+
+            // Запуск автопрокрутки
+            startAutoplay();
+
+            // Поддержка клавиатуры
+            armaloftSlider.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') {
+                    prevSlide();
+                } else if (e.key === 'ArrowRight') {
+                    nextSlide();
+                }
+            });
+
+            // Поддержка свайпов на мобильных устройствах
+            let touchStartX = 0;
+            let touchEndX = 0;
+
+            track.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+
+            track.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            }, { passive: true });
+
+            function handleSwipe() {
+                const swipeThreshold = 50;
+                const diff = touchStartX - touchEndX;
+                
+                if (Math.abs(diff) > swipeThreshold) {
+                    if (diff > 0) {
+                        nextSlide();
+                    } else {
+                        prevSlide();
+                    }
+                }
+            }
+        }
+
+        // Слайдер для зала Меркури
+        const merkuriSlider = document.getElementById('merkuriSlider');
+        if (merkuriSlider) {
+            const track = document.getElementById('merkuriTrack');
+            const slides = track.querySelectorAll('.room-slide');
+            const prevBtn = merkuriSlider.querySelector('.prev');
+            const nextBtn = merkuriSlider.querySelector('.next');
+            const indicatorsContainer = document.getElementById('merkuriIndicators');
+            
+            let currentSlide = 0;
+            const totalSlides = slides.length;
+
+            // Создание индикаторов
+            for (let i = 0; i < totalSlides; i++) {
+                const indicator = document.createElement('button');
+                indicator.className = 'room-slider-indicator';
+                if (i === 0) indicator.classList.add('active');
+                indicator.setAttribute('aria-label', `Перейти к слайду ${i + 1}`);
+                indicator.addEventListener('click', () => goToSlide(i));
+                indicatorsContainer.appendChild(indicator);
+            }
+
+            const indicators = indicatorsContainer.querySelectorAll('.room-slider-indicator');
+
+            function updateSlider() {
+                track.style.transform = `translateX(-${currentSlide * 100}%)`;
+                
+                // Обновление индикаторов
+                indicators.forEach((indicator, index) => {
+                    if (index === currentSlide) {
+                        indicator.classList.add('active');
+                    } else {
+                        indicator.classList.remove('active');
+                    }
+                });
+            }
+
+            function nextSlide() {
+                currentSlide = (currentSlide + 1) % totalSlides;
+                updateSlider();
+            }
+
+            function prevSlide() {
+                currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+                updateSlider();
+            }
+
+            function goToSlide(index) {
+                currentSlide = index;
+                updateSlider();
+            }
+
+            // Обработчики событий
+            if (nextBtn) {
+                nextBtn.addEventListener('click', nextSlide);
+            }
+
+            if (prevBtn) {
+                prevBtn.addEventListener('click', prevSlide);
+            }
+
+            // Автопрокрутка (опционально)
+            let autoplayInterval;
+            function startAutoplay() {
+                autoplayInterval = setInterval(nextSlide, 5000);
+            }
+
+            function stopAutoplay() {
+                if (autoplayInterval) {
+                    clearInterval(autoplayInterval);
+                }
+            }
+
+            // Остановка автопрокрутки при наведении
+            merkuriSlider.addEventListener('mouseenter', stopAutoplay);
+            merkuriSlider.addEventListener('mouseleave', startAutoplay);
+
+            // Запуск автопрокрутки
+            startAutoplay();
+
+            // Поддержка клавиатуры
+            merkuriSlider.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') {
+                    prevSlide();
+                } else if (e.key === 'ArrowRight') {
+                    nextSlide();
+                }
+            });
+
+            // Поддержка свайпов на мобильных устройствах
+            let touchStartX = 0;
+            let touchEndX = 0;
+
+            track.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+
+            track.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            }, { passive: true });
+
+            function handleSwipe() {
+                const swipeThreshold = 50;
+                const diff = touchStartX - touchEndX;
+                
+                if (Math.abs(diff) > swipeThreshold) {
+                    if (diff > 0) {
+                        nextSlide();
+                    } else {
+                        prevSlide();
+                    }
+                }
+            }
+        }
+
+        // Слайдер для зала Самолет
+        const samoletSlider = document.getElementById('samoletSlider');
+        if (samoletSlider) {
+            const track = document.getElementById('samoletTrack');
+            const slides = track.querySelectorAll('.room-slide');
+            const prevBtn = samoletSlider.querySelector('.prev');
+            const nextBtn = samoletSlider.querySelector('.next');
+            const indicatorsContainer = document.getElementById('samoletIndicators');
+            
+            let currentSlide = 0;
+            const totalSlides = slides.length;
+
+            // Создание индикаторов
+            for (let i = 0; i < totalSlides; i++) {
+                const indicator = document.createElement('button');
+                indicator.className = 'room-slider-indicator';
+                if (i === 0) indicator.classList.add('active');
+                indicator.setAttribute('aria-label', `Перейти к слайду ${i + 1}`);
+                indicator.addEventListener('click', () => goToSlide(i));
+                indicatorsContainer.appendChild(indicator);
+            }
+
+            const indicators = indicatorsContainer.querySelectorAll('.room-slider-indicator');
+
+            function updateSlider() {
+                track.style.transform = `translateX(-${currentSlide * 100}%)`;
+                
+                // Обновление индикаторов
+                indicators.forEach((indicator, index) => {
+                    if (index === currentSlide) {
+                        indicator.classList.add('active');
+                    } else {
+                        indicator.classList.remove('active');
+                    }
+                });
+            }
+
+            function nextSlide() {
+                currentSlide = (currentSlide + 1) % totalSlides;
+                updateSlider();
+            }
+
+            function prevSlide() {
+                currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+                updateSlider();
+            }
+
+            function goToSlide(index) {
+                currentSlide = index;
+                updateSlider();
+            }
+
+            // Обработчики событий
+            if (nextBtn) {
+                nextBtn.addEventListener('click', nextSlide);
+            }
+
+            if (prevBtn) {
+                prevBtn.addEventListener('click', prevSlide);
+            }
+
+            // Автопрокрутка (опционально)
+            let autoplayInterval;
+            function startAutoplay() {
+                autoplayInterval = setInterval(nextSlide, 5000);
+            }
+
+            function stopAutoplay() {
+                if (autoplayInterval) {
+                    clearInterval(autoplayInterval);
+                }
+            }
+
+            // Остановка автопрокрутки при наведении
+            samoletSlider.addEventListener('mouseenter', stopAutoplay);
+            samoletSlider.addEventListener('mouseleave', startAutoplay);
+
+            // Запуск автопрокрутки
+            startAutoplay();
+
+            // Поддержка клавиатуры
+            samoletSlider.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') {
+                    prevSlide();
+                } else if (e.key === 'ArrowRight') {
+                    nextSlide();
+                }
+            });
+
+            // Поддержка свайпов на мобильных устройствах
+            let touchStartX = 0;
+            let touchEndX = 0;
+
+            track.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+
+            track.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            }, { passive: true });
+
+            function handleSwipe() {
+                const swipeThreshold = 50;
+                const diff = touchStartX - touchEndX;
+                
+                if (Math.abs(diff) > swipeThreshold) {
+                    if (diff > 0) {
+                        nextSlide();
+                    } else {
+                        prevSlide();
+                    }
+                }
+            }
+        }
+
+        // Слайдер для зала Руфер
+        const ruferSlider = document.getElementById('ruferSlider');
+        if (ruferSlider) {
+            const track = document.getElementById('ruferTrack');
+            const slides = track.querySelectorAll('.room-slide');
+            const prevBtn = ruferSlider.querySelector('.prev');
+            const nextBtn = ruferSlider.querySelector('.next');
+            const indicatorsContainer = document.getElementById('ruferIndicators');
+            
+            let currentSlide = 0;
+            const totalSlides = slides.length;
+
+            // Создание индикаторов
+            for (let i = 0; i < totalSlides; i++) {
+                const indicator = document.createElement('button');
+                indicator.className = 'room-slider-indicator';
+                if (i === 0) indicator.classList.add('active');
+                indicator.setAttribute('aria-label', `Перейти к слайду ${i + 1}`);
+                indicator.addEventListener('click', () => goToSlide(i));
+                indicatorsContainer.appendChild(indicator);
+            }
+
+            const indicators = indicatorsContainer.querySelectorAll('.room-slider-indicator');
+
+            function updateSlider() {
+                track.style.transform = `translateX(-${currentSlide * 100}%)`;
+                
+                // Обновление индикаторов
+                indicators.forEach((indicator, index) => {
+                    if (index === currentSlide) {
+                        indicator.classList.add('active');
+                    } else {
+                        indicator.classList.remove('active');
+                    }
+                });
+            }
+
+            function nextSlide() {
+                currentSlide = (currentSlide + 1) % totalSlides;
+                updateSlider();
+            }
+
+            function prevSlide() {
+                currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+                updateSlider();
+            }
+
+            function goToSlide(index) {
+                currentSlide = index;
+                updateSlider();
+            }
+
+            // Обработчики событий
+            if (nextBtn) {
+                nextBtn.addEventListener('click', nextSlide);
+            }
+
+            if (prevBtn) {
+                prevBtn.addEventListener('click', prevSlide);
+            }
+
+            // Автопрокрутка (опционально)
+            let autoplayInterval;
+            function startAutoplay() {
+                autoplayInterval = setInterval(nextSlide, 5000);
+            }
+
+            function stopAutoplay() {
+                if (autoplayInterval) {
+                    clearInterval(autoplayInterval);
+                }
+            }
+
+            // Остановка автопрокрутки при наведении
+            ruferSlider.addEventListener('mouseenter', stopAutoplay);
+            ruferSlider.addEventListener('mouseleave', startAutoplay);
+
+            // Запуск автопрокрутки
+            startAutoplay();
+
+            // Поддержка клавиатуры
+            ruferSlider.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') {
+                    prevSlide();
+                } else if (e.key === 'ArrowRight') {
+                    nextSlide();
+                }
+            });
+
+            // Поддержка свайпов на мобильных устройствах
+            let touchStartX = 0;
+            let touchEndX = 0;
+
+            track.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+
+            track.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            }, { passive: true });
+
+            function handleSwipe() {
+                const swipeThreshold = 50;
+                const diff = touchStartX - touchEndX;
+                
+                if (Math.abs(diff) > swipeThreshold) {
+                    if (diff > 0) {
+                        nextSlide();
+                    } else {
+                        prevSlide();
+                    }
+                }
+            }
+        }
+
+        // Слайдер для зала Пулька
+        const pulkaSlider = document.getElementById('pulkaSlider');
+        if (pulkaSlider) {
+            const track = document.getElementById('pulkaTrack');
+            const slides = track.querySelectorAll('.room-slide');
+            const prevBtn = pulkaSlider.querySelector('.prev');
+            const nextBtn = pulkaSlider.querySelector('.next');
+            const indicatorsContainer = document.getElementById('pulkaIndicators');
+            
+            let currentSlide = 0;
+            const totalSlides = slides.length;
+
+            // Создание индикаторов
+            for (let i = 0; i < totalSlides; i++) {
+                const indicator = document.createElement('button');
+                indicator.className = 'room-slider-indicator';
+                if (i === 0) indicator.classList.add('active');
+                indicator.setAttribute('aria-label', `Перейти к слайду ${i + 1}`);
+                indicator.addEventListener('click', () => goToSlide(i));
+                indicatorsContainer.appendChild(indicator);
+            }
+
+            const indicators = indicatorsContainer.querySelectorAll('.room-slider-indicator');
+
+            function updateSlider() {
+                track.style.transform = `translateX(-${currentSlide * 100}%)`;
+                
+                // Обновление индикаторов
+                indicators.forEach((indicator, index) => {
+                    if (index === currentSlide) {
+                        indicator.classList.add('active');
+                    } else {
+                        indicator.classList.remove('active');
+                    }
+                });
+            }
+
+            function nextSlide() {
+                currentSlide = (currentSlide + 1) % totalSlides;
+                updateSlider();
+            }
+
+            function prevSlide() {
+                currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+                updateSlider();
+            }
+
+            function goToSlide(index) {
+                currentSlide = index;
+                updateSlider();
+            }
+
+            // Обработчики событий
+            if (nextBtn) {
+                nextBtn.addEventListener('click', nextSlide);
+            }
+
+            if (prevBtn) {
+                prevBtn.addEventListener('click', prevSlide);
+            }
+
+            // Автопрокрутка (опционально)
+            let autoplayInterval;
+            function startAutoplay() {
+                autoplayInterval = setInterval(nextSlide, 5000);
+            }
+
+            function stopAutoplay() {
+                if (autoplayInterval) {
+                    clearInterval(autoplayInterval);
+                }
+            }
+
+            // Остановка автопрокрутки при наведении
+            pulkaSlider.addEventListener('mouseenter', stopAutoplay);
+            pulkaSlider.addEventListener('mouseleave', startAutoplay);
+
+            // Запуск автопрокрутки
+            startAutoplay();
+
+            // Поддержка клавиатуры
+            pulkaSlider.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') {
+                    prevSlide();
+                } else if (e.key === 'ArrowRight') {
+                    nextSlide();
+                }
+            });
+
+            // Поддержка свайпов на мобильных устройствах
+            let touchStartX = 0;
+            let touchEndX = 0;
+
+            track.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+
+            track.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            }, { passive: true });
+
+            function handleSwipe() {
+                const swipeThreshold = 50;
+                const diff = touchStartX - touchEndX;
+                
+                if (Math.abs(diff) > swipeThreshold) {
+                    if (diff > 0) {
+                        nextSlide();
+                    } else {
+                        prevSlide();
+                    }
+                }
+            }
+        }
+    </script>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-logo">
+                <img src="images/logo.png" alt="ARMALOFT">
+            </div>
+            <nav class="footer-nav">
+                <a href="#" class="footer-nav-link">Главная</a>
+                <a href="#" class="footer-nav-link">Правила</a>
+                <a href="dogovor.html" class="footer-nav-link">Договор</a>
+                <a href="kontakty.html" class="footer-nav-link">Контакты</a>
+            </nav>
+            <div class="footer-right">
+                <div class="footer-contact">
+                    <a href="tel:+79296535982" class="footer-phone">+79296535982</a>
+                    <div class="footer-address">
+                        м. Курская, Нижний Сусальный пер 5 стр 10
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p class="footer-copyright">© 2025 Armaloft All Rights Reserved</p>
+        </div>
+    </footer>
+</body>
+</html>

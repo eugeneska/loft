@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arma Loft - Зал Армалофт</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700;800;900&family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(to bottom, #3A3A3A 0%, #3A3A3A 27.5%, #F5F5DC 27.5%, #F5F5DC 100%);
+            color: #2C2C2C;
+            overflow-x: hidden;
+            font-weight: 400;
+            min-height: 100vh;
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 35px 60px;
+            transition: all 0.3s ease;
+            background: rgba(44, 44, 44, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        header.scrolled {
+            background: rgba(44, 44, 44, 0.98);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header-logo {
+            height: auto;
+            width: 150px;
+            max-width: 150px;
+        }
+
+        .header-logo img {
+            width: 100%;
+            height: auto;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .nav-item {
+            position: relative;
+        }
+
+        .nav-link {
+            color: #FFFFF0;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 400;
+            transition: color 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-transform: uppercase;
+        }
+
+        .nav-link:hover {
+            color: #CC7A6F;
+        }
+
+        .nav-link::after {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 7px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 7'%3E%3Cpath d='M4 7L0.5 0.5L7.5 0.5Z' fill='%23FFFFF0' stroke='%23FFFFF0' stroke-width='0.3' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            margin-left: 5px;
+            transition: transform 0.3s ease;
+            vertical-align: middle;
+        }
+
+        .nav-item:not(.has-dropdown) .nav-link::after {
+            display: none;
+        }
+
+        .nav-link:hover::after {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 7'%3E%3Cpath d='M4 7L0.5 0.5L7.5 0.5Z' fill='%23CC7A6F' stroke='%23CC7A6F' stroke-width='0.3' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E");
+        }
+
+        .dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: rgba(58, 58, 58, 0.98);
+            backdrop-filter: blur(10px);
+            min-width: 200px;
+            padding: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            list-style: none;
+        }
+
+        .nav-item:hover .dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            display: block;
+            padding: 12px 20px;
+            color: #FFFFF0;
+            text-decoration: none;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(204, 122, 111, 0.2);
+            color: #CC7A6F;
+            padding-left: 25px;
+        }
+
+        /* Основной контент */
+        .room-detail-page {
+            padding-top: 120px;
+            min-height: 100vh;
+        }
+
+        .room-detail-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 60px;
+        }
+
+        .room-detail-title {
+            font-size: 48px;
+            font-weight: 700;
+            color: #FFFFF0;
+            text-transform: uppercase;
+            font-family: 'Jost', sans-serif;
+            margin-bottom: 60px;
+            text-align: center;
+        }
+
+        /* Галерея и форма */
+        .room-main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 40px;
+            margin-bottom: 80px;
+        }
+
+        /* Галерея */
+        .room-gallery {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #2C2C2C;
+        }
+
+        .room-gallery-slider {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            overflow: hidden;
+        }
+
+        .room-gallery-track {
+            display: flex;
+            transition: transform 0.5s ease;
+            height: 100%;
+        }
+
+        .room-gallery-slide {
+            min-width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .room-gallery-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .room-gallery-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .room-gallery-nav:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .room-gallery-nav.prev {
+            left: 20px;
+        }
+
+        .room-gallery-nav.next {
+            right: 20px;
+        }
+
+        .room-gallery-nav svg {
+            width: 24px;
+            height: 24px;
+            fill: #FFFFF0;
+        }
+
+        .room-gallery-indicators {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .room-gallery-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .room-gallery-indicator.active {
+            background: #CC7A6F;
+            width: 30px;
+            border-radius: 6px;
+        }
+
+        /* Форма бронирования */
+        .booking-form-container {
+            background: #3A3A3A;
+            padding: 40px;
+            border-radius: 16px;
+            height: fit-content;
+        }
+
+        .booking-form-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #FFFFF0;
+            text-transform: uppercase;
+            font-family: 'Jost', sans-serif;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .booking-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .booking-form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .booking-form-time-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .booking-form-time-group > label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #FFFFF0;
+            text-transform: uppercase;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .booking-form-time-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .booking-form-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #FFFFF0;
+            text-transform: uppercase;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .booking-form-group input,
+        .booking-form-group select {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid rgba(44, 44, 44, 0.2);
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: 'Montserrat', sans-serif;
+            color: #2C2C2C;
+            background: #F5F5DC;
+            transition: all 0.3s ease;
+        }
+
+        .booking-form-group input:focus,
+        .booking-form-group select:focus {
+            outline: none;
+            border-color: #CC7A6F;
+            box-shadow: 0 0 0 3px rgba(204, 122, 111, 0.2);
+        }
+
+        .booking-form-button {
+            padding: 16px 32px;
+            background: #CC7A6F;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            font-family: 'Montserrat', sans-serif;
+            margin-top: 10px;
+        }
+
+        .booking-form-button:hover {
+            background: #b86a60;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(204, 122, 111, 0.3);
+        }
+
+        /* Описание зала */
+        .room-description {
+            background: transparent;
+            padding: 60px;
+            border-radius: 16px;
+            margin-bottom: 60px;
+        }
+
+        .room-description-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2C2C2C;
+            text-transform: uppercase;
+            font-family: 'Jost', sans-serif;
+            margin-bottom: 40px;
+        }
+
+        .room-characteristics {
+            margin-bottom: 50px;
+        }
+
+        .room-characteristics-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2C2C2C;
+            text-transform: uppercase;
+            font-family: 'Jost', sans-serif;
+            margin-bottom: 30px;
+        }
+
+        .room-characteristic-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            font-size: 18px;
+            color: #2C2C2C;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .room-characteristic-icon {
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+        }
+
+        .room-characteristic-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: #CC7A6F;
+        }
+
+        .room-features-section {
+            margin-bottom: 50px;
+        }
+
+        .room-features-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2C2C2C;
+            text-transform: uppercase;
+            font-family: 'Jost', sans-serif;
+            margin-bottom: 30px;
+        }
+
+        .room-features-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        .room-features-column {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .room-features-column-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #CC7A6F;
+            text-transform: uppercase;
+            font-family: 'Montserrat', sans-serif;
+            margin-bottom: 15px;
+        }
+
+        .room-feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 16px;
+            color: #2C2C2C;
+            font-family: 'Montserrat', sans-serif;
+            line-height: 1.6;
+        }
+
+        .room-feature-check {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .room-feature-check svg {
+            width: 100%;
+            height: 100%;
+            fill: #CC7A6F;
+        }
+
+        .room-note {
+            margin-top: 40px;
+            padding: 30px;
+            background: rgba(204, 122, 111, 0.1);
+            border-left: 4px solid #CC7A6F;
+            border-radius: 8px;
+        }
+
+        .room-note-text {
+            font-size: 16px;
+            color: #2C2C2C;
+            font-family: 'Montserrat', sans-serif;
+            line-height: 1.8;
+        }
+
+        /* Другие залы */
+        .other-rooms-section {
+            margin-bottom: 60px;
+        }
+
+        .other-rooms-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #CC7A6F;
+            text-transform: uppercase;
+            font-family: 'Jost', sans-serif;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .other-rooms-slider {
+            position: relative;
+            overflow: visible;
+            padding: 0;
+        }
+
+        .other-rooms-track {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+        }
+
+        .other-room-card {
+            background: transparent;
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .other-room-card:hover {
+            transform: translateY(-5px);
+        }
+
+        /* Слайдер фотографий в карточках */
+        .other-room-slider {
+            position: relative;
+            width: 100%;
+            margin-bottom: 40px;
+        }
+
+        .other-room-slider-wrapper {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            border-radius: 16px;
+        }
+
+        .other-room-slider-track {
+            display: flex;
+            transition: transform 0.5s ease;
+        }
+
+        .other-room-slide {
+            min-width: 100%;
+            height: 400px;
+            position: relative;
+        }
+
+        .other-room-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .other-room-slider-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 10;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .other-room-slider-nav:hover {
+            background: #CC7A6F;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .other-room-slider-nav:hover svg {
+            fill: #FFFFF0;
+        }
+
+        .other-room-slider-nav.prev {
+            left: 20px;
+        }
+
+        .other-room-slider-nav.next {
+            right: 20px;
+        }
+
+        .other-room-slider-nav svg {
+            width: 24px;
+            height: 24px;
+            fill: #3A3A3A;
+            transition: fill 0.3s ease;
+        }
+
+        .other-room-slider-indicators {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .other-room-slider-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(58, 58, 58, 0.3);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 0;
+        }
+
+        .other-room-slider-indicator.active {
+            background: #CC7A6F;
+            transform: scale(1.2);
+        }
+
+        .other-room-info {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .other-room-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .other-room-name {
+            font-size: 32px;
+            font-weight: 700;
+            color: #3A3A3A;
+            text-transform: uppercase;
+            font-family: 'Jost', sans-serif;
+            letter-spacing: 2px;
+            margin: 0;
+        }
+
+        .other-room-feature {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .other-room-feature-icon {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+
+        .other-room-feature-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: #CC7A6F;
+        }
+
+        .other-room-feature span {
+            font-size: 16px;
+            color: #3A3A3A;
+            font-weight: 400;
+            line-height: 1.5;
+            font-family: 'Montserrat', sans-serif;
+            text-transform: uppercase;
+        }
+
+        .other-room-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: #CC7A6F;
+            font-size: 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-family: 'Montserrat', sans-serif;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid #CC7A6F;
+            padding-bottom: 2px;
+            align-self: flex-start;
+        }
+
+        .other-room-link:hover {
+            color: #b86a60;
+            border-bottom-color: #b86a60;
+            transform: translateX(5px);
+        }
+
+        .other-room-link-icon {
+            width: 20px;
+            height: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .other-room-link:hover .other-room-link-icon {
+            transform: translate(3px, -3px);
+        }
+
+        .other-room-link-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .other-room-link-icon svg path {
+            stroke: #CC7A6F;
+            transition: stroke 0.3s ease;
+        }
+
+        .other-room-link:hover .other-room-link-icon svg path {
+            stroke: #b86a60;
+        }
+
+        .other-rooms-nav {
+            display: none;
+        }
+
+        .other-rooms-nav:hover {
+            background: #CC7A6F;
+        }
+
+        .other-rooms-nav:hover svg {
+            fill: #FFFFF0;
+        }
+
+        .other-rooms-nav.prev {
+            left: -20px;
+        }
+
+        .other-rooms-nav.next {
+            right: -20px;
+        }
+
+        .other-rooms-nav svg {
+            width: 20px;
+            height: 20px;
+            fill: #CC7A6F;
+            transition: fill 0.3s ease;
+        }
+
+        .other-rooms-nav:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Футер */
+        footer {
+            background: #2C2C2C;
+            padding: 60px 60px 40px;
+            color: #FFFFF0;
+        }
+
+        .footer-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 60px;
+            align-items: start;
+        }
+
+        .footer-logo {
+            width: 150px;
+            height: auto;
+            margin-left: 100px;
+            margin-top: 40px;
+        }
+
+        .footer-logo img {
+            width: 100%;
+            height: auto;
+        }
+
+        .footer-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .footer-nav-link {
+            color: #FFFFF0;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 400;
+            font-family: 'Montserrat', sans-serif;
+            text-transform: uppercase;
+            transition: color 0.3s ease;
+            display: inline-block;
+        }
+
+        .footer-nav-link:hover {
+            color: #CC7A6F;
+        }
+
+        .footer-right {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .footer-contact {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .footer-phone {
+            font-size: 18px;
+            color: #FFFFF0;
+            font-weight: 600;
+            font-family: 'Montserrat', sans-serif;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-phone:hover {
+            color: #CC7A6F;
+        }
+
+        .footer-address {
+            font-size: 14px;
+            color: #FFFFF0;
+            line-height: 1.6;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .footer-bottom {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 240, 0.2);
+            text-align: center;
+        }
+
+        .footer-copyright {
+            font-size: 12px;
+            color: #FFFFF0;
+            font-family: 'Montserrat', sans-serif;
+            opacity: 0.7;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 1024px) {
+            .room-main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .room-gallery-slider {
+                height: 500px;
+            }
+
+            .room-features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .other-rooms-track {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 30px;
+            }
+
+            .footer-container {
+                grid-template-columns: 1fr;
+                gap: 40px;
+                text-align: center;
+            }
+
+            .footer-logo {
+                margin: 0 auto;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 20px 20px;
+            }
+
+            .room-detail-container {
+                padding: 40px 20px;
+            }
+
+            .room-detail-title {
+                font-size: 32px;
+                margin-bottom: 40px;
+            }
+
+            .room-gallery-slider {
+                height: 400px;
+            }
+
+            .booking-form-container {
+                padding: 30px;
+            }
+
+            .room-description {
+                padding: 40px 30px;
+            }
+
+            .booking-form-time-row {
+                gap: 10px;
+            }
+
+            footer {
+                padding: 40px 20px 30px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .room-detail-title {
+                font-size: 24px;
+            }
+
+            .room-gallery-slider {
+                height: 300px;
+            }
+
+            .room-gallery-nav {
+                width: 40px;
+                height: 40px;
+            }
+
+            .room-description {
+                padding: 30px 20px;
+            }
+
+            .room-description-title {
+                font-size: 24px;
+            }
+
+            .booking-form-time-row {
+                gap: 8px;
+            }
+
+            .other-rooms-section {
+                margin-bottom: 40px;
+            }
+
+            .other-rooms-title {
+                font-size: 24px;
+                margin-bottom: 30px;
+            }
+
+            .other-rooms-track {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .other-rooms-track {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header id="header">
+        <div class="header-content">
+            <div class="header-logo">
+                <a href="index.html"><img src="images/logo.png" alt="ARMALOFT"></a>
+            </div>
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item has-dropdown">
+                        <a href="#" class="nav-link">Аренда</a>
+                        <ul class="dropdown">
+                            <li><a href="index.html" class="dropdown-item">Залы</a></li>
+                            <li><a href="https://example.com" target="_blank" class="dropdown-item">Антикафе</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item has-dropdown">
+                        <a href="#" class="nav-link">Услуги</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#contract" class="nav-link">Договор</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#location" class="nav-link">Контакты</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="room-detail-page">
+        <div class="room-detail-container">
+            <h1 class="room-detail-title">АРМАЛОФТ</h1>
+
+            <div class="room-main-content">
+                <!-- Галерея -->
+                <div class="room-gallery">
+                    <div class="room-gallery-slider" id="gallerySlider">
+                        <div class="room-gallery-track" id="galleryTrack">
+                            <div class="room-gallery-slide">
+                                <img src="photos/armaloft/armaloft1.jpg" alt="Arma Loft - фото 1">
+                            </div>
+                            <div class="room-gallery-slide">
+                                <img src="photos/armaloft/armaloft2.jpg" alt="Arma Loft - фото 2">
+                            </div>
+                            <div class="room-gallery-slide">
+                                <img src="photos/armaloft/armaloft3.jpg" alt="Arma Loft - фото 3">
+                            </div>
+                            <div class="room-gallery-slide">
+                                <img src="photos/armaloft/armaloft4.jpg" alt="Arma Loft - фото 4">
+                            </div>
+                            <div class="room-gallery-slide">
+                                <img src="photos/armaloft/armaloft5.jpg" alt="Arma Loft - фото 5">
+                            </div>
+                            <div class="room-gallery-slide">
+                                <img src="photos/armaloft/armaloft6.jpg" alt="Arma Loft - фото 6">
+                            </div>
+                            <div class="room-gallery-slide">
+                                <img src="photos/armaloft/armaloft7.jpg" alt="Arma Loft - фото 7">
+                            </div>
+                            <div class="room-gallery-slide">
+                                <img src="photos/armaloft/armaloft8.jpg" alt="Arma Loft - фото 8">
+                            </div>
+                        </div>
+                        <button class="room-gallery-nav prev" aria-label="Предыдущее фото">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                            </svg>
+                        </button>
+                        <button class="room-gallery-nav next" aria-label="Следующее фото">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                            </svg>
+                        </button>
+                        <div class="room-gallery-indicators" id="galleryIndicators"></div>
+                    </div>
+                </div>
+
+                <!-- Форма бронирования -->
+                <div class="booking-form-container">
+                    <h2 class="booking-form-title">Бронирование зала</h2>
+                    <form class="booking-form" id="bookingForm">
+                        <div class="booking-form-group">
+                            <label for="booking-date">Дата</label>
+                            <input type="date" id="booking-date" name="date" required>
+                        </div>
+                        <div class="booking-form-time-group">
+                            <label>Время</label>
+                            <div class="booking-form-time-row">
+                                <div class="booking-form-group">
+                                    <select id="booking-time-from" name="time-from" required>
+                                        <option value="" selected>От</option>
+                                        <option value="00:00">00:00</option>
+                                        <option value="01:00">01:00</option>
+                                        <option value="02:00">02:00</option>
+                                        <option value="03:00">03:00</option>
+                                        <option value="04:00">04:00</option>
+                                        <option value="05:00">05:00</option>
+                                        <option value="06:00">06:00</option>
+                                        <option value="07:00">07:00</option>
+                                        <option value="08:00">08:00</option>
+                                        <option value="09:00">09:00</option>
+                                        <option value="10:00">10:00</option>
+                                        <option value="11:00">11:00</option>
+                                        <option value="12:00">12:00</option>
+                                        <option value="13:00">13:00</option>
+                                        <option value="14:00">14:00</option>
+                                        <option value="15:00">15:00</option>
+                                        <option value="16:00">16:00</option>
+                                        <option value="17:00">17:00</option>
+                                        <option value="18:00">18:00</option>
+                                        <option value="19:00">19:00</option>
+                                        <option value="20:00">20:00</option>
+                                        <option value="21:00">21:00</option>
+                                        <option value="22:00">22:00</option>
+                                        <option value="23:00">23:00</option>
+                                    </select>
+                                </div>
+                                <div class="booking-form-group">
+                                    <select id="booking-time-to" name="time-to" required>
+                                        <option value="" selected>До</option>
+                                        <option value="00:00">00:00</option>
+                                        <option value="01:00">01:00</option>
+                                        <option value="02:00">02:00</option>
+                                        <option value="03:00">03:00</option>
+                                        <option value="04:00">04:00</option>
+                                        <option value="05:00">05:00</option>
+                                        <option value="06:00">06:00</option>
+                                        <option value="07:00">07:00</option>
+                                        <option value="08:00">08:00</option>
+                                        <option value="09:00">09:00</option>
+                                        <option value="10:00">10:00</option>
+                                        <option value="11:00">11:00</option>
+                                        <option value="12:00">12:00</option>
+                                        <option value="13:00">13:00</option>
+                                        <option value="14:00">14:00</option>
+                                        <option value="15:00">15:00</option>
+                                        <option value="16:00">16:00</option>
+                                        <option value="17:00">17:00</option>
+                                        <option value="18:00">18:00</option>
+                                        <option value="19:00">19:00</option>
+                                        <option value="20:00">20:00</option>
+                                        <option value="21:00">21:00</option>
+                                        <option value="22:00">22:00</option>
+                                        <option value="23:00">23:00</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="booking-form-group">
+                            <label for="booking-guests">Количество гостей</label>
+                            <select id="booking-guests" name="guests" required>
+                                <option value="">Выберите количество</option>
+                                <option value="1-10">1-10</option>
+                                <option value="10-20">10-20</option>
+                                <option value="20-50">20-50</option>
+                                <option value="50-80">50-80</option>
+                                <option value="80-120">80-120</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="booking-form-button">Забронировать</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Описание зала -->
+            <div class="room-description">
+
+                <!-- Характеристики -->
+                <div class="room-characteristics">
+                    <h3 class="room-characteristics-title">Характеристики</h3>
+                    <div class="room-characteristic-item">
+                        <div class="room-characteristic-icon">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z" fill="#CC7A6F"/>
+                            </svg>
+                        </div>
+                        <span>ДВУХУРОВНЕВЫЙ ЗАЛ. НИЖНИЙ УРОВЕНЬ - 120M², ВЕРХНИЙ 50M²</span>
+                    </div>
+                    <div class="room-characteristic-item">
+                        <div class="room-characteristic-icon">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="#CC7A6F"/>
+                            </svg>
+                        </div>
+                        <span>ДО 120 ЧЕЛОВЕК</span>
+                    </div>
+                </div>
+
+                <!-- Что находится в зале -->
+                <div class="room-features-section">
+                    <h3 class="room-features-title">Что находится в зале?</h3>
+                    <div class="room-features-grid">
+                        <div class="room-features-column">
+                            <div class="room-features-column-title">Внизу</div>
+                            <div class="room-feature-item">
+                                <div class="room-feature-check">
+                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill="#CC7A6F"/>
+                                    </svg>
+                                </div>
+                                <span>Танцпол с профессиональным светом, звуком и дымом</span>
+                            </div>
+                            <div class="room-feature-item">
+                                <div class="room-feature-check">
+                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill="#CC7A6F"/>
+                                    </svg>
+                                </div>
+                                <span>Барная стойка</span>
+                            </div>
+                            <div class="room-feature-item">
+                                <div class="room-feature-check">
+                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill="#CC7A6F"/>
+                                    </svg>
+                                </div>
+                                <span>Экран для проекции шириной 6 метров для просмотра фильмов и караоке</span>
+                            </div>
+                        </div>
+                        <div class="room-features-column">
+                            <div class="room-features-column-title">Вверху</div>
+                            <div class="room-feature-item">
+                                <div class="room-feature-check">
+                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill="#CC7A6F"/>
+                                    </svg>
+                                </div>
+                                <span>Столы для «ресторанной» рассадки гостей</span>
+                            </div>
+                            <div class="room-feature-item">
+                                <div class="room-feature-check">
+                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill="#CC7A6F"/>
+                                    </svg>
+                                </div>
+                                <span>VIP зона</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Примечание -->
+                <div class="room-note">
+                    <p class="room-note-text">
+                        <strong>Примечание:</strong> Arma Loft – находится в нескольких минутах ходьбы от кольцевой станции метро Курская, что делает его легко доступным для гостей. Самый большой зал, предназначен для крупных (в том числе ночных) мероприятий, а также для большого кино. Имеет отдельный вход с улицы.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Другие залы -->
+            <div class="other-rooms-section">
+                <h2 class="other-rooms-title">Другие залы</h2>
+                <div class="other-rooms-slider" id="otherRoomsSlider">
+                    <button class="other-rooms-nav prev" id="otherRoomsPrev" aria-label="Предыдущие залы">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                        </svg>
+                    </button>
+                    <button class="other-rooms-nav next" id="otherRoomsNext" aria-label="Следующие залы">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                        </svg>
+                    </button>
+                    <div class="other-rooms-track" id="otherRoomsTrack">
+                        <div class="other-room-card">
+                            <div class="other-room-slider" id="merkuriSlider">
+                                <div class="other-room-slider-wrapper">
+                                    <div class="other-room-slider-track" id="merkuriTrack">
+                                        <div class="other-room-slide">
+                                            <img src="photos/merkuri/merkuri1.jpg" alt="Меркури - фото 1">
+                                        </div>
+                                        <div class="other-room-slide">
+                                            <img src="photos/merkuri/merkuri2.jpg" alt="Меркури - фото 2">
+                                        </div>
+                                        <div class="other-room-slide">
+                                            <img src="photos/merkuri/merkuri3.jpg" alt="Меркури - фото 3">
+                                        </div>
+                                        <div class="other-room-slide">
+                                            <img src="photos/merkuri/merkuri4.jpg" alt="Меркури - фото 4">
+                                        </div>
+                                        <div class="other-room-slide">
+                                            <img src="photos/merkuri/merkuri5.jpg" alt="Меркури - фото 5">
+                                        </div>
+                                        <div class="other-room-slide">
+                                            <img src="photos/merkuri/merkuri6.jpg" alt="Меркури - фото 6">
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="other-room-slider-nav prev" aria-label="Предыдущее фото">
+                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                                    </svg>
+                                </button>
+                                <button class="other-room-slider-nav next" aria-label="Следующее фото">
+                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                                    </svg>
+                                </button>
+                                <div class="other-room-slider-indicators" id="merkuriIndicators"></div>
+                            </div>
+                            <div class="other-room-info">
+                                <div class="other-room-header-row">
+                                <h3 class="other-room-name">МЕРКУРИ</h3>
+                                    <a href="merkuri.html" class="other-room-link">
+                                        <span>ПОДРОБНЕЕ</span>
+                                        <div class="other-room-link-icon">
+                                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M7 17L17 7M17 7H9M17 7V15" stroke="#CC7A6F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                            </svg>
+                                        </div>
+                                    </a>
+                                </div>
+                                <div class="other-room-feature">
+                                    <div class="other-room-feature-icon">
+                                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z"/>
+                                        </svg>
+                                    </div>
+                                    <span>ПЛОЩАДЬ 70 М²</span>
+                                </div>
+                                <div class="other-room-feature">
+                                    <div class="other-room-feature-icon">
+                                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                        </svg>
+                                    </div>
+                                    <span>ДО 50 ЧЕЛОВЕК</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="other-room-card">
+                            <div class="other-room-slider" id="samoletSlider">
+                                <div class="other-room-slider-wrapper">
+                                    <div class="other-room-slider-track" id="samoletTrack">
+                                        <div class="other-room-slide">
+                                            <img src="photos/samolet/samolet1.jpg" alt="Самолет - фото 1">
+                                        </div>
+                                        <div class="other-room-slide">
+                                            <img src="photos/samolet/samolet2.jpg" alt="Самолет - фото 2">
+                                        </div>
+                                        <div class="other-room-slide">
+                                            <img src="photos/samolet/samolet3.jpg" alt="Самолет - фото 3">
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="other-room-slider-nav prev" aria-label="Предыдущее фото">
+                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                                    </svg>
+                                </button>
+                                <button class="other-room-slider-nav next" aria-label="Следующее фото">
+                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                                    </svg>
+                                </button>
+                                <div class="other-room-slider-indicators" id="samoletIndicators"></div>
+                            </div>
+                            <div class="other-room-info">
+                                <div class="other-room-header-row">
+                                    <h3 class="other-room-name">САМОЛЕТ</h3>
+                                    <a href="samolet.html" class="other-room-link">
+                                    <span>ПОДРОБНЕЕ</span>
+                                    <div class="other-room-link-icon">
+                                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M7 17L17 7M17 7H9M17 7V15" stroke="#CC7A6F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                        </svg>
+                                    </div>
+                                </a>
+                            </div>
+                                <div class="other-room-feature">
+                                    <div class="other-room-feature-icon">
+                                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z"/>
+                                        </svg>
+                                    </div>
+                                    <span>ПЛОЩАДЬ 42 М²</span>
+                                </div>
+                                <div class="other-room-feature">
+                                    <div class="other-room-feature-icon">
+                                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                        </svg>
+                                    </div>
+                                    <span>ДО 20 ЧЕЛОВЕК</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="other-room-card">
+                            <div class="other-room-slider" id="ruferSlider">
+                                <div class="other-room-slider-wrapper">
+                                    <div class="other-room-slider-track" id="ruferTrack">
+                                        <div class="other-room-slide">
+                                            <img src="photos/rufer/rufer1.jpg" alt="Руфер - фото 1">
+                                        </div>
+                                        <div class="other-room-slide">
+                                            <img src="photos/rufer/rufer2.jpg" alt="Руфер - фото 2">
+                                        </div>
+                                        <div class="other-room-slide">
+                                            <img src="photos/rufer/rufer3.jpg" alt="Руфер - фото 3">
+                                        </div>
+                                        <div class="other-room-slide">
+                                            <img src="photos/rufer/rufer4.jpg" alt="Руфер - фото 4">
+                                        </div>
+                                        <div class="other-room-slide">
+                                            <img src="photos/rufer/rufer5.jpg" alt="Руфер - фото 5">
+                                        </div>
+                                        <div class="other-room-slide">
+                                            <img src="photos/rufer/rufer6.jpg" alt="Руфер - фото 6">
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="other-room-slider-nav prev" aria-label="Предыдущее фото">
+                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                                    </svg>
+                                </button>
+                                <button class="other-room-slider-nav next" aria-label="Следующее фото">
+                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                                    </svg>
+                                </button>
+                                <div class="other-room-slider-indicators" id="ruferIndicators"></div>
+                            </div>
+                            <div class="other-room-info">
+                                <div class="other-room-header-row">
+                                    <h3 class="other-room-name">РУФЕР</h3>
+                                    <a href="rufer.html" class="other-room-link">
+                                    <span>ПОДРОБНЕЕ</span>
+                                    <div class="other-room-link-icon">
+                                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M7 17L17 7M17 7H9M17 7V15" stroke="#CC7A6F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                        </svg>
+                                    </div>
+                                </a>
+                            </div>
+                                <div class="other-room-feature">
+                                    <div class="other-room-feature-icon">
+                                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z"/>
+                                        </svg>
+                                    </div>
+                                    <span>ПЛОЩАДЬ 40 М²</span>
+                                </div>
+                                <div class="other-room-feature">
+                                    <div class="other-room-feature-icon">
+                                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                        </svg>
+                                    </div>
+                                    <span>ДО 25 ЧЕЛОВЕК</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="other-room-card">
+                            <div class="other-room-slider" id="pulkaSlider">
+                                <div class="other-room-slider-wrapper">
+                                    <div class="other-room-slider-track" id="pulkaTrack">
+                                        <div class="other-room-slide">
+                                            <img src="photos/pulka/pulka1.jpg" alt="Пулька - фото 1">
+                                        </div>
+                                        <div class="other-room-slide">
+                                            <img src="photos/pulka/pulka2.jpg" alt="Пулька - фото 2">
+                                        </div>
+                                        <div class="other-room-slide">
+                                            <img src="photos/pulka/pulka3.jpg" alt="Пулька - фото 3">
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="other-room-slider-nav prev" aria-label="Предыдущее фото">
+                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                                    </svg>
+                                </button>
+                                <button class="other-room-slider-nav next" aria-label="Следующее фото">
+                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                                    </svg>
+                                </button>
+                                <div class="other-room-slider-indicators" id="pulkaIndicators"></div>
+                            </div>
+                            <div class="other-room-info">
+                                <div class="other-room-header-row">
+                                    <h3 class="other-room-name">ПУЛЬКА</h3>
+                                    <a href="pulka.html" class="other-room-link">
+                                    <span>ПОДРОБНЕЕ</span>
+                                    <div class="other-room-link-icon">
+                                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M7 17L17 7M17 7H9M17 7V15" stroke="#CC7A6F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                        </svg>
+                                    </div>
+                                </a>
+                            </div>
+                                <div class="other-room-feature">
+                                    <div class="other-room-feature-icon">
+                                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z"/>
+                                        </svg>
+                                    </div>
+                                    <span>ПЛОЩАДЬ 18 М²</span>
+                                </div>
+                                <div class="other-room-feature">
+                                    <div class="other-room-feature-icon">
+                                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                        </svg>
+                                    </div>
+                                    <span>ДО 15 ЧЕЛОВЕК</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-logo">
+                <img src="images/logo.png" alt="ARMALOFT">
+            </div>
+            <nav class="footer-nav">
+                <a href="index.html" class="footer-nav-link">Главная</a>
+                <a href="#" class="footer-nav-link">Правила</a>
+                <a href="#contract" class="footer-nav-link">Договор</a>
+                <a href="#location" class="footer-nav-link">Контакты</a>
+            </nav>
+            <div class="footer-right">
+                <div class="footer-contact">
+                    <a href="tel:+79296535982" class="footer-phone">+79296535982</a>
+                    <div class="footer-address">
+                        м. Курская, Нижний Сусальный пер 5 стр 10
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p class="footer-copyright">© 2025 Armaloft All Rights Reserved</p>
+        </div>
+    </footer>
+
+    <script>
+        // Скролл хедера
+        const header = document.getElementById('header');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+
+        // Галерея
+        const gallerySlider = document.getElementById('gallerySlider');
+        const galleryTrack = document.getElementById('galleryTrack');
+        const slides = galleryTrack.querySelectorAll('.room-gallery-slide');
+        const prevBtn = gallerySlider.querySelector('.prev');
+        const nextBtn = gallerySlider.querySelector('.next');
+        const indicatorsContainer = document.getElementById('galleryIndicators');
+        
+        let currentSlide = 0;
+        const totalSlides = slides.length;
+
+        // Создание индикаторов
+        for (let i = 0; i < totalSlides; i++) {
+            const indicator = document.createElement('button');
+            indicator.className = 'room-gallery-indicator';
+            if (i === 0) indicator.classList.add('active');
+            indicator.setAttribute('aria-label', `Перейти к слайду ${i + 1}`);
+            indicator.addEventListener('click', () => goToSlide(i));
+            indicatorsContainer.appendChild(indicator);
+        }
+
+        const indicators = indicatorsContainer.querySelectorAll('.room-gallery-indicator');
+
+        function updateSlider() {
+            galleryTrack.style.transform = `translateX(-${currentSlide * 100}%)`;
+            
+            indicators.forEach((indicator, index) => {
+                if (index === currentSlide) {
+                    indicator.classList.add('active');
+                } else {
+                    indicator.classList.remove('active');
+                }
+            });
+        }
+
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % totalSlides;
+            updateSlider();
+        }
+
+        function prevSlide() {
+            currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+            updateSlider();
+        }
+
+        function goToSlide(index) {
+            currentSlide = index;
+            updateSlider();
+        }
+
+        if (nextBtn) {
+            nextBtn.addEventListener('click', nextSlide);
+        }
+
+        if (prevBtn) {
+            prevBtn.addEventListener('click', prevSlide);
+        }
+
+        // Автопрокрутка
+        let autoplayInterval;
+        function startAutoplay() {
+            autoplayInterval = setInterval(nextSlide, 5000);
+        }
+
+        function stopAutoplay() {
+            if (autoplayInterval) {
+                clearInterval(autoplayInterval);
+            }
+        }
+
+        gallerySlider.addEventListener('mouseenter', stopAutoplay);
+        gallerySlider.addEventListener('mouseleave', startAutoplay);
+        startAutoplay();
+
+        // Поддержка клавиатуры
+        gallerySlider.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                prevSlide();
+            } else if (e.key === 'ArrowRight') {
+                nextSlide();
+            }
+        });
+
+        // Поддержка свайпов
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        galleryTrack.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        galleryTrack.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            const diff = touchStartX - touchEndX;
+            
+            if (Math.abs(diff) > swipeThreshold) {
+                if (diff > 0) {
+                    nextSlide();
+                } else {
+                    prevSlide();
+                }
+            }
+        }
+
+        // Форма бронирования
+        const bookingForm = document.getElementById('bookingForm');
+        bookingForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('Спасибо за бронирование! Мы свяжемся с вами в ближайшее время.');
+            bookingForm.reset();
+        });
+
+        // Установка минимальной даты на сегодня
+        const dateInput = document.getElementById('booking-date');
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.setAttribute('min', today);
+
+        // Слайдеры фотографий в карточках других залов
+        function initRoomSlider(sliderId, trackId, indicatorsId) {
+            const slider = document.getElementById(sliderId);
+            if (!slider) return;
+            
+            const track = document.getElementById(trackId);
+            const slides = track.querySelectorAll('.other-room-slide');
+            const prevBtn = slider.querySelector('.prev');
+            const nextBtn = slider.querySelector('.next');
+            const indicatorsContainer = document.getElementById(indicatorsId);
+            
+            let currentSlide = 0;
+            const totalSlides = slides.length;
+
+            // Создание индикаторов
+            if (indicatorsContainer) {
+                indicatorsContainer.innerHTML = '';
+                for (let i = 0; i < totalSlides; i++) {
+                    const indicator = document.createElement('button');
+                    indicator.className = 'other-room-slider-indicator';
+                    if (i === 0) indicator.classList.add('active');
+                    indicator.setAttribute('aria-label', `Перейти к слайду ${i + 1}`);
+                    indicator.addEventListener('click', () => goToSlide(i));
+                    indicatorsContainer.appendChild(indicator);
+                }
+            }
+
+            const indicators = indicatorsContainer ? indicatorsContainer.querySelectorAll('.other-room-slider-indicator') : [];
+
+            function updateSlider() {
+                track.style.transform = `translateX(-${currentSlide * 100}%)`;
+                
+                indicators.forEach((indicator, index) => {
+                    if (index === currentSlide) {
+                        indicator.classList.add('active');
+                    } else {
+                        indicator.classList.remove('active');
+                    }
+                });
+            }
+
+            function nextSlide() {
+                currentSlide = (currentSlide + 1) % totalSlides;
+                updateSlider();
+            }
+
+            function prevSlide() {
+                currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+                updateSlider();
+            }
+
+            function goToSlide(index) {
+                currentSlide = index;
+                updateSlider();
+            }
+
+            if (nextBtn) {
+                nextBtn.addEventListener('click', nextSlide);
+            }
+
+            if (prevBtn) {
+                prevBtn.addEventListener('click', prevSlide);
+            }
+
+            // Автопрокрутка
+            let autoplayInterval;
+            function startAutoplay() {
+                autoplayInterval = setInterval(nextSlide, 5000);
+            }
+
+            function stopAutoplay() {
+                if (autoplayInterval) {
+                    clearInterval(autoplayInterval);
+                }
+            }
+
+            slider.addEventListener('mouseenter', stopAutoplay);
+            slider.addEventListener('mouseleave', startAutoplay);
+            startAutoplay();
+
+            // Поддержка свайпов
+            let touchStartX = 0;
+            let touchEndX = 0;
+
+            track.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+            track.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+        }, { passive: true });
+
+            function handleSwipe() {
+            const swipeThreshold = 50;
+                const diff = touchStartX - touchEndX;
+            
+            if (Math.abs(diff) > swipeThreshold) {
+                if (diff > 0) {
+                        nextSlide();
+                } else {
+                        prevSlide();
+                    }
+                }
+            }
+        }
+
+        // Инициализация всех слайдеров
+        initRoomSlider('merkuriSlider', 'merkuriTrack', 'merkuriIndicators');
+        initRoomSlider('samoletSlider', 'samoletTrack', 'samoletIndicators');
+        initRoomSlider('ruferSlider', 'ruferTrack', 'ruferIndicators');
+        initRoomSlider('pulkaSlider', 'pulkaTrack', 'pulkaIndicators');
+
+    </script>
+</body>
+</html>

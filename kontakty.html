@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Armaloft - Контакты</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700;800;900&family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: #3A3A3A;
+            color: #2C2C2C;
+            overflow-x: hidden;
+            font-weight: 400;
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 35px 60px;
+            transition: all 0.3s ease;
+            background: rgba(44, 44, 44, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        header.scrolled {
+            background: rgba(44, 44, 44, 0.98);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header-logo {
+            height: auto;
+            width: 150px;
+            max-width: 150px;
+        }
+
+        .header-logo img {
+            width: 100%;
+            height: auto;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .nav-item {
+            position: relative;
+        }
+
+        .nav-link {
+            color: #FFFFF0;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 400;
+            transition: color 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-transform: uppercase;
+        }
+
+        .nav-link:hover {
+            color: #CC7A6F;
+        }
+
+        .nav-link::after {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 7px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 7'%3E%3Cpath d='M4 7L0.5 0.5L7.5 0.5Z' fill='%23FFFFF0' stroke='%23FFFFF0' stroke-width='0.3' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            margin-left: 5px;
+            transition: transform 0.3s ease;
+            vertical-align: middle;
+        }
+
+        .nav-item:not(.has-dropdown) .nav-link::after {
+            display: none;
+        }
+
+        .nav-link:hover::after {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 7'%3E%3Cpath d='M4 7L0.5 0.5L7.5 0.5Z' fill='%23CC7A6F' stroke='%23CC7A6F' stroke-width='0.3' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E");
+        }
+
+        .dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: rgba(58, 58, 58, 0.98);
+            backdrop-filter: blur(10px);
+            min-width: 200px;
+            padding: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            list-style: none;
+        }
+
+        .nav-item:hover .dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            display: block;
+            padding: 12px 20px;
+            color: #FFFFF0;
+            text-decoration: none;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(204, 122, 111, 0.2);
+            color: #CC7A6F;
+            padding-left: 25px;
+        }
+
+        /* Секция "Как нас найти" */
+        .location-section {
+            background: #FFFFF0;
+            padding: 100px 60px;
+            min-height: 100vh;
+            padding-top: 180px;
+        }
+
+        .location-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: start;
+        }
+
+        .location-info {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        .location-title {
+            font-size: 42px;
+            font-weight: 700;
+            color: #3A3A3A;
+            text-transform: uppercase;
+            font-family: 'Jost', sans-serif;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
+
+        .location-item {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .location-item-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .location-icon {
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+        }
+
+        .location-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: #CC7A6F;
+        }
+
+        .location-item-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #3A3A3A;
+            text-transform: uppercase;
+            font-family: 'Jost', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        .location-item-content {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-left: 47px;
+        }
+
+        .location-address {
+            font-size: 16px;
+            color: #3A3A3A;
+            line-height: 1.6;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .location-address-line {
+            display: block;
+        }
+
+        .location-features {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .location-feature-item {
+            font-size: 16px;
+            color: #3A3A3A;
+            line-height: 1.6;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .location-phone {
+            font-size: 18px;
+            color: #3A3A3A;
+            font-weight: 600;
+            font-family: 'Montserrat', sans-serif;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .location-phone:hover {
+            color: #CC7A6F;
+        }
+
+        .location-disclaimer {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #e0e0e0;
+            font-size: 12px;
+            color: #666666;
+            font-family: 'Montserrat', sans-serif;
+            line-height: 1.5;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .location-map {
+            width: 100%;
+            height: 600px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .location-map iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Футер */
+        footer {
+            background: #2C2C2C;
+            padding: 60px 60px 40px;
+            color: #FFFFF0;
+        }
+
+        .footer-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 60px;
+            align-items: start;
+        }
+
+        .footer-logo {
+            width: 150px;
+            height: auto;
+            margin-left: 100px;
+            margin-top: 40px;
+        }
+
+        .footer-logo img {
+            width: 100%;
+            height: auto;
+        }
+
+        .footer-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .footer-nav-link {
+            color: #FFFFF0;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 400;
+            font-family: 'Montserrat', sans-serif;
+            text-transform: uppercase;
+            transition: color 0.3s ease;
+            display: inline-block;
+        }
+
+        .footer-nav-link:hover {
+            color: #CC7A6F;
+        }
+
+        .footer-right {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .footer-contact {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .footer-phone {
+            font-size: 18px;
+            color: #FFFFF0;
+            font-weight: 600;
+            font-family: 'Montserrat', sans-serif;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-phone:hover {
+            color: #CC7A6F;
+        }
+
+        .footer-address {
+            font-size: 14px;
+            color: #FFFFF0;
+            line-height: 1.6;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .footer-bottom {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 240, 0.2);
+            text-align: center;
+        }
+
+        .footer-copyright {
+            font-size: 12px;
+            color: #FFFFF0;
+            font-family: 'Montserrat', sans-serif;
+            opacity: 0.7;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 1024px) {
+            .location-container {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .location-map {
+                height: 500px;
+            }
+
+            .footer-container {
+                grid-template-columns: 1fr;
+                gap: 40px;
+                text-align: center;
+            }
+
+            .footer-logo {
+                margin: 0 auto;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 20px 20px;
+            }
+
+            .location-section {
+                padding: 160px 20px 60px;
+            }
+
+            .location-title {
+                font-size: 28px;
+            }
+
+            .location-info {
+                gap: 30px;
+            }
+
+            .location-item {
+                gap: 15px;
+            }
+
+            .location-icon {
+                width: 28px;
+                height: 28px;
+            }
+
+            .location-item-title {
+                font-size: 18px;
+            }
+
+            .location-item-content {
+                padding-left: 43px;
+            }
+
+            .location-address,
+            .location-feature-item {
+                font-size: 15px;
+            }
+
+            .location-phone {
+                font-size: 16px;
+            }
+
+            .location-map {
+                height: 400px;
+            }
+
+            .location-disclaimer {
+                font-size: 11px;
+                margin-top: 30px;
+                padding-top: 20px;
+            }
+
+            footer {
+                padding: 40px 20px 30px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .location-section {
+                padding: 150px 15px 40px;
+            }
+
+            .location-title {
+                font-size: 24px;
+            }
+
+            .location-info {
+                gap: 25px;
+            }
+
+            .location-item {
+                gap: 12px;
+            }
+
+            .location-icon {
+                width: 24px;
+                height: 24px;
+            }
+
+            .location-item-title {
+                font-size: 16px;
+            }
+
+            .location-item-content {
+                padding-left: 39px;
+            }
+
+            .location-address,
+            .location-feature-item {
+                font-size: 14px;
+            }
+
+            .location-phone {
+                font-size: 15px;
+            }
+
+            .location-map {
+                height: 300px;
+            }
+
+            .location-disclaimer {
+                font-size: 10px;
+                margin-top: 25px;
+                padding-top: 15px;
+            }
+
+            footer {
+                padding: 30px 15px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header id="header">
+        <div class="header-content">
+            <div class="header-logo">
+                <a href="index.html"><img src="images/logo.png" alt="ARMALOFT"></a>
+            </div>
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item has-dropdown">
+                        <a href="#" class="nav-link">Аренда</a>
+                        <ul class="dropdown">
+                            <li><a href="index.html" class="dropdown-item">Залы</a></li>
+                            <li><a href="https://example.com" target="_blank" class="dropdown-item">Антикафе</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item has-dropdown">
+                        <a href="#" class="nav-link">Услуги</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="dogovor.html" class="nav-link">Договор</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="kontakty.html" class="nav-link">Контакты</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <section class="location-section" id="location">
+        <div class="location-container">
+            <div class="location-info">
+                <h2 class="location-title">Как нас найти</h2>
+                <div class="location-item">
+                    <div class="location-item-header">
+                        <div class="location-icon">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                            </svg>
+                        </div>
+                        <h3 class="location-item-title">Адрес</h3>
+                    </div>
+                    <div class="location-item-content">
+                        <div class="location-address">
+                            <span class="location-address-line">Москва м. Курская,</span>
+                            <span class="location-address-line">Нижний Сусальный пер 5 стр 10.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="location-item">
+                    <div class="location-item-header">
+                        <div class="location-icon">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+                            </svg>
+                        </div>
+                        <h3 class="location-item-title">Удобства</h3>
+                    </div>
+                    <div class="location-item-content">
+                        <div class="location-features">
+                            <div class="location-feature-item">Рядом с метро</div>
+                            <div class="location-feature-item">Рядом бесплатный паркинг</div>
+                            <div class="location-feature-item">Легко найти</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="location-item">
+                    <div class="location-item-header">
+                        <div class="location-icon">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                            </svg>
+                        </div>
+                        <h3 class="location-item-title">Телефон</h3>
+                    </div>
+                    <div class="location-item-content">
+                        <a href="tel:+79296535982" class="location-phone">+7 (929) 653-59-82</a>
+                    </div>
+                </div>
+
+                <div class="location-disclaimer">
+                    ИНФОРМАЦИЯ НА САЙТЕ НЕ ЯВЛЯЕТСЯ ПУБЛИЧНОЙ ОФЕРТОЙ
+                </div>
+            </div>
+
+            <div class="location-map">
+                <iframe 
+                    src="https://www.google.com/maps?q=Москва,+Нижний+Сусальный+переулок,+5,+стр.+10&output=embed&zoom=16"
+                    allowfullscreen="" 
+                    loading="lazy" 
+                    referrerpolicy="no-referrer-when-downgrade"
+                    title="Карта расположения">
+                </iframe>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-logo">
+                <img src="images/logo.png" alt="ARMALOFT">
+            </div>
+            <nav class="footer-nav">
+                <a href="index.html" class="footer-nav-link">Главная</a>
+                <a href="#" class="footer-nav-link">Правила</a>
+                <a href="dogovor.html" class="footer-nav-link">Договор</a>
+                <a href="kontakty.html" class="footer-nav-link">Контакты</a>
+            </nav>
+            <div class="footer-right">
+                <div class="footer-contact">
+                    <a href="tel:+79296535982" class="footer-phone">+79296535982</a>
+                    <div class="footer-address">
+                        м. Курская, Нижний Сусальный пер 5 стр 10
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p class="footer-copyright">© 2025 Armaloft All Rights Reserved</p>
+        </div>
+    </footer>
+
+    <script>
+        // Скролл хедера
+        const header = document.getElementById('header');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+    </script>
+</body>
+</html>
+
