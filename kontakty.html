@@ -155,6 +155,174 @@
             padding-left: 25px;
         }
 
+        .mobile-menu-toggle {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 5px;
+            z-index: 1002;
+        }
+
+        .mobile-menu-toggle span {
+            width: 25px;
+            height: 3px;
+            background: #FFFFF0;
+            transition: all 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .mobile-menu-toggle.active span:nth-child(1) {
+            transform: rotate(45deg) translate(8px, 8px);
+        }
+
+        .mobile-menu-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .mobile-menu-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -7px);
+        }
+
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 80%;
+            max-width: 300px;
+            height: 100vh;
+            background: rgba(58, 58, 58, 0.98);
+            backdrop-filter: blur(10px);
+            padding: 100px 30px 30px;
+            transition: right 0.3s ease;
+            z-index: 1001;
+            overflow-y: auto;
+        }
+
+        .mobile-menu.active {
+            right: 0;
+        }
+
+        .mobile-menu-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1002;
+            padding: 0;
+        }
+
+        .mobile-menu-close span {
+            position: absolute;
+            width: 25px;
+            height: 3px;
+            background: #FFFFF0;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-menu-close span:nth-child(1) {
+            transform: rotate(45deg);
+        }
+
+        .mobile-menu-close span:nth-child(2) {
+            transform: rotate(-45deg);
+        }
+
+        .mobile-menu-close:hover span {
+            background: #CC7A6F;
+        }
+
+        .mobile-menu ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .mobile-menu .nav-item {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 15px;
+        }
+
+        .mobile-menu .nav-link {
+            font-size: 18px;
+            padding: 10px 0;
+            text-transform: uppercase;
+        }
+
+        .mobile-menu .nav-link::after {
+            display: none;
+        }
+
+        .mobile-menu .nav-item.has-dropdown .nav-link::after {
+            display: inline-block;
+            content: '';
+            width: 8px;
+            height: 7px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 7'%3E%3Cpath d='M4 7L0.5 0.5L7.5 0.5Z' fill='%23FFFFF0' stroke='%23FFFFF0' stroke-width='0.3' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            margin-left: 5px;
+            transition: transform 0.3s ease;
+            vertical-align: middle;
+        }
+
+        .mobile-menu .nav-item.active .nav-link::after {
+            transform: rotate(180deg);
+        }
+
+        .mobile-menu .dropdown {
+            position: static;
+            opacity: 1;
+            visibility: visible;
+            transform: none;
+            background: transparent;
+            box-shadow: none;
+            margin-top: 10px;
+            padding: 0;
+            display: none;
+            list-style: none;
+        }
+
+        .mobile-menu .nav-item.active .dropdown {
+            display: block;
+        }
+
+        .mobile-menu .dropdown-item {
+            padding: 10px 20px;
+            font-size: 16px;
+            text-transform: uppercase;
+        }
+
+        .mobile-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .mobile-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
         /* Секция "Как нас найти" */
         .location-section {
             background: #FFFFF0;
@@ -413,6 +581,14 @@
                 padding: 20px 20px;
             }
 
+            .nav-menu {
+                display: none;
+            }
+
+            .mobile-menu-toggle {
+                display: flex;
+            }
+
             .location-section {
                 padding: 160px 20px 60px;
             }
@@ -467,6 +643,22 @@
         }
 
         @media (max-width: 480px) {
+            .mobile-menu {
+                width: 90%;
+                padding: 70px 20px 20px;
+            }
+
+            .mobile-menu-close {
+                top: 15px;
+                right: 15px;
+                width: 35px;
+                height: 35px;
+            }
+
+            .mobile-menu-close span {
+                width: 22px;
+            }
+
             .location-section {
                 padding: 150px 15px 40px;
             }
@@ -538,6 +730,12 @@
                     </li>
                     <li class="nav-item has-dropdown">
                         <a href="#" class="nav-link">Услуги</a>
+                        <ul class="dropdown">
+                            <li><a href="index.html#cafe" class="dropdown-item">Кафе</a></li>
+                            <li><a href="index.html#catering" class="dropdown-item">Кейтеринг</a></li>
+                            <li><a href="index.html#photo" class="dropdown-item">Видео и фотосъемки</a></li>
+                            <li><a href="index.html#pylon" class="dropdown-item">Пилон</a></li>
+                        </ul>
                     </li>
                     <li class="nav-item">
                         <a href="dogovor.html" class="nav-link">Договор</a>
@@ -546,9 +744,46 @@
                         <a href="kontakty.html" class="nav-link">Контакты</a>
                     </li>
                 </ul>
+                <button class="mobile-menu-toggle" aria-label="Меню">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
             </nav>
         </div>
     </header>
+
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+    <div class="mobile-menu" id="mobileMenu">
+        <button class="mobile-menu-close" aria-label="Закрыть меню">
+            <span></span>
+            <span></span>
+        </button>
+        <ul>
+            <li class="nav-item has-dropdown">
+                <a href="#" class="nav-link">Аренда</a>
+                <ul class="dropdown">
+                    <li><a href="index.html" class="dropdown-item">Залы</a></li>
+                    <li><a href="https://example.com" target="_blank" class="dropdown-item">Антикафе</a></li>
+                </ul>
+            </li>
+            <li class="nav-item has-dropdown">
+                <a href="#" class="nav-link">Услуги</a>
+                <ul class="dropdown">
+                    <li><a href="index.html#cafe" class="dropdown-item">Кафе</a></li>
+                    <li><a href="index.html#catering" class="dropdown-item">Кейтеринг</a></li>
+                    <li><a href="index.html#photo" class="dropdown-item">Видео и фотосъемки</a></li>
+                    <li><a href="index.html#pylon" class="dropdown-item">Пилон</a></li>
+                </ul>
+            </li>
+            <li class="nav-item">
+                <a href="dogovor.html" class="nav-link">Договор</a>
+            </li>
+            <li class="nav-item">
+                <a href="kontakty.html" class="nav-link">Контакты</a>
+            </li>
+        </ul>
+    </div>
 
     <section class="location-section" id="location">
         <div class="location-container">
@@ -654,6 +889,56 @@
             } else {
                 header.classList.remove('scrolled');
             }
+        });
+
+        // Мобильное меню
+        const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+        const mobileNavItems = mobileMenu.querySelectorAll('.nav-item.has-dropdown');
+
+        function toggleMobileMenu() {
+            mobileMenuToggle.classList.toggle('active');
+            mobileMenu.classList.toggle('active');
+            mobileOverlay.classList.toggle('active');
+            document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
+        }
+
+        if (mobileMenuToggle) {
+            mobileMenuToggle.addEventListener('click', toggleMobileMenu);
+        }
+        if (mobileOverlay) {
+            mobileOverlay.addEventListener('click', toggleMobileMenu);
+        }
+
+        // Кнопка закрытия мобильного меню
+        const mobileMenuClose = document.querySelector('.mobile-menu-close');
+        if (mobileMenuClose) {
+            mobileMenuClose.addEventListener('click', toggleMobileMenu);
+        }
+
+        // Открытие/закрытие подменю в мобильной версии
+        mobileNavItems.forEach(item => {
+            const link = item.querySelector('.nav-link');
+            if (link) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    item.classList.toggle('active');
+                });
+            }
+        });
+
+        // Закрытие меню при клике на ссылку
+        const mobileLinks = mobileMenu.querySelectorAll('a');
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                // Не закрываем меню, если это ссылка с dropdown (подменю)
+                const parentItem = this.closest('.nav-item.has-dropdown');
+                if (!parentItem || this.classList.contains('dropdown-item')) {
+                    // Закрываем только если это не ссылка с подменю или это пункт подменю
+                    toggleMobileMenu();
+                }
+            });
         });
     </script>
 </body>
