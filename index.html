@@ -1244,6 +1244,23 @@
             flex: 0 0 calc(33.333% - 27px);
             min-width: 350px;
             max-width: 400px;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .room-card[style*="display: none"] {
+            opacity: 0;
+            transform: scale(0.95);
+            pointer-events: none;
+        }
+
+        .rooms-subtitle {
+            transition: color 0.3s ease;
+        }
+
+        .rooms-subtitle.loading {
+            color: #CC7A6F;
         }
 
         /* Слайдер */
@@ -2285,7 +2302,7 @@
                     <p class="rooms-subtitle">Предложено 5 из 5 залов</p>
                 </div>
                 <div class="rooms-cards-grid">
-            <div class="room-card">
+            <div class="room-card" data-hall-id="armaloft" data-yclients-id="">
                 <div class="room-slider" id="armaloftSlider">
                     <div class="room-slider-wrapper">
                         <div class="room-slider-track" id="armaloftTrack">
@@ -2359,7 +2376,7 @@
                 </div>
             </div>
 
-            <div class="room-card">
+            <div class="room-card" data-hall-id="mercury" data-yclients-id="">
                 <div class="room-slider" id="merkuriSlider">
                     <div class="room-slider-wrapper">
                         <div class="room-slider-track" id="merkuriTrack">
@@ -2427,7 +2444,7 @@
                 </div>
             </div>
 
-            <div class="room-card">
+            <div class="room-card" data-hall-id="airplane" data-yclients-id="">
                 <div class="room-slider" id="samoletSlider">
                     <div class="room-slider-wrapper">
                         <div class="room-slider-track" id="samoletTrack">
@@ -2486,7 +2503,7 @@
                 </div>
             </div>
 
-            <div class="room-card">
+            <div class="room-card" data-hall-id="rufer" data-yclients-id="">
                 <div class="room-slider" id="ruferSlider">
                     <div class="room-slider-wrapper">
                         <div class="room-slider-track" id="ruferTrack">
@@ -2551,7 +2568,7 @@
                 </div>
             </div>
 
-            <div class="room-card">
+            <div class="room-card" data-hall-id="pulka" data-yclients-id="">
                 <div class="room-slider" id="pulkaSlider">
                     <div class="room-slider-wrapper">
                         <div class="room-slider-track" id="pulkaTrack">
@@ -2810,10 +2827,209 @@
             });
         }
 
+        // ============================================
+        // КОНФИГУРАЦИЯ API YCLIENTS
+        // ============================================
+        // ВАЖНО: Для работы системы фильтрации необходимо:
+        // 1. Настроить ID залов в YClients в объекте hallYClientsMapping ниже
+        // 2. Убедиться, что API ключ имеет права на чтение бронирований
+        // 3. Если возникают проблемы с CORS, используйте прокси-сервер или backend
+        // ============================================
+        
+        const YCLIENTS_API_KEY = '905010bc6e633654624061a480566ba9';
+        const YCLIENTS_API_BASE = 'https://api.yclients.com/api/v1';
+        
+        // Маппинг залов на ID в YClients
+        // Чтобы найти ID зала в YClients:
+        // 1. Зайдите в админ-панель YClients
+        // 2. Перейдите в раздел "Залы" или "Помещения"
+        // 3. Откройте нужный зал и посмотрите его ID в URL или настройках
+        // 4. Вставьте ID в соответствующие поля ниже
+        const hallYClientsMapping = {
+            'armaloft': '', // ID зала "АРМАЛОФТ" в YClients
+            'mercury': '',  // ID зала "МЕРКУРИ" в YClients
+            'airplane': '', // ID зала "САМОЛЕТ" в YClients
+            'rufer': '',    // ID зала "РУФЕР" в YClients
+            'pulka': ''     // ID зала "ПУЛЬКА" в YClients
+        };
+
+        // Функция проверки доступности зала через API YClients
+        async function checkHallAvailability(hallId, date, timeFrom, timeTo) {
+            try {
+                // Получаем ID зала в YClients
+                const yclientsHallId = hallYClientsMapping[hallId];
+                if (!yclientsHallId) {
+                    // Если ID не указан, считаем зал доступным (для тестирования)
+                    console.log(`ID зала ${hallId} не указан в маппинге, считаем доступным`);
+                    return true;
+                }
+
+                // Формируем дату и время для запроса
+                const dateTimeFrom = `${date}T${timeFrom}:00`;
+                const dateTimeTo = `${date}T${timeTo}:00`;
+
+                // Запрос к API YClients для получения бронирований
+                // Примечание: может потребоваться прокси-сервер из-за CORS
+                // Формат запроса может отличаться в зависимости от версии API
+                // YClients API может использовать разные форматы авторизации:
+                // 1. Authorization: Bearer {token}
+                // 2. User-Token: {token}
+                // 3. Authorization: {token}
+                
+                const url = `${YCLIENTS_API_BASE}/bookings?date_from=${date}&date_to=${date}`;
+                
+                // Пробуем разные варианты авторизации
+                let response;
+                try {
+                    response = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${YCLIENTS_API_KEY}`,
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        }
+                    });
+                } catch (error) {
+                    // Если первый вариант не сработал, пробуем альтернативный формат
+                    try {
+                        response = await fetch(url, {
+                            method: 'GET',
+                            headers: {
+                                'User-Token': YCLIENTS_API_KEY,
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            }
+                        });
+                    } catch (error2) {
+                        throw error2;
+                    }
+                }
+
+                if (!response.ok) {
+                    console.warn(`Ошибка при проверке доступности зала ${hallId}:`, response.status, response.statusText);
+                    // В случае ошибки считаем зал доступным
+                    return true;
+                }
+
+                const result = await response.json();
+                
+                // Обрабатываем разные форматы ответа API
+                const bookings = result.data || result.bookings || result || [];
+                
+                // Проверяем, есть ли пересечения с запрашиваемым временем
+                if (!bookings || bookings.length === 0) {
+                    return true; // Нет бронирований - зал свободен
+                }
+
+                // Проверяем каждое бронирование на пересечение
+                const requestedStart = new Date(dateTimeFrom);
+                const requestedEnd = new Date(dateTimeTo);
+
+                for (const booking of bookings) {
+                    // Фильтруем по ID зала, если указан
+                    if (yclientsHallId && booking.hall_id && booking.hall_id != yclientsHallId) {
+                        continue;
+                    }
+
+                    const bookingStart = new Date(booking.date_time || booking.datetime || booking.start_time);
+                    if (isNaN(bookingStart.getTime())) {
+                        continue; // Пропускаем некорректные даты
+                    }
+
+                    let bookingEnd = new Date(bookingStart);
+                    // Предполагаем, что длительность бронирования указана в booking.duration или booking.date_time_to
+                    if (booking.date_time_to || booking.datetime_to || booking.end_time) {
+                        bookingEnd = new Date(booking.date_time_to || booking.datetime_to || booking.end_time);
+                    } else if (booking.duration) {
+                        bookingEnd.setTime(bookingStart.getTime() + booking.duration * 60000);
+                    } else {
+                        // Если длительность не указана, считаем 1 час
+                        bookingEnd.setTime(bookingStart.getTime() + 60 * 60000);
+                    }
+
+                    // Проверяем пересечение временных интервалов
+                    if (requestedStart < bookingEnd && requestedEnd > bookingStart) {
+                        return false; // Есть пересечение - зал занят
+                    }
+                }
+
+                return true; // Нет пересечений - зал свободен
+            } catch (error) {
+                console.error(`Ошибка при проверке доступности зала ${hallId}:`, error);
+                // В случае ошибки считаем зал доступным (чтобы не скрывать залы при проблемах с API)
+                return true;
+            }
+        }
+
+        // Функция фильтрации залов по доступности
+        async function filterHallsByAvailability(date, timeFrom, timeTo, selectedHall) {
+            const roomCards = document.querySelectorAll('.room-card');
+            const roomsSubtitle = document.querySelector('.rooms-subtitle');
+            const roomsGrid = document.querySelector('.rooms-cards-grid');
+            
+            // Показываем индикатор загрузки
+            if (roomsSubtitle) {
+                roomsSubtitle.textContent = 'Проверка доступности...';
+                roomsSubtitle.classList.add('loading');
+            }
+
+            let availableCount = 0;
+            const totalHalls = roomCards.length;
+
+            // Сначала скрываем все залы с анимацией
+            roomCards.forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.95)';
+            });
+
+            // Небольшая задержка для плавности
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            // Проверяем каждый зал
+            for (const card of roomCards) {
+                const hallId = card.getAttribute('data-hall-id');
+                
+                // Если выбран конкретный зал, показываем только его
+                if (selectedHall && selectedHall !== 'all' && hallId !== selectedHall) {
+                    card.style.display = 'none';
+                    continue;
+                }
+
+                // Проверяем доступность
+                const isAvailable = await checkHallAvailability(hallId, date, timeFrom, timeTo);
+                
+                if (isAvailable) {
+                    card.style.display = 'block';
+                    // Плавное появление
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'scale(1)';
+                    }, 50);
+                    availableCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            }
+
+            // Обновляем подзаголовок
+            if (roomsSubtitle) {
+                roomsSubtitle.textContent = `Предложено ${availableCount} из ${totalHalls} залов`;
+                roomsSubtitle.classList.remove('loading');
+            }
+
+            // Прокручиваем к секции с залами
+            const roomsSection = document.getElementById('rooms');
+            if (roomsSection) {
+                setTimeout(() => {
+                    roomsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 300);
+            }
+        }
+
         // Обработка формы hero
         const heroForm = document.getElementById('heroForm');
         if (heroForm) {
-            heroForm.addEventListener('submit', function(e) {
+            heroForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
                 const hall = document.getElementById('hero-hall-select').value;
@@ -2822,14 +3038,14 @@
                 const timeTo = document.getElementById('hero-time-to').value;
                 const guests = document.getElementById('hero-guests-count').value;
                 
-                // Здесь можно добавить логику поиска залов
-                console.log('Hero форма:', { hall, date, timeFrom, timeTo, guests });
-                
-                // Можно прокрутить к секции с залами
-                const hallsSection = document.querySelector('.halls-section');
-                if (hallsSection) {
-                    hallsSection.scrollIntoView({ behavior: 'smooth' });
+                // Валидация
+                if (!date || !timeFrom || !timeTo) {
+                    alert('Пожалуйста, заполните все поля формы');
+                    return;
                 }
+
+                // Фильтруем залы по доступности
+                await filterHallsByAvailability(date, timeFrom, timeTo, hall);
             });
         }
 

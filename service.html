@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Студия Армалофт - Услуги</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700;800;900&family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: #3A3A3A;
+            color: #2C2C2C;
+            overflow-x: hidden;
+            font-weight: 400;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 35px 60px;
+            transition: all 0.3s ease;
+            background: rgba(44, 44, 44, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        header.scrolled {
+            background: rgba(44, 44, 44, 0.98);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header-logo {
+            height: auto;
+            width: 150px;
+            max-width: 150px;
+        }
+
+        .header-logo img {
+            width: 100%;
+            height: auto;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .nav-item {
+            position: relative;
+        }
+
+        .nav-link {
+            color: #FFFFF0;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 400;
+            transition: color 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-transform: uppercase;
+        }
+
+        .nav-link:hover {
+            color: #CC7A6F;
+        }
+
+        .contact-buttons {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .contact-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #CC7A6F;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(204, 122, 111, 0.4);
+            text-decoration: none;
+        }
+
+        .contact-button:hover {
+            background: #b86a60;
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(204, 122, 111, 0.6);
+        }
+
+        .contact-button svg {
+            width: 28px;
+            height: 28px;
+            fill: #3A3A3A;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            background: linear-gradient(rgba(44, 44, 44, 0.6), rgba(44, 44, 44, 0.6)), url('photos/armaloft/armaloft2.jpg') center/cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 60px 60px;
+            text-align: center;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .hero-title {
+            font-size: 5rem;
+            font-weight: 900;
+            color: #FFFFF0;
+            margin-bottom: 50px;
+            line-height: 1.1;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+        }
+
+        .hero-button {
+            background: linear-gradient(135deg, #CC7A6F, #b86a60);
+            color: #FFFFFF;
+            border: none;
+            padding: 20px 40px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            cursor: pointer;
+            border-radius: 50px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            font-family: 'Montserrat', sans-serif;
+            box-shadow: 0 10px 30px rgba(204, 122, 111, 0.4);
+        }
+
+        .hero-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(204, 122, 111, 0.6);
+        }
+
+        .hero-features {
+            display: flex;
+            gap: 40px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .hero-feature {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #FFFFF0;
+        }
+
+        .hero-feature-icon {
+            width: 24px;
+            height: 24px;
+            background: #CC7A6F;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .hero-feature-text {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        /* Studio Overview */
+        .studio-overview {
+            padding: 120px 60px;
+            background: #FFFFF0;
+        }
+
+        .overview-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: #2C2C2C;
+            text-align: center;
+            margin-bottom: 80px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, #CC7A6F, #b86a60);
+            border-radius: 2px;
+        }
+
+        .studio-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            margin-bottom: 80px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 30px;
+            background: #FFFFFF;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(204, 122, 111, 0.2);
+        }
+
+        .stat-number {
+            font-size: 4rem;
+            font-weight: 900;
+            color: #CC7A6F;
+            margin-bottom: 10px;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2C2C2C;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .studio-description {
+            text-align: center;
+            font-size: 1.3rem;
+            line-height: 1.8;
+            color: #666;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Levels Section */
+        .levels-section {
+            padding: 120px 60px;
+            background: #2C2C2C;
+        }
+
+        .levels-section .section-title {
+            color: #FFFFF0;
+        }
+
+        .levels-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .levels-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .level-content {
+            padding: 40px;
+        }
+
+        .level-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #CC7A6F;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .level-description {
+            font-size: 1.2rem;
+            line-height: 1.7;
+            color: #CCCCCC;
+            margin-bottom: 30px;
+        }
+
+        .level-features {
+            list-style: none;
+        }
+
+        .level-features li {
+            padding: 10px 0;
+            color: #FFFFF0;
+            position: relative;
+            padding-left: 30px;
+            font-size: 1.1rem;
+        }
+
+        .level-features li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: #CC7A6F;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .level-images {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .level-image {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .level-image:hover {
+            transform: scale(1.05);
+            box-shadow: 0 20px 50px rgba(204, 122, 111, 0.3);
+        }
+
+        .level-image img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+        }
+
+        /* Equipment Section */
+        .equipment-section {
+            padding: 120px 60px;
+            background: #FFFFF0;
+        }
+
+        .equipment-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .equipment-highlight {
+            background: linear-gradient(135deg, #CC7A6F, #b86a60);
+            border-radius: 30px;
+            padding: 60px;
+            text-align: center;
+            color: #FFFFFF;
+            margin-bottom: 80px;
+            box-shadow: 0 20px 50px rgba(204, 122, 111, 0.3);
+        }
+
+        .equipment-highlight h3 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .equipment-highlight p {
+            font-size: 1.3rem;
+            line-height: 1.6;
+            opacity: 0.95;
+        }
+
+        .additional-services {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }
+
+        .service-item {
+            background: #FFFFFF;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .service-item:hover {
+            transform: translateY(-10px);
+            border-color: #CC7A6F;
+            box-shadow: 0 20px 50px rgba(204, 122, 111, 0.2);
+        }
+
+        .service-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .service-item h4 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2C2C2C;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .service-item p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* CTA Section */
+        .cta {
+            padding: 120px 60px;
+            background: linear-gradient(135deg, #2C2C2C, #3A3A3A);
+            text-align: center;
+        }
+
+        .cta-title {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #FFFFF0;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .cta-description {
+            font-size: 1.3rem;
+            color: #CCCCCC;
+            margin-bottom: 50px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-button {
+            background: linear-gradient(135deg, #CC7A6F, #b86a60);
+            color: #FFFFFF;
+            border: none;
+            padding: 25px 50px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            cursor: pointer;
+            border-radius: 50px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            font-family: 'Montserrat', sans-serif;
+            box-shadow: 0 10px 30px rgba(204, 122, 111, 0.4);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px rgba(204, 122, 111, 0.6);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .levels-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero {
+                padding: 100px 30px 40px;
+            }
+
+            .hero-title {
+                font-size: 3rem;
+                letter-spacing: 2px;
+            }
+
+            .hero-button {
+                padding: 18px 35px;
+                font-size: 1.1rem;
+            }
+
+            .studio-overview, .levels-section, .equipment-section, .cta {
+                padding: 80px 30px;
+            }
+
+            .section-title {
+                font-size: 2.5rem;
+            }
+
+            .studio-stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }
+
+            .stat-number {
+                font-size: 3rem;
+            }
+
+            .level-images {
+                grid-template-columns: 1fr;
+            }
+
+            .contact-buttons {
+                bottom: 20px;
+                right: 20px;
+            }
+
+            .contact-button {
+                width: 50px;
+                height: 50px;
+            }
+
+            .contact-button svg {
+                width: 22px;
+                height: 22px;
+            }
+
+            header {
+                padding: 20px 30px;
+            }
+
+            .nav-menu {
+                gap: 20px;
+            }
+
+            .nav-link {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-title {
+                font-size: 2.2rem;
+            }
+
+            .studio-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .additional-services {
+                grid-template-columns: 1fr;
+            }
+
+            .contact-buttons {
+                bottom: 15px;
+                right: 15px;
+                gap: 10px;
+            }
+
+            .contact-button {
+                width: 45px;
+                height: 45px;
+            }
+
+            .contact-button svg {
+                width: 20px;
+                height: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header id="header">
+        <div class="header-content">
+            <div class="header-logo">
+                <a href="index.html">
+                    <img src="images/logo.png" alt="Armaloft Logo">
+                </a>
+            </div>
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="index.html" class="nav-link">Главная</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="service.html" class="nav-link">Услуги</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="kontakty.html" class="nav-link">Контакты</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Студия Армалофт</h1>
+            <a href="#levels-section" class="hero-button">Посмотреть студию</a>
+        </div>
+    </section>
+
+    <!-- Studio Overview -->
+    <section class="studio-overview">
+        <div class="overview-container">
+            <h2 class="section-title">О студии</h2>
+            
+            <div class="studio-stats">
+                <div class="stat-item">
+                    <div class="stat-number">110</div>
+                    <div class="stat-label">м² площади</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">метров высота</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">7×7</div>
+                    <div class="stat-label">циклорама</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">2</div>
+                    <div class="stat-label">уровня</div>
+                </div>
+            </div>
+
+            <p class="studio-description">
+                Большая студия площадью 110 м² с потолками высотой 8 метров. Перед циклорамой расположен 
+                двухуровневый лофт с баром, зоной chill-out, светом и звуком для мероприятий. 
+                Круговая циклорама шириной 7м, высотой 7м, вылет 5м. Отдельный вход с возможностью 
+                подъезда ко входу для удобной разгрузки оборудования.
+            </p>
+            
+            <div style="text-align: center; margin-top: 40px;">
+                <a href="#equipment-list" class="cta-button">Полный список оборудования</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Levels Section -->
+    <section class="levels-section" id="levels-section">
+        <div class="levels-container">
+            <h2 class="section-title">Уровни студии</h2>
+            
+            <!-- First Level -->
+            <div class="levels-grid">
+                <div class="level-content">
+                    <h3 class="level-title">Первый уровень</h3>
+                    <p class="level-description">
+                        Основное пространство студии с профессиональной круговой циклорамой 
+                        и всем необходимым оборудованием для съемок любой сложности.
+                    </p>
+                    <ul class="level-features">
+                        <li>Круговая циклорама 7×7 метров</li>
+                        <li>Подвесная система до 7 метров</li>
+                        <li>Импульсное освещение Rekam</li>
+                        <li>Гримерный стол и зона переодевания</li>
+                        <li>Рейл для одежды и реквизит</li>
+                    </ul>
+                </div>
+                <div class="level-images">
+                    <div class="level-image">
+                        <img src="photos/armaloft/1up1.jpg" alt="Первый уровень - вид 1">
+                    </div>
+                    <div class="level-image">
+                        <img src="photos/armaloft/1up2.jpg" alt="Первый уровень - вид 2">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Second Level -->
+            <div class="levels-grid" style="margin-top: 80px;">
+                <div class="level-images">
+                    <div class="level-image">
+                        <img src="photos/armaloft/2up1.jpg" alt="Второй уровень - вид 1">
+                    </div>
+                    <div class="level-image">
+                        <img src="photos/armaloft/2up2.jpg" alt="Второй уровень - вид 2">
+                    </div>
+                </div>
+                <div class="level-content">
+                    <h3 class="level-title">Второй уровень</h3>
+                    <p class="level-description">
+                        Пространство напротив циклорамы с баром, зоной отдыха и дополнительными 
+                        возможностями для размещения оборудования и проведения мероприятий.
+                    </p>
+                    <ul class="level-features">
+                        <li>Бар и зона chill-out</li>
+                        <li>Площадка для световых приборов</li>
+                        <li>Зона гримерки и кейтеринга</li>
+                        <li>Музыкальный центр и звук</li>
+                        <li>Панорамный вид на циклораму</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Equipment Section -->
+    <section class="equipment-section">
+        <div class="equipment-container">
+            <h2 class="section-title">Оборудование</h2>
+            
+            <div class="equipment-highlight">
+                <h3>Всегда в студии</h3>
+                <p>
+                    До 3-х источников импульсного света Rekam, гримерный стол, ширмы, диван, 
+                    рейл для одежды, музыкальный центр - входят в стоимость аренды студии.
+                </p>
+            </div>
+
+            <div class="additional-services" id="equipment-list">
+                <div class="service-item">
+                    <div class="service-icon">🎬</div>
+                    <h4>Подвесная система</h4>
+                    <p>
+                        Сценическая ферма опускается и поднимается до 7 метров. 
+                        Монтаж освещения, отражателей, декораций.
+                    </p>
+                </div>
+                <div class="service-item">
+                    <div class="service-icon">🚪</div>
+                    <h4>Удобный доступ</h4>
+                    <p>
+                        Отдельный вход с подъездом. Широкие двери для заезда 
+                        мотоциклов, трициклов и разгрузки оборудования.
+                    </p>
+                </div>
+                <div class="service-item">
+                    <div class="service-icon">⚡</div>
+                    <h4>Дополнительные услуги</h4>
+                    <p>
+                        Заказ дополнительного оборудования и услуг. 
+                        Часть аксессуаров предоставляется бесплатно.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="equipment-container">
+            <h2 class="cta-title">Готовы начать работу?</h2>
+            <p class="cta-description">
+                Свяжитесь с нами для бронирования студии Армалофт и уточнения всех деталей. 
+                Больше актуальных фото в нашем Instagram.
+            </p>
+            <a href="kontakty.html" class="cta-button">Забронировать студию</a>
+        </div>
+    </section>
+
+    <!-- Contact Buttons -->
+    <div class="contact-buttons">
+        <a href="https://wa.me/79999999999" target="_blank" class="contact-button" aria-label="Написать в WhatsApp">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+            </svg>
+        </a>
+        <a href="tel:+79999999999" class="contact-button" aria-label="Позвонить">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+            </svg>
+        </a>
+    </div>
+
+    <script>
+        // Эффект появления фона при скролле
+        window.addEventListener('scroll', function() {
+            const header = document.getElementById('header');
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+
+        // Плавная прокрутка к секциям с учетом фиксированного хедера
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const href = this.getAttribute('href');
+                if (href !== '#' && href !== '') {
+                    const target = document.querySelector(href);
+                    if (target) {
+                        e.preventDefault();
+                        const headerHeight = document.getElementById('header').offsetHeight;
+                        const targetPosition = target.offsetTop - headerHeight - 20;
+                        
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                }
+            });
+        });
+
+        // Анимация появления элементов при скролле
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Применяем анимацию к карточкам услуг
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.service-card, .feature-card, .equipment-item');
+            cards.forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(30px)';
+                card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(card);
+            });
+        });
+    </script>
+</body>
+</html>
