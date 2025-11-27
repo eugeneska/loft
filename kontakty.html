@@ -843,14 +843,8 @@
                 </div>
             </div>
 
-            <div class="location-map">
-                <iframe 
-                    src="https://www.google.com/maps?q=Москва,+Нижний+Сусальный+переулок,+5,+стр.+10&output=embed&zoom=16"
-                    allowfullscreen="" 
-                    loading="lazy" 
-                    referrerpolicy="no-referrer-when-downgrade"
-                    title="Карта расположения">
-                </iframe>
+            <div class="location-map" id="yandex-map">
+                <!-- Яндекс.Карта будет загружена здесь -->
             </div>
         </div>
     </section>
@@ -939,6 +933,28 @@
                     toggleMobileMenu();
                 }
             });
+        });
+    </script>
+
+    <!-- Яндекс.Карты (встроенный виджет) -->
+    <script type="text/javascript">
+        // Загружаем карту через iframe как fallback, если нет API ключа
+        document.addEventListener('DOMContentLoaded', function() {
+            const mapContainer = document.getElementById('yandex-map');
+            if (mapContainer) {
+                // Создаем iframe с Яндекс.Картами
+                const iframe = document.createElement('iframe');
+                iframe.src = 'https://yandex.ru/map-widget/v1/?text=Москва%2C%20Нижний%20Сусальный%20переулок%2C%205%2C%20стр.%2010&z=16';
+                iframe.width = '100%';
+                iframe.height = '600';
+                iframe.frameBorder = '0';
+                iframe.allowFullscreen = true;
+                iframe.loading = 'lazy';
+                iframe.title = 'Карта расположения - Яндекс.Карты';
+                iframe.style.borderRadius = '16px';
+                
+                mapContainer.appendChild(iframe);
+            }
         });
     </script>
 </body>
