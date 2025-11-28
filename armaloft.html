@@ -505,6 +505,12 @@
             box-shadow: 0 0 0 3px rgba(204, 122, 111, 0.2);
         }
 
+        .booking-form-group select option:disabled {
+            background-color: #E0E0E0;
+            color: #999;
+            cursor: not-allowed;
+        }
+
         .booking-form-button {
             padding: 16px 32px;
             background: #CC7A6F;
@@ -1844,6 +1850,140 @@
         const dateInput = document.getElementById('booking-date');
         const today = new Date().toISOString().split('T')[0];
         dateInput.setAttribute('min', today);
+
+        // ============================================
+        // API YCLIENTS - Отключение занятых часов
+        // ============================================
+        const YCLIENTS_BEARER_TOKEN = 'nux5dyunjmauan8zar4r';
+        const YCLIENTS_USER_TOKEN = '905010bc6e633654624061a480566ba9';
+        const YCLIENTS_API_BASE = 'https://api.yclients.com/api/v1/company/115469';
+        
+        // Маппинг залов на staff_id в YClients
+        const hallYClientsMapping = {
+            'armaloft': '267195',  // АРМАЛОФТ
+            'mercury': '3414531',
+            'airplane': '3610778',
+            'rufer': '3295198',
+            'pulka': '3295199'
+        };
+
+        // Получение занятых часов для зала на указанную дату
+        async function getBusyHours(hallId, date) {
+            try {
+                const staffId = hallYClientsMapping[hallId];
+                if (!staffId) {
+                    console.warn(`staff_id для зала ${hallId} не найден`);
+                    return [];
+                }
+
+                const url = `${YCLIENTS_API_BASE}/staff/schedule?start_date=${date}&end_date=${date}&include[]=busy_intervals`;
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/vnd.api.v2+json',
+                        'Authorization': `Bearer ${YCLIENTS_BEARER_TOKEN}, User ${YCLIENTS_USER_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    console.warn(`Ошибка API: ${response.status}`);
+                    return [];
+                }
+
+                const result = await response.json();
+                const scheduleData = result.data || result || [];
+                
+                const staffSchedule = scheduleData.find(staff => staff.staff_id == staffId);
+                if (!staffSchedule) {
+                    return [];
+                }
+
+                const busyIntervals = staffSchedule.busy_intervals || [];
+                const busyHours = new Set();
+
+                busyIntervals.forEach(interval => {
+                    if (interval.from && interval.to) {
+                        const fromHour = parseInt(interval.from.split(':')[0]);
+                        const toHour = interval.to === '00:00:00' ? 24 : parseInt(interval.to.split(':')[0]);
+                        
+                        // Добавляем все часы в интервале
+                        for (let hour = fromHour; hour < toHour; hour++) {
+                            busyHours.add(hour);
+                        }
+                    }
+                });
+
+                return Array.from(busyHours);
+            } catch (error) {
+                console.error('Ошибка при получении занятых часов:', error);
+                return [];
+            }
+        }
+
+        // Отключение занятых часов в селектах
+        function disableBusyHours(busyHours) {
+            const timeFromSelect = document.getElementById('booking-time-from');
+            const timeToSelect = document.getElementById('booking-time-to');
+
+            [timeFromSelect, timeToSelect].forEach(select => {
+                if (!select) return;
+                
+                // Сначала включаем все опции
+                select.querySelectorAll('option').forEach(option => {
+                    if (option.value && option.value !== '') {
+                        option.disabled = false;
+                        const hour = parseInt(option.value.split(':')[0]);
+                        // Отключаем занятые часы
+                        if (busyHours.includes(hour)) {
+                            option.disabled = true;
+                        }
+                    }
+                });
+            });
+        }
+
+        // Обработчик изменения даты
+        dateInput.addEventListener('change', async function() {
+            const selectedDate = this.value;
+            if (!selectedDate) return;
+
+            // Показываем индикатор загрузки
+            const timeFromSelect = document.getElementById('booking-time-from');
+            const timeToSelect = document.getElementById('booking-time-to');
+            
+            if (timeFromSelect) timeFromSelect.disabled = true;
+            if (timeToSelect) timeToSelect.disabled = true;
+
+            // Получаем занятые часы для зала АРМАЛОФТ
+            const busyHours = await getBusyHours('armaloft', selectedDate);
+            
+            // Сохраняем текущие выбранные значения
+            const selectedFrom = timeFromSelect ? timeFromSelect.value : '';
+            const selectedTo = timeToSelect ? timeToSelect.value : '';
+            
+            // Отключаем занятые часы
+            disableBusyHours(busyHours);
+
+            // Сбрасываем выбранное время, если оно стало недоступным
+            if (timeFromSelect && selectedFrom) {
+                const selectedHour = parseInt(selectedFrom.split(':')[0]);
+                if (busyHours.includes(selectedHour)) {
+                    timeFromSelect.value = '';
+                }
+            }
+            if (timeToSelect && selectedTo) {
+                const selectedHour = parseInt(selectedTo.split(':')[0]);
+                if (busyHours.includes(selectedHour)) {
+                    timeToSelect.value = '';
+                }
+            }
+
+            // Включаем селекты обратно
+            if (timeFromSelect) timeFromSelect.disabled = false;
+            if (timeToSelect) timeToSelect.disabled = false;
+        });
 
         // Слайдеры фотографий в карточках других залов
         function initRoomSlider(sliderId, trackId, indicatorsId) {
