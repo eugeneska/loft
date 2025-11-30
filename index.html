@@ -517,6 +517,12 @@
             -moz-appearance: none;
         }
 
+        .hero-form-group select option:disabled {
+            background-color: #E0E0E0;
+            color: #999;
+            cursor: not-allowed;
+        }
+
         .hero-form-group input[type="date"]::-webkit-calendar-picker-indicator {
             opacity: 0;
             position: absolute;
@@ -1456,6 +1462,57 @@
             stroke: #b86a60;
         }
 
+        /* Блок с ценой */
+        .room-price {
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(204, 122, 111, 0.1);
+            border-radius: 8px;
+            border-left: 3px solid #CC7A6F;
+            transition: all 0.3s ease;
+        }
+
+        .room-price.error {
+            background: rgba(244, 67, 54, 0.1);
+            border-left-color: #F44336;
+        }
+
+        .price-main {
+            font-size: 18px;
+            font-weight: 700;
+            color: #CC7A6F;
+            margin-bottom: 5px;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .room-price.error .price-main {
+            color: #F44336;
+        }
+
+        .price-amount {
+            color: #CC7A6F;
+        }
+
+        .room-price.error .price-amount {
+            color: #F44336;
+        }
+
+        .price-detail {
+            font-size: 12px;
+            color: #666;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .room-card.calculated {
+            box-shadow: 0 4px 15px rgba(204, 122, 111, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .room-card.calculated:hover {
+            box-shadow: 0 6px 20px rgba(204, 122, 111, 0.3);
+            transform: translateY(-3px);
+        }
+
         @media (max-width: 1400px) {
             .rooms-cards-grid {
                 flex-direction: column;
@@ -2373,6 +2430,10 @@
                         </div>
                         <p class="room-feature-text">ДО 120 ЧЕЛОВЕК</p>
                     </div>
+                    <div class="room-price" style="display: none;">
+                        <div class="price-main">от <span class="price-amount">0</span> руб</div>
+                        <div class="price-detail">за 2 часа</div>
+                    </div>
                 </div>
             </div>
 
@@ -2441,6 +2502,10 @@
                         </div>
                         <p class="room-feature-text">ДО 50 ЧЕЛОВЕК</p>
                     </div>
+                    <div class="room-price" style="display: none;">
+                        <div class="price-main">от <span class="price-amount">0</span> руб</div>
+                        <div class="price-detail">за 2 часа</div>
+                    </div>
                 </div>
             </div>
 
@@ -2499,6 +2564,10 @@
                             </svg>
                         </div>
                         <p class="room-feature-text">ДО 20 ЧЕЛОВЕК</p>
+                    </div>
+                    <div class="room-price" style="display: none;">
+                        <div class="price-main">от <span class="price-amount">0</span> руб</div>
+                        <div class="price-detail">за 2 часа</div>
                     </div>
                 </div>
             </div>
@@ -2565,6 +2634,10 @@
                         </div>
                         <p class="room-feature-text">ДО 25 ЧЕЛОВЕК</p>
                     </div>
+                    <div class="room-price" style="display: none;">
+                        <div class="price-main">от <span class="price-amount">0</span> руб</div>
+                        <div class="price-detail">за 2 часа</div>
+                    </div>
                 </div>
             </div>
 
@@ -2623,6 +2696,10 @@
                             </svg>
                         </div>
                         <p class="room-feature-text">ДО 15 ЧЕЛОВЕК</p>
+                    </div>
+                    <div class="room-price" style="display: none;">
+                        <div class="price-main">от <span class="price-amount">0</span> руб</div>
+                        <div class="price-detail">за 2 часа</div>
                     </div>
                 </div>
             </div>
@@ -2906,14 +2983,37 @@
                 }
 
                 // Формируем дату и время для запроса
-                const dateTimeFrom = `${date}T${timeFrom}:00`;
-                const dateTimeTo = `${date}T${timeTo}:00`;
+                // Обрабатываем случай, когда время окончания меньше времени начала (переход через полночь)
+                let dateTimeFrom = `${date}T${timeFrom}:00`;
+                let dateTimeTo = `${date}T${timeTo}:00`;
+                
+                // Если время окончания меньше времени начала, значит это следующий день
+                const [fromHours, fromMinutes] = timeFrom.split(':').map(Number);
+                const [toHours, toMinutes] = timeTo.split(':').map(Number);
+                const fromTimeMinutes = fromHours * 60 + (fromMinutes || 0);
+                const toTimeMinutes = toHours * 60 + (toMinutes || 0);
+                
+                if (toTimeMinutes <= fromTimeMinutes) {
+                    // Время переходит через полночь - добавляем день к времени окончания
+                    const endDate = new Date(date);
+                    endDate.setDate(endDate.getDate() + 1);
+                    const endDateStr = endDate.toISOString().split('T')[0];
+                    dateTimeTo = `${endDateStr}T${timeTo}:00`;
+                }
 
                 // Запрос к API YClients для получения расписания и занятости
                 // Используем Schedule API с параметром include[]=busy_intervals
                 // Примечание: может потребоваться прокси-сервер из-за CORS
                 
-                const url = `${YCLIENTS_API_BASE}/staff/schedule?start_date=${date}&end_date=${date}&include[]=busy_intervals`;
+                // Если запрашиваемое время переходит через полночь, нужно запросить данные за два дня
+                let endDateForAPI = date;
+                if (toTimeMinutes <= fromTimeMinutes) {
+                    const endDate = new Date(date);
+                    endDate.setDate(endDate.getDate() + 1);
+                    endDateForAPI = endDate.toISOString().split('T')[0];
+                }
+                
+                const url = `${YCLIENTS_API_BASE}/staff/schedule?start_date=${date}&end_date=${endDateForAPI}&include[]=busy_intervals`;
                 
                 if (DEBUG_API) {
                     console.log('API запрос:', url);
@@ -2959,8 +3059,15 @@
                 const requestedStart = new Date(dateTimeFrom);
                 const requestedEnd = new Date(dateTimeTo);
                 
+                // Проверяем корректность дат запроса
+                if (isNaN(requestedStart.getTime()) || isNaN(requestedEnd.getTime())) {
+                    console.error(`Некорректные даты запроса для зала ${hallId}: ${dateTimeFrom} - ${dateTimeTo}`);
+                    return true; // В случае ошибки считаем доступным
+                }
+                
                 if (DEBUG_API) {
                     console.log(`Проверяем доступность зала ${hallId} (staff_id: ${staffId}) на ${date} с ${timeFrom} до ${timeTo}`);
+                    console.log(`Запрошенный диапазон: ${requestedStart.toISOString()} - ${requestedEnd.toISOString()}`);
                 }
 
                 // Ищем данные для нужного сотрудника (зала)
@@ -2980,29 +3087,53 @@
                     console.log(`Сотрудник ${staffSchedule.staff_id} (зал ${hallId}) имеет ${busyIntervals.length} занятых интервалов`);
                 }
                 
+                // Проверяем каждый занятый интервал
                 for (const interval of busyIntervals) {
                     // Парсим время начала и окончания занятого интервала
                     let intervalStart, intervalEnd;
                     
                     // Используем поля from и to из реального ответа API
                     if (interval.from && interval.to) {
-                        // Обрабатываем случай когда время заканчивается в 00:00:00 (следующий день)
                         let fromTime = interval.from;
                         let toTime = interval.to;
                         
-                        // Если время окончания 00:00:00, это означает конец дня (24:00)
-                        if (toTime === '00:00:00') {
-                            toTime = '24:00:00';
+                        // Обрабатываем случай, когда время переходит через полночь
+                        // Если toTime меньше fromTime, значит это следующий день
+                        const [intFromHours, intFromMinutes] = fromTime.split(':').map(Number);
+                        const [intToHours, intToMinutes] = toTime.split(':').map(Number);
+                        const intFromMinutesTotal = intFromHours * 60 + (intFromMinutes || 0);
+                        const intToMinutesTotal = intToHours * 60 + (intToMinutes || 0);
+                        
+                        // Определяем дату для интервала
+                        // Занятые интервалы могут быть на той же дате или следующей
+                        let intervalDate = date;
+                        
+                        // Если в интервале указана дата, используем её
+                        if (interval.date) {
+                            intervalDate = interval.date;
+                        } else if (interval.date_from) {
+                            intervalDate = interval.date_from.split('T')[0];
                         }
                         
-                        intervalStart = new Date(`${date}T${fromTime}`);
-                        intervalEnd = new Date(`${date}T${toTime}`);
+                        if (intToMinutesTotal <= intFromMinutesTotal) {
+                            // Интервал переходит через полночь - время окончания на следующий день
+                            intervalStart = new Date(`${intervalDate}T${fromTime}`);
+                            const intervalEndDate = new Date(intervalDate);
+                            intervalEndDate.setDate(intervalEndDate.getDate() + 1);
+                            const intervalEndDateStr = intervalEndDate.toISOString().split('T')[0];
+                            intervalEnd = new Date(`${intervalEndDateStr}T${toTime}`);
+                        } else {
+                            // Обычный интервал в пределах одного дня
+                            intervalStart = new Date(`${intervalDate}T${fromTime}`);
+                            intervalEnd = new Date(`${intervalDate}T${toTime}`);
+                        }
                         
-                        // Если время окончания 24:00, устанавливаем на следующий день 00:00
-                        if (toTime === '24:00:00') {
-                            intervalEnd = new Date(intervalStart);
-                            intervalEnd.setDate(intervalEnd.getDate() + 1);
-                            intervalEnd.setHours(0, 0, 0, 0);
+                        // Обрабатываем случай когда время заканчивается в 00:00:00 (конец дня)
+                        if (toTime === '00:00:00' || toTime === '00:00') {
+                            const intervalEndDate = new Date(intervalDate);
+                            intervalEndDate.setDate(intervalEndDate.getDate() + 1);
+                            intervalEndDate.setHours(0, 0, 0, 0);
+                            intervalEnd = intervalEndDate;
                         }
                     } else {
                         if (DEBUG_API) {
@@ -3019,14 +3150,31 @@
                     }
 
                     if (DEBUG_API) {
-                        console.log(`Проверяем интервал: ${interval.from} - ${interval.to}`);
-                        console.log(`Запрашиваемое время: ${timeFrom} - ${timeTo}`);
+                        console.log(`Проверяем занятый интервал: ${interval.from} - ${interval.to}`);
+                        console.log(`  Парсированные даты: ${intervalStart.toISOString()} - ${intervalEnd.toISOString()}`);
+                        console.log(`  Запрошенный диапазон: ${requestedStart.toISOString()} - ${requestedEnd.toISOString()}`);
                     }
 
-                    // Проверяем пересечение временных интервалов
-                    if (requestedStart < intervalEnd && requestedEnd > intervalStart) {
+                    // Строгая проверка: весь запрашиваемый диапазон должен быть полностью свободен
+                    // Зал считается занятым, если занятый интервал пересекается с запрошенным диапазоном
+                    // 
+                    // Интервалы НЕ пересекаются только если:
+                    // - запрошенный интервал полностью ДО занятого: requestedEnd <= intervalStart
+                    // - запрошенный интервал полностью ПОСЛЕ занятого: requestedStart >= intervalEnd
+                    //
+                    // Во всех остальных случаях есть пересечение - зал занят
+                    
+                    const noIntersection = requestedEnd <= intervalStart || requestedStart >= intervalEnd;
+                    
+                    if (!noIntersection) {
+                        // Есть пересечение - проверяем, действительно ли весь диапазон занят
+                        // Если запрошенный диапазон пересекается с занятым, зал недоступен
                         if (DEBUG_API) {
-                            console.log(`Зал ${hallId} занят в интервале ${interval.from}-${interval.to}`);
+                            console.log(`❌ Зал ${hallId} ЗАНЯТ: пересечение с интервалом ${interval.from}-${interval.to}`);
+                            console.log(`  Запрос: ${timeFrom}-${timeTo}`);
+                            console.log(`  Запрос (даты): ${requestedStart.toISOString()} - ${requestedEnd.toISOString()}`);
+                            console.log(`  Занят: ${interval.from}-${interval.to}`);
+                            console.log(`  Занят (даты): ${intervalStart.toISOString()} - ${intervalEnd.toISOString()}`);
                         }
                         return false; // Есть пересечение - зал занят
                     }
@@ -3160,28 +3308,154 @@
             }
         }
 
-        // Обработка формы hero
-        const heroForm = document.getElementById('heroForm');
-        if (heroForm) {
-            heroForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const hall = document.getElementById('hero-hall-select').value;
-                const date = document.getElementById('hero-event-date').value;
-                const timeFrom = document.getElementById('hero-time-from').value;
-                const timeTo = document.getElementById('hero-time-to').value;
-                const guests = document.getElementById('hero-guests-count').value;
-                
-                // Валидация
-                if (!date || !timeFrom || !timeTo) {
-                    alert('Пожалуйста, заполните все поля формы');
-                    return;
+        // Обработка формы hero (будет переопределена модулем hero-pricing.js)
+        // Сохраняем функции и данные для использования в модуле hero-pricing
+        window.filterHallsByAvailability = filterHallsByAvailability;
+        window.checkHallAvailability = checkHallAvailability;
+        window.hallCapacity = hallCapacity;
+        window.hallYClientsMapping = hallYClientsMapping;
+
+        // Получение занятых часов для зала на указанную дату (для отключения в селектах)
+        async function getBusyHours(hallId, date) {
+            try {
+                const staffId = hallYClientsMapping[hallId];
+                if (!staffId) {
+                    console.warn(`staff_id для зала ${hallId} не найден`);
+                    return [];
                 }
 
-                // Фильтруем залы по доступности и вместимости
-                await filterHallsByAvailability(date, timeFrom, timeTo, hall, guests);
+                // Если запрашиваемое время переходит через полночь, нужно запросить данные за два дня
+                const [fromHours, fromMinutes] = '00:00'.split(':').map(Number);
+                const [toHours, toMinutes] = '23:59'.split(':').map(Number);
+                const fromTimeMinutes = fromHours * 60 + (fromMinutes || 0);
+                const toTimeMinutes = toHours * 60 + (toMinutes || 0);
+                
+                let endDateForAPI = date;
+                if (toTimeMinutes <= fromTimeMinutes) {
+                    const endDate = new Date(date);
+                    endDate.setDate(endDate.getDate() + 1);
+                    endDateForAPI = endDate.toISOString().split('T')[0];
+                }
+
+                const url = `${YCLIENTS_API_BASE}/staff/schedule?start_date=${date}&end_date=${endDateForAPI}&include[]=busy_intervals`;
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/vnd.api.v2+json',
+                        'Authorization': `Bearer ${YCLIENTS_BEARER_TOKEN}, User ${YCLIENTS_USER_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    console.warn(`Ошибка API при получении занятых часов: ${response.status}`);
+                    return [];
+                }
+
+                const result = await response.json();
+                const scheduleData = result.data || result || [];
+                
+                const staffSchedule = scheduleData.find(staff => staff.staff_id == staffId);
+                if (!staffSchedule) {
+                    return [];
+                }
+
+                const busyIntervals = staffSchedule.busy_intervals || [];
+                const busyHours = new Set();
+
+                busyIntervals.forEach(interval => {
+                    if (interval.from && interval.to) {
+                        let fromTime = interval.from;
+                        let toTime = interval.to;
+                        
+                        // Обрабатываем переход через полночь
+                        const [intFromHours, intFromMinutes] = fromTime.split(':').map(Number);
+                        const [intToHours, intToMinutes] = toTime.split(':').map(Number);
+                        const intFromMinutesTotal = intFromHours * 60 + (intFromMinutes || 0);
+                        let intToMinutesTotal = intToHours * 60 + (intToMinutes || 0);
+                        
+                        // Если время окончания 00:00, это означает 24:00 (конец дня)
+                        if (intToHours === 0 && intToMinutes === 0) {
+                            intToMinutesTotal = 24 * 60; // 24:00 = 1440 минут
+                        }
+                        
+                        let fromHour = intFromHours;
+                        let toHour = intToHours === 0 && intToMinutes === 0 ? 24 : intToHours;
+                        
+                        // Если интервал переходит через полночь
+                        if (intToMinutesTotal <= intFromMinutesTotal && toHour !== 24) {
+                            // Добавляем часы до полуночи
+                            for (let hour = fromHour; hour < 24; hour++) {
+                                busyHours.add(hour);
+                            }
+                            // Добавляем часы после полуночи
+                            for (let hour = 0; hour < toHour; hour++) {
+                                busyHours.add(hour);
+                            }
+                        } else {
+                            // Обычный интервал
+                            // Добавляем все часы, которые пересекаются с интервалом
+                            // Если интервал с 14:00 до 16:00, то заняты часы 14 и 15
+                            // Если интервал с 14:30 до 15:30, то заняты часы 14 и 15 (оба часа частично заняты)
+                            // Если интервал с 14:00 до 16:30, то заняты часы 14, 15 и 16
+                            
+                            // Помечаем час начала как занятый (даже если интервал начинается не в начале часа)
+                            if (fromHour < 24) {
+                                busyHours.add(fromHour);
+                            }
+                            
+                            // Помечаем все промежуточные часы
+                            for (let hour = fromHour + 1; hour < toHour; hour++) {
+                                if (hour < 24) {
+                                    busyHours.add(hour);
+                                }
+                            }
+                            
+                            // Если интервал заканчивается не в начале часа (например, 16:30), то час окончания тоже занят
+                            if (intToMinutes > 0 && toHour < 24) {
+                                busyHours.add(toHour);
+                            }
+                            
+                            // Также если интервал заканчивается точно в начале часа (например, 16:00),
+                            // но начинается не в начале предыдущего часа, предыдущий час занят
+                            // Это уже покрыто циклом выше
+                        }
+                    }
+                });
+
+                return Array.from(busyHours).sort((a, b) => a - b);
+            } catch (error) {
+                console.error('Ошибка при получении занятых часов:', error);
+                return [];
+            }
+        }
+
+        // Отключение занятых часов в селектах главной формы
+        function disableBusyHoursInHeroForm(busyHours) {
+            const timeFromSelect = document.getElementById('hero-time-from');
+            const timeToSelect = document.getElementById('hero-time-to');
+
+            [timeFromSelect, timeToSelect].forEach(select => {
+                if (!select) return;
+                
+                // Сначала включаем все опции
+                select.querySelectorAll('option').forEach(option => {
+                    if (option.value && option.value !== '') {
+                        option.disabled = false;
+                        const hour = parseInt(option.value.split(':')[0]);
+                        // Отключаем занятые часы
+                        if (busyHours.includes(hour)) {
+                            option.disabled = true;
+                        }
+                    }
+                });
             });
         }
+
+        // Экспорт функций для использования в других модулях
+        window.getBusyHours = getBusyHours;
+        window.disableBusyHoursInHeroForm = disableBusyHoursInHeroForm;
 
         // Слайдер для зала Армалофт
         const armaloftSlider = document.getElementById('armaloftSlider');
@@ -3893,6 +4167,11 @@
             }
         });
     </script>
+
+    <!-- Модуль расчета стоимости для главной страницы -->
+    <script src="js/pricing-calculator.js"></script>
+    <script src="js/pricing-api-loader.js"></script>
+    <script src="js/hero-pricing.js"></script>
 
     <footer>
         <div class="footer-container">
