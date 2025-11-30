@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админка - Управление ценами</title>
+    <link rel="stylesheet" href="/backend/admin/admin.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Админка - Управление ценами и условиями аренды</h1>
+            <div id="message" class="message"></div>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" data-tab="halls">Залы</button>
+            <button class="tab" data-tab="price-sets">Прайс-сеты</button>
+            <button class="tab" data-tab="hall-prices">Цены залов</button>
+            <button class="tab" data-tab="extras">Доп. услуги</button>
+            <button class="tab" data-tab="extras-prices">Цены доп. услуг</button>
+            <button class="tab" data-tab="season-rules">Сезонные правила</button>
+        </div>
+        
+        <!-- Залы -->
+        <div id="halls" class="tab-content active">
+            <div class="content-card">
+                <div class="content-header">
+                    <h2>Управление залами</h2>
+                    <button class="btn btn-primary" onclick="admin.openHallModal()">+ Добавить зал</button>
+                </div>
+                <div id="halls-loading" class="loading">Загрузка...</div>
+                <table class="table" id="halls-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Название</th>
+                            <th>Код</th>
+                            <th>Вместимость</th>
+                            <th>Статус</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="halls-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Прайс-сеты -->
+        <div id="price-sets" class="tab-content">
+            <div class="content-card">
+                <div class="content-header">
+                    <h2>Прайс-сеты</h2>
+                    <button class="btn btn-primary" onclick="admin.openPriceSetModal()">+ Добавить прайс-сет</button>
+                </div>
+                <div id="price-sets-loading" class="loading">Загрузка...</div>
+                <table class="table" id="price-sets-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Код</th>
+                            <th>Название</th>
+                            <th>Описание</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="price-sets-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Цены залов -->
+        <div id="hall-prices" class="tab-content">
+            <div class="content-card">
+                <h2>Цены залов</h2>
+                <div class="form-group">
+                    <label>Выберите зал:</label>
+                    <select id="hall-select" class="form-control" onchange="admin.loadHallPrices()">
+                        <option value="">-- Выберите зал --</option>
+                    </select>
+                </div>
+                <div id="hall-prices-loading" class="loading" style="display: none;">Загрузка...</div>
+                <table class="table" id="hall-prices-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Прайс-сет</th>
+                            <th>Будни 10:00-22:00</th>
+                            <th>Будни 22:00-00:00</th>
+                            <th>Пт/Сб</th>
+                            <th>Вс</th>
+                            <th>Уборка до 30</th>
+                            <th>Уборка > 30</th>
+                            <th>Внеурочные</th>
+                            <th>Мин. часов</th>
+                            <th>Мин. часов (сб)</th>
+                            <th>Еда/алкоголь от</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hall-prices-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Дополнительные услуги -->
+        <div id="extras" class="tab-content">
+            <div class="content-card">
+                <div class="content-header">
+                    <h2>Дополнительные услуги</h2>
+                    <button class="btn btn-primary" onclick="admin.openExtraModal()">+ Добавить услугу</button>
+                </div>
+                <div id="extras-loading" class="loading">Загрузка...</div>
+                <table class="table" id="extras-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Название</th>
+                            <th>Код</th>
+                            <th>Тип</th>
+                            <th>Статус</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="extras-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Цены дополнительных услуг -->
+        <div id="extras-prices" class="tab-content">
+            <div class="content-card">
+                <h2>Цены дополнительных услуг</h2>
+                <div class="form-group">
+                    <label>Выберите услугу:</label>
+                    <select id="extra-select" class="form-control" onchange="admin.loadExtraPrices()">
+                        <option value="">-- Выберите услугу --</option>
+                    </select>
+                </div>
+                <div id="extras-prices-loading" class="loading" style="display: none;">Загрузка...</div>
+                <table class="table" id="extras-prices-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Прайс-сет</th>
+                            <th>Базовая цена</th>
+                            <th>Цена доп. единицы</th>
+                            <th>Единица</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="extras-prices-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Сезонные правила -->
+        <div id="season-rules" class="tab-content">
+            <div class="content-card">
+                <div class="content-header">
+                    <h2>Сезонные правила</h2>
+                    <button class="btn btn-primary" onclick="admin.openSeasonRuleModal()">+ Добавить правило</button>
+                </div>
+                <div id="season-rules-loading" class="loading">Загрузка...</div>
+                <table class="table" id="season-rules-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Описание</th>
+                            <th>Прайс-сет</th>
+                            <th>Дата начала</th>
+                            <th>Дата окончания</th>
+                            <th>Дни недели</th>
+                            <th>Приоритет</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="season-rules-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Редактирование</h2>
+                <button class="close-btn" onclick="admin.closeModal()">&times;</button>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+    
+    <script src="/backend/admin/admin.js"></script>
+</body>
+</html>

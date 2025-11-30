@@ -1,0 +1,297 @@
+/**
+ * Стили для модуля расчёта стоимости аренды
+ */
+
+/* Контейнер модуля расчёта - изолируем от стилей формы */
+#pricing-container {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.pricing-container {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+/* Убираем лишние отступы внутри формы */
+.booking-form #pricing-container {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.booking-form .pricing-container {
+    margin: 0;
+}
+
+/* Дополнительные услуги */
+.pricing-extra-services {
+    margin-top: 0;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 240, 0.2);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.pricing-extra-services-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #FFFFF0;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.pricing-extra-services-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.pricing-extra-service-item {
+    display: flex;
+    align-items: flex-start;
+}
+
+.pricing-extra-service-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #FFFFF0;
+    font-family: 'Montserrat', sans-serif;
+    line-height: 1.5;
+    transition: color 0.3s ease;
+}
+
+.pricing-extra-service-label:hover {
+    color: #CC7A6F;
+}
+
+.pricing-extra-service-checkbox {
+    margin-top: 3px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #CC7A6F;
+    flex-shrink: 0;
+}
+
+.pricing-extra-service-text {
+    flex: 1;
+}
+
+/* Предупреждения */
+.pricing-warnings {
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.pricing-warnings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pricing-warning {
+    padding: 10px 15px;
+    background: rgba(255, 193, 7, 0.15);
+    border-left: 3px solid #FFC107;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #FFFFF0;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.pricing-error {
+    padding: 10px 15px;
+    background: rgba(244, 67, 54, 0.15);
+    border-left: 3px solid #F44336;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #FFFFF0;
+    font-family: 'Montserrat', sans-serif;
+}
+
+/* Детализация стоимости */
+.pricing-breakdown {
+    margin-top: 0;
+    margin-bottom: 15px;
+    padding: 15px;
+    background: rgba(255, 255, 240, 0.05);
+    border-radius: 8px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.pricing-breakdown-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #FFFFF0;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.pricing-breakdown-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pricing-breakdown-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: #FFFFF0;
+    font-family: 'Montserrat', sans-serif;
+    padding: 5px 0;
+}
+
+.pricing-breakdown-label {
+    color: rgba(255, 255, 240, 0.8);
+}
+
+.pricing-breakdown-value {
+    font-weight: 600;
+    color: #FFFFF0;
+}
+
+/* Итоговая стоимость */
+.pricing-total-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 20px;
+    background: rgba(204, 122, 111, 0.2);
+    border-radius: 8px;
+    border: 2px solid #CC7A6F;
+    margin-top: 0;
+    margin-bottom: 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.pricing-total-label {
+    font-size: 18px;
+    font-weight: 600;
+    color: #FFFFF0;
+    text-transform: uppercase;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.pricing-total {
+    font-size: 28px;
+    font-weight: 700;
+    color: #FFFFF0;
+    font-family: 'Jost', sans-serif;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .pricing-total-container {
+        padding: 15px;
+    }
+    
+    .pricing-total-label {
+        font-size: 16px;
+    }
+    
+    .pricing-total {
+        font-size: 24px;
+    }
+    
+    .pricing-breakdown {
+        padding: 12px;
+    }
+    
+    .pricing-extra-services-list {
+        gap: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .pricing-total-container {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+        padding: 15px;
+    }
+    
+    .pricing-breakdown-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .pricing-extra-services {
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+    }
+    
+    .booking-form #pricing-container {
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+}
+
+/* Исправление конфликтов со стилями формы */
+.booking-form #pricing-container {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    display: block;
+}
+
+.booking-form .pricing-container {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.booking-form .pricing-container > * {
+    box-sizing: border-box;
+}
+
+/* Убираем конфликты с gap формы */
+.booking-form #pricing-container,
+.booking-form #pricing-container .pricing-container {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+/* Первый элемент в контейнере не должен иметь верхний отступ */
+.pricing-container > *:first-child {
+    margin-top: 0 !important;
+}
+
+/* Последний элемент не должен иметь нижний отступ (кроме итоговой стоимости) */
+.pricing-container > *:not(.pricing-total-container):last-child {
+    margin-bottom: 0 !important;
+}
+
+/* Дополнительная изоляция от стилей формы */
+.booking-form-container #pricing-container {
+    order: 0;
+    flex: none;
+    align-self: stretch;
+}
+
+/* Убеждаемся, что все элементы модуля не наследуют стили формы */
+#pricing-container *,
+#pricing-container *::before,
+#pricing-container *::after {
+    box-sizing: border-box;
+}
+

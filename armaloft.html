@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700;800;900&family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/pricing-ui.css">
     
     <style>
         * {
@@ -337,7 +338,6 @@
             position: relative;
             border-radius: 16px;
             overflow: hidden;
-            background: #2C2C2C;
         }
 
         .room-gallery-slider {
@@ -1336,6 +1336,7 @@
                                 <option value="80-120">80-120</option>
                             </select>
                         </div>
+                        <div id="pricing-container"></div>
                         <button type="submit" class="booking-form-button">Забронировать</button>
                     </form>
                 </div>
@@ -1850,6 +1851,11 @@
         const dateInput = document.getElementById('booking-date');
         const today = new Date().toISOString().split('T')[0];
         dateInput.setAttribute('min', today);
+
+        // МОДУЛЬ РАСЧЁТА СТОИМОСТИ
+        const pricingInitScript = document.createElement('script');
+        pricingInitScript.src = 'js/pricing-init.js';
+        document.head.appendChild(pricingInitScript);
 
         // ============================================
         // API YCLIENTS - Отключение занятых часов
