@@ -252,3 +252,6 @@ if (typeof window !== 'undefined') {
     window.PricingIntegration = PricingIntegration;
 }
 
+
+
+

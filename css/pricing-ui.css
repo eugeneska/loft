@@ -176,7 +176,7 @@
     border-radius: 8px;
     border: 2px solid #CC7A6F;
     margin-top: 0;
-    margin-bottom: 0;
+    margin-bottom: 0 !important;
     width: 100%;
     box-sizing: border-box;
 }
@@ -247,6 +247,7 @@
 /* Исправление конфликтов со стилями формы */
 .booking-form #pricing-container {
     margin: 0;
+    margin-bottom: 0 !important;
     padding: 0;
     width: 100%;
     display: block;
@@ -268,7 +269,7 @@
 .booking-form #pricing-container,
 .booking-form #pricing-container .pricing-container {
     margin-top: 0;
-    margin-bottom: 0;
+    margin-bottom: -20px !important; /* Компенсируем gap: 20px формы */
 }
 
 /* Первый элемент в контейнере не должен иметь верхний отступ */
@@ -279,6 +280,21 @@
 /* Последний элемент не должен иметь нижний отступ (кроме итоговой стоимости) */
 .pricing-container > *:not(.pricing-total-container):last-child {
     margin-bottom: 0 !important;
+}
+
+/* Убираем нижний отступ у контейнера цен на страницах залов */
+.booking-form #pricing-container .pricing-total-container {
+    margin-bottom: 0 !important;
+}
+
+/* Компенсируем gap формы между pricing-container и кнопкой */
+.booking-form #pricing-container {
+    margin-bottom: -20px !important; /* Компенсируем gap: 20px формы */
+}
+
+/* Убираем gap между pricing-container и кнопкой */
+.booking-form #pricing-container + .booking-form-button {
+    margin-top: 0 !important;
 }
 
 /* Дополнительная изоляция от стилей формы */
