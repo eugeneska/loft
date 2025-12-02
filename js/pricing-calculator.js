@@ -645,7 +645,8 @@ if (typeof window !== 'undefined') {
     }
 }
 
-// Для использования в Node.js
+// Экспорт для использования в других модулях (для совместимости)
+// В браузере используется window.PricingCalculator
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         calculate: calculateRentalPrice,

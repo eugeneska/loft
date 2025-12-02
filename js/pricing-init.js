@@ -136,7 +136,7 @@
             // Загрузка скриптов последовательно
             await loadScript('js/pricing-calculator.js');
             
-            // Попытка загрузить API loader (опционально, если backend доступен)
+            // Загрузка API loader для получения данных из PHP API
             try {
                 await loadScript('js/pricing-api-loader.js');
                 // Ждем загрузку данных из API

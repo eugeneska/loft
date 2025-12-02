@@ -1,3 +1,16 @@
+<?php
+/**
+ * Admin login page - PHP version
+ */
+
+session_start();
+
+// If already logged in, redirect to admin
+if (isset($_SESSION['user_id'])) {
+    header('Location: /admin');
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -180,11 +193,7 @@
                     throw new Error(data.error || 'Ошибка входа');
                 }
                 
-                // Сохраняем информацию о пользователе
-                localStorage.setItem('admin_user', JSON.stringify(data.user));
-                localStorage.setItem('admin_token', 'authenticated');
-                
-                // Перенаправляем на админку
+                // Redirect to admin panel (PHP will handle session)
                 window.location.href = '/admin';
                 
             } catch (error) {
@@ -194,11 +203,6 @@
                 loading.classList.remove('show');
             }
         });
-        
-        // Проверка, авторизован ли пользователь
-        if (localStorage.getItem('admin_token')) {
-            window.location.href = '/admin';
-        }
     </script>
 </body>
 </html>

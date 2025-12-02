@@ -1,0 +1,7 @@
+# Admin panel .htaccess
+# Redirect to index.php if directory is accessed
+DirectoryIndex index.php
+
+# Protect against directory listing
+Options -Indexes
+

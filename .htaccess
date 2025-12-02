@@ -1,0 +1,16 @@
+# Main .htaccess for project
+RewriteEngine On
+
+# Redirect /services/:slug to services.php router
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^services/([^/]+)$ services.php [L,QSA]
+
+# If file or directory exists, serve it directly
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Set default charset
+AddDefaultCharset UTF-8
+

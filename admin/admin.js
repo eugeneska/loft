@@ -9,49 +9,15 @@ const admin = {
     currentTab: 'halls',
     
     init() {
-        // Проверка авторизации
-        if (!this.checkAuth()) {
-            return;
-        }
-        
+        // PHP handles authentication, so we just initialize
         console.log('Admin panel initializing...');
         this.setupTabs();
         this.loadTabData(this.currentTab);
-        this.setupLogout();
-    },
-    
-    checkAuth() {
-        const token = localStorage.getItem('admin_token');
-        const user = localStorage.getItem('admin_user');
-        
-        if (!token || !user) {
-            window.location.href = '/admin/login.html';
-            return false;
-        }
-        
-        return true;
-    },
-    
-    setupLogout() {
-        // Добавляем кнопку выхода в header
-        const header = document.querySelector('.header');
-        if (header && !header.querySelector('.logout-btn')) {
-            const user = JSON.parse(localStorage.getItem('admin_user') || '{}');
-            const logoutBtn = document.createElement('div');
-            logoutBtn.style.cssText = 'text-align: right; margin-top: 10px;';
-            logoutBtn.innerHTML = `
-                <span style="margin-right: 15px; color: #666;">Пользователь: ${user.username || 'admin'}</span>
-                <button class="btn btn-danger logout-btn" onclick="admin.logout()">Выйти</button>
-            `;
-            header.appendChild(logoutBtn);
-        }
     },
     
     logout() {
         if (confirm('Вы уверены, что хотите выйти?')) {
-            localStorage.removeItem('admin_token');
-            localStorage.removeItem('admin_user');
-            window.location.href = '/admin/login.html';
+            window.location.href = '/admin/logout.php';
         }
     },
     
@@ -1438,14 +1404,28 @@ const admin = {
                     submitBtn.textContent = 'Сохранение...';
                 }
                 
+                // Use POST for both create and update to avoid PHP multipart/form-data parsing issues with PUT
+                // PHP doesn't populate $_POST for PUT requests with multipart/form-data
                 const url = serviceId ? `${API_BASE}/services/${serviceId}` : `${API_BASE}/services`;
-                const method = serviceId ? 'PUT' : 'POST';
+                const method = 'POST';
                 
-                console.log('Sending request to:', url, 'Method:', method);
+                // Add _method=PUT for updates so PHP knows it's an update
+                if (serviceId) {
+                    data.append('_method', 'PUT');
+                }
+                
+                console.log('Sending request to:', url, 'Method:', method, 'ServiceId:', serviceId);
+                
+                // Debug: Log all FormData entries
+                console.log('FormData contents:');
+                for (let pair of data.entries()) {
+                    console.log('  ' + pair[0] + ': ' + pair[1]);
+                }
                 
                 const response = await fetch(url, {
                     method,
                     body: data
+                    // Don't set Content-Type header - browser will set it automatically for FormData with boundary
                 });
                 
                 console.log('Response status:', response.status);

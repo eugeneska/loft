@@ -1,16 +1,39 @@
+<?php
+/**
+ * Admin panel - PHP version
+ */
+
+session_start();
+
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    header('Location: /admin/login.php');
+    exit;
+}
+
+$user = [
+    'id' => $_SESSION['user_id'],
+    'username' => $_SESSION['username'],
+    'role' => $_SESSION['role']
+];
+?>
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Админка - Управление ценами</title>
-    <link rel="stylesheet" href="/backend/admin/admin.css">
+    <link rel="stylesheet" href="/admin/admin.css">
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>Админка - Управление ценами и условиями аренды</h1>
             <div id="message" class="message"></div>
+            <div style="text-align: right; margin-top: 10px;">
+                <span style="margin-right: 15px; color: #666;">Пользователь: <?php echo htmlspecialchars($user['username']); ?></span>
+                <button class="btn btn-danger logout-btn" onclick="admin.logout()">Выйти</button>
+            </div>
         </div>
         
         <div class="tabs">
@@ -220,6 +243,7 @@
         </div>
     </div>
     
-    <script src="/backend/admin/admin.js"></script>
+    <script src="/admin/admin.js"></script>
 </body>
 </html>
+

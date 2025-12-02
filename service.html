@@ -789,30 +789,31 @@
     <header id="header">
         <div class="header-content">
             <div class="header-logo">
-                <a href="/">
-                    <img src="/images/logo.png" alt="Armaloft Logo">
-                </a>
+                <img src="images/logo.png" alt="ARMALOFT">
             </div>
             <nav>
                 <ul class="nav-menu">
                     <li class="nav-item has-dropdown">
                         <a href="#" class="nav-link">Аренда</a>
                         <ul class="dropdown">
-                            <li><a href="/#rooms" class="dropdown-item">Залы</a></li>
+                            <li><a href="#rooms" class="dropdown-item">Залы</a></li>
                             <li><a href="https://delu-vremya-antikafe.ru/" target="_blank" class="dropdown-item">Антикафе</a></li>
                         </ul>
                     </li>
                     <li class="nav-item has-dropdown">
                         <a href="#" class="nav-link">Услуги</a>
                         <ul class="dropdown">
-                            <!-- Динамически заполняется через services-menu.js -->
+                            <li><a href="#cafe" class="dropdown-item">Кафе</a></li>
+                            <li><a href="#catering" class="dropdown-item">Кейтеринг</a></li>
+                            <li><a href="#photo" class="dropdown-item">Видео и фотосъемки</a></li>
+                            <li><a href="#pylon" class="dropdown-item">Пилон</a></li>
                         </ul>
                     </li>
                     <li class="nav-item">
-                        <a href="/dogovor.html" class="nav-link">Договор</a>
+                        <a href="dogovor.html" class="nav-link">Договор</a>
                     </li>
                     <li class="nav-item">
-                        <a href="/kontakty.html" class="nav-link">Контакты</a>
+                        <a href="kontakty.html" class="nav-link">Контакты</a>
                     </li>
                 </ul>
                 <button class="mobile-menu-toggle" aria-label="Меню">
@@ -824,24 +825,34 @@
         </div>
     </header>
 
-    <!-- Mobile Menu -->
-    <div class="mobile-menu" id="mobile-menu">
-        <button class="mobile-menu-close" onclick="document.getElementById('mobile-menu').classList.remove('active'); document.querySelector('.mobile-menu-toggle').classList.remove('active');">
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+    <div class="mobile-menu" id="mobileMenu">
+        <button class="mobile-menu-close" aria-label="Закрыть меню">
             <span></span>
             <span></span>
         </button>
-        <ul class="nav-menu">
-            <li class="nav-item">
+        <ul>
+            <li class="nav-item has-dropdown">
                 <a href="#" class="nav-link">Аренда</a>
+                <ul class="dropdown">
+                    <li><a href="#rooms" class="dropdown-item">Залы</a></li>
+                    <li><a href="https://delu-vremya-antikafe.ru/" target="_blank" class="dropdown-item">Антикафе</a></li>
+                </ul>
             </li>
-            <li class="nav-item">
+            <li class="nav-item has-dropdown">
                 <a href="#" class="nav-link">Услуги</a>
+                <ul class="dropdown">
+                    <li><a href="#cafe" class="dropdown-item">Кафе</a></li>
+                    <li><a href="#catering" class="dropdown-item">Кейтеринг</a></li>
+                    <li><a href="#photo" class="dropdown-item">Видео и фотосъемки</a></li>
+                    <li><a href="#pylon" class="dropdown-item">Пилон</a></li>
+                </ul>
             </li>
             <li class="nav-item">
-                <a href="/dogovor.html" class="nav-link">Договор</a>
+                <a href="dogovor.html" class="nav-link">Договор</a>
             </li>
             <li class="nav-item">
-                <a href="/kontakty.html" class="nav-link">Контакты</a>
+                <a href="kontakty.html" class="nav-link">Контакты</a>
             </li>
         </ul>
     </div>
@@ -882,11 +893,45 @@
 
     <script>
         // Мобильное меню
-        document.querySelector('.mobile-menu-toggle')?.addEventListener('click', function() {
-            const mobileMenu = document.getElementById('mobile-menu');
-            this.classList.toggle('active');
-            mobileMenu.classList.toggle('active');
-        });
+        const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+        const mobileNavItems = mobileMenu?.querySelectorAll('.nav-item.has-dropdown');
+
+        function toggleMobileMenu() {
+            if (mobileMenuToggle && mobileMenu && mobileOverlay) {
+                mobileMenuToggle.classList.toggle('active');
+                mobileMenu.classList.toggle('active');
+                mobileOverlay.classList.toggle('active');
+                document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
+            }
+        }
+
+        if (mobileMenuToggle) {
+            mobileMenuToggle.addEventListener('click', toggleMobileMenu);
+        }
+        if (mobileOverlay) {
+            mobileOverlay.addEventListener('click', toggleMobileMenu);
+        }
+
+        // Кнопка закрытия мобильного меню
+        const mobileMenuClose = document.querySelector('.mobile-menu-close');
+        if (mobileMenuClose) {
+            mobileMenuClose.addEventListener('click', toggleMobileMenu);
+        }
+
+        // Открытие/закрытие подменю в мобильной версии
+        if (mobileNavItems) {
+            mobileNavItems.forEach(item => {
+                const link = item.querySelector('.nav-link');
+                if (link) {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        item.classList.toggle('active');
+                    });
+                }
+            });
+        }
 
         // Эффект появления фона при скролле
         window.addEventListener('scroll', function() {
@@ -944,6 +989,7 @@
             });
         });
     </script>
-    <script src="/js/services-menu.js"></script>
+    <script src="js/services-menu.js"></script>
 </body>
 </html>
+    
