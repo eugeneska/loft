@@ -90,6 +90,65 @@
     }
 
     /**
+     * Расчет количества часов из диапазона времени
+     * @param {string} timeFrom - Время начала в формате "HH:MM"
+     * @param {string} timeTo - Время окончания в формате "HH:MM"
+     * @returns {number} - Количество часов
+     */
+    function calculateHours(timeFrom, timeTo) {
+        if (!timeFrom || !timeTo) {
+            return 2; // По умолчанию 2 часа
+        }
+
+        try {
+            const [fromHours, fromMinutes] = timeFrom.split(':').map(Number);
+            const [toHours, toMinutes] = timeTo.split(':').map(Number);
+
+            // Преобразуем время в минуты
+            const fromTotalMinutes = fromHours * 60 + (fromMinutes || 0);
+            let toTotalMinutes = toHours * 60 + (toMinutes || 0);
+
+            // Если время окончания меньше времени начала, значит это следующий день
+            if (toTotalMinutes < fromTotalMinutes) {
+                toTotalMinutes += 24 * 60; // Добавляем 24 часа
+            }
+
+            // Вычисляем разницу в минутах
+            const diffMinutes = toTotalMinutes - fromTotalMinutes;
+            
+            // Преобразуем в часы (округляем вверх)
+            const hours = Math.ceil(diffMinutes / 60);
+            
+            // Минимум 1 час
+            return Math.max(1, hours);
+        } catch (error) {
+            console.warn('Ошибка расчета часов:', error);
+            return 2; // По умолчанию 2 часа
+        }
+    }
+
+    /**
+     * Получение правильного склонения слова "час"
+     * @param {number} hours - Количество часов
+     * @returns {string} - Правильное склонение
+     */
+    function getHoursWord(hours) {
+        const lastDigit = hours % 10;
+        const lastTwoDigits = hours % 100;
+
+        if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
+            return 'часов';
+        }
+        if (lastDigit === 1) {
+            return 'час';
+        }
+        if (lastDigit >= 2 && lastDigit <= 4) {
+            return 'часа';
+        }
+        return 'часов';
+    }
+
+    /**
      * Обновление цены на карточке зала
      */
     function updateHallPrice(calculationHallId, calculationResult) {
@@ -104,13 +163,26 @@
         if (!priceBlock) return;
 
         if (calculationResult && calculationResult.valid) {
+            // Получаем данные формы для расчета часов
+            const formData = getFormData();
+            const hours = calculateHours(formData.timeFrom, formData.timeTo);
+            
             const priceAmount = priceBlock.querySelector('.price-amount');
+            const priceDetail = priceBlock.querySelector('.price-detail');
+            
             if (priceAmount) {
-                // Показываем стоимость за 2 часа
+                // Показываем стоимость за рассчитанное количество часов
                 const basePrice = calculationResult.base_price || 0;
-                const twoHoursPrice = basePrice * 2;
-                priceAmount.textContent = twoHoursPrice.toLocaleString('ru-RU');
+                const totalPrice = basePrice * hours;
+                priceAmount.textContent = totalPrice.toLocaleString('ru-RU');
             }
+            
+            // Обновляем текст с количеством часов
+            if (priceDetail) {
+                const hoursWord = getHoursWord(hours);
+                priceDetail.textContent = `за ${hours} ${hoursWord}`;
+            }
+            
             priceBlock.style.display = 'block';
             roomCard.classList.add('calculated');
         } else {
