@@ -52,12 +52,14 @@ function updatePricingDataFromAPI(apiData) {
 const STANDARD_PRICES = {
     'armaloft': {
         name: 'Арма Лофт студия 1',
-        weekday_price: 2500,        // Будни (Пн-Чт + Пт до 17:00)
-        fri_sat_price: 3500,        // Пятница 17:00+ и суббота
-        sunday_price: 3000,         // Воскресенье
+        weekday_price: 3500,        // Пн с 8-00 до Пт 17-00
+        weekday_10_22: 3500,        // Пн с 8-00 до Пт 17-00
+        weekday_22_00: 3500,        // Пн с 8-00 до Пт 17-00
+        fri_sat_price: 4500,        // Пт 17-00 до Вс 8-00
+        sunday_price: 3500,         // Вс 8-00 до Пн 8-00
         cleaning_under_30: 1500,    // Уборка до 30 чел
         cleaning_over_30: 2000,     // Уборка свыше 30 чел
-        after_hours_rate: 500,      // Доплата за внеурочное время (руб/час)
+        after_hours_rate: 400,      // Наценка за ночное время 22:00-10:00 (руб/час)
         food_alcohol_allowed: true  // Бронирование с едой/алкоголем разрешено
     },
     'merkuri': {
@@ -106,12 +108,14 @@ const STANDARD_PRICES = {
 const DECEMBER_PRICES = {
     'armaloft': {
         name: 'Арма Лофт студия 1',
-        weekday_price: 2500,        // Пн-Вт: обычные цены
-        fri_sat_price: 4000,        // Ср-Чт-Пт-Сб-Вс: цены декабря
-        sunday_price: 3500,         // Воскресенье декабря
+        weekday_price: 3500,        // Пн с 8-00 до Пт 17-00
+        weekday_10_22: 3500,        // Пн с 8-00 до Пт 17-00
+        weekday_22_00: 3500,        // Пн с 8-00 до Пт 17-00
+        fri_sat_price: 4500,        // Пт 17-00 до Вс 8-00
+        sunday_price: 3500,         // Вс 8-00 до Пн 8-00
         cleaning_under_30: 1500,
         cleaning_over_30: 2000,
-        after_hours_rate: 400,      // Декабрь: 400 руб/час
+        after_hours_rate: 400,      // Наценка за ночное время 22:00-10:00 (руб/час)
         food_alcohol_allowed: true
     },
     'merkuri': {
@@ -206,7 +210,8 @@ const EXTRA_SERVICES = {
 // ============================================
 
 /**
- * Определяет категорию дня
+ * Определяет категорию дня с учетом перехода в 8:00
+ * Правила: Пн 8:00-Пт 17:00 = weekday, Пт 17:00-Вс 8:00 = fri_sat, Вс 8:00-Пн 8:00 = sunday
  * @param {Date} date - Дата
  * @returns {string} 'weekday' | 'fri_sat' | 'sunday'
  */
@@ -214,22 +219,26 @@ function getDayCategory(date) {
     const dayOfWeek = date.getDay(); // 0=воскресенье, 1=понедельник, ..., 6=суббота
     const hour = date.getHours();
     
-    // Воскресенье - весь день
-    if (dayOfWeek === 0) {
+    // Воскресенье с 8:00 до понедельника 8:00
+    if (dayOfWeek === 0 && hour >= 8) {
+        return 'sunday';
+    }
+    if (dayOfWeek === 1 && hour < 8) {
         return 'sunday';
     }
     
-    // Суббота - весь день
-    if (dayOfWeek === 6) {
-        return 'fri_sat';
-    }
-    
-    // Пятница после 17:00
+    // Пятница с 17:00, суббота весь день, воскресенье до 8:00 -> fri_sat
     if (dayOfWeek === 5 && hour >= 17) {
         return 'fri_sat';
     }
+    if (dayOfWeek === 6) {
+        return 'fri_sat';
+    }
+    if (dayOfWeek === 0 && hour < 8) {
+        return 'fri_sat';
+    }
     
-    // Все остальное - будни (Пн-Чт + Пт до 17:00)
+    // Все остальное - будни (Пн с 8:00 до Пт 17:00)
     return 'weekday';
 }
 
@@ -306,7 +315,7 @@ function getHallPricing(hallId, date) {
 }
 
 /**
- * Определяет категорию дня с учетом декабрьских правил
+ * Определяет категорию дня с учетом декабрьских правил и переходов в 8:00
  * @param {Date} date - Дата начала бронирования
  * @param {string} startTime - Время начала (HH:MM)
  * @returns {string} 'weekday' | 'fri_sat' | 'sunday'
@@ -314,15 +323,22 @@ function getHallPricing(hallId, date) {
 function getDayCategoryWithDecemberRules(date, startTime) {
     // Для декабря: Пн-Вт используют weekday_price, остальные дни - fri_sat_price/sunday_price
     if (isDecember(date) && !isEarlyDecember(date)) {
+        const [hours, minutes] = startTime.split(':').map(Number);
         const dayOfWeek = date.getDay();
         
+        // Если время до 8:00, считаем что это предыдущий день
+        let effectiveDay = dayOfWeek;
+        if (hours < 8) {
+            effectiveDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        }
+        
         // Воскресенье декабря
-        if (dayOfWeek === 0) {
+        if (effectiveDay === 0 || (dayOfWeek === 1 && hours < 8)) {
             return 'sunday';
         }
         
         // Понедельник и вторник декабря - используем weekday_price
-        if (dayOfWeek === 1 || dayOfWeek === 2) {
+        if (effectiveDay === 1 || effectiveDay === 2) {
             return 'weekday';
         }
         
@@ -330,7 +346,7 @@ function getDayCategoryWithDecemberRules(date, startTime) {
         return 'fri_sat';
     }
     
-    // Для стандартного периода используем обычную логику
+    // Для стандартного периода используем обычную логику с переходами в 8:00
     const dateWithTime = new Date(date);
     const [hours, minutes] = startTime.split(':').map(Number);
     dateWithTime.setHours(hours, minutes || 0, 0, 0);
@@ -363,35 +379,42 @@ function calculateHours(startTime, endTime) {
 }
 
 /**
- * Вычисляет доплату за внеурочное время (только в будни)
+ * Вычисляет доплату за ночное время (22:00-10:00) для любого дня недели
  * @param {string} dayCategory - Категория дня
  * @param {string} startTime - Время начала (HH:MM)
  * @param {string} endTime - Время окончания (HH:MM)
- * @param {number} afterHoursRate - Ставка за внеурочный час
+ * @param {number} afterHoursRate - Ставка за ночной час (400р)
  * @returns {number} Доплата в рублях
  */
 function calculateAfterHoursFee(dayCategory, startTime, endTime, afterHoursRate) {
-    // Доплата только в будни
-    if (dayCategory !== 'weekday') {
-        return 0;
-    }
-    
-    const [startHours] = startTime.split(':').map(Number);
+    // Ночная наценка применяется к любому дню недели
+    const [startHours, startMinutes] = startTime.split(':').map(Number);
     const [endHours, endMinutes] = endTime.split(':').map(Number);
     
-    // Внеурочное время: до 10:00 и после 22:00
-    const earlyHours = Math.max(0, 10 - startHours);
-    let lateHours = 0;
+    const startDecimal = startHours + startMinutes / 60;
+    let endDecimal = endHours + endMinutes / 60;
     
-    if (endHours > 22 || (endHours === 22 && endMinutes > 0)) {
-        lateHours = endHours - 22;
-        if (endHours === 22 && endMinutes > 0) {
-            lateHours += endMinutes / 60;
+    // Если время окончания меньше времени начала, значит это следующий день
+    if (endDecimal <= startDecimal) {
+        endDecimal += 24;
+    }
+    
+    let nightHours = 0;
+    
+    // Итерируем по каждому часу бронирования
+    for (let hour = startDecimal; hour < endDecimal; hour += 1) {
+        const currentHour = hour % 24;
+        // Ночной период: с 22:00 до 10:00 (22, 23, 0, 1, 2, ..., 9)
+        if (currentHour >= 22 || currentHour < 10) {
+            // Определяем, сколько часов из этого часа попадает в бронирование
+            const hourStart = Math.max(hour, startDecimal);
+            const hourEnd = Math.min(hour + 1, endDecimal);
+            const hoursInPeriod = Math.max(0, hourEnd - hourStart);
+            nightHours += hoursInPeriod;
         }
     }
     
-    const afterHours = earlyHours + lateHours;
-    return Math.max(0, afterHours) * afterHoursRate;
+    return Math.max(0, nightHours) * afterHoursRate;
 }
 
 /**

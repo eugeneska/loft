@@ -91,6 +91,9 @@ const admin = {
             case 'season-rules':
                 this.loadSeasonRules();
                 break;
+            case 'services':
+                this.loadServices();
+                break;
         }
     },
     
@@ -980,6 +983,525 @@ const admin = {
             this.loadSeasonRules();
         } catch (error) {
             this.showMessage('Ошибка удаления правила', 'error');
+        }
+    },
+    
+    // ==================== SERVICES ====================
+    
+    async loadServices() {
+        const loadingEl = document.getElementById('services-loading');
+        const tableEl = document.getElementById('services-table');
+        
+        try {
+            loadingEl.style.display = 'block';
+            tableEl.style.display = 'none';
+            
+            const response = await fetch(`${API_BASE}/services`);
+            if (!response.ok) throw new Error('Ошибка загрузки');
+            
+            const services = await response.json();
+            this.allServices = services; // Сохраняем для фильтрации
+            
+            this.renderServicesTable(services);
+            
+            loadingEl.style.display = 'none';
+            tableEl.style.display = 'table';
+        } catch (error) {
+            console.error('Error loading services:', error);
+            loadingEl.innerHTML = `<span style="color: red;">Ошибка загрузки: ${error.message}</span>`;
+        }
+    },
+    
+    renderServicesTable(services) {
+        const tbody = document.getElementById('services-table-body');
+        tbody.innerHTML = services.map(service => `
+            <tr>
+                <td>${service.id}</td>
+                <td>${service.hero_title || '-'}</td>
+                <td><code>${service.slug}</code></td>
+                <td><span class="status-badge ${service.is_active ? 'status-active' : 'status-inactive'}">
+                    ${service.is_active ? 'Активна' : 'Неактивна'}
+                </span></td>
+                <td><span class="status-badge ${service.show_in_menu ? 'status-active' : 'status-inactive'}">
+                    ${service.show_in_menu ? 'Да' : 'Нет'}
+                </span></td>
+                <td>${service.menu_sort || 500}</td>
+                <td>${new Date(service.created_at).toLocaleDateString('ru-RU')}</td>
+                <td>
+                    <button class="btn btn-secondary" onclick="admin.openServiceModal(${service.id})">Редактировать</button>
+                    <button class="btn btn-danger" onclick="admin.deleteService(${service.id})">Удалить</button>
+                    ${service.is_active ? `<a href="/services/${service.slug}" target="_blank" class="btn btn-primary" style="margin-left: 5px;">Перейти</a>` : ''}
+                </td>
+            </tr>
+        `).join('');
+    },
+    
+    filterServices() {
+        if (!this.allServices) return;
+        
+        const search = document.getElementById('services-search').value.toLowerCase();
+        const onlyActive = document.getElementById('services-filter-active').checked;
+        
+        let filtered = this.allServices.filter(service => {
+            const matchesSearch = !search || 
+                (service.hero_title && service.hero_title.toLowerCase().includes(search)) ||
+                (service.slug && service.slug.toLowerCase().includes(search));
+            const matchesActive = !onlyActive || service.is_active;
+            return matchesSearch && matchesActive;
+        });
+        
+        this.renderServicesTable(filtered);
+    },
+    
+    openServiceModal(id = null) {
+        if (id) {
+            fetch(`${API_BASE}/services/admin/${id}`)
+                .then(r => r.json())
+                .then(service => {
+                    this.openModal('Редактировать услугу', this.getServiceFormHTML(service));
+                    this.setupServiceForm(id);
+                })
+                .catch(err => {
+                    this.showMessage('Ошибка загрузки данных', 'error');
+                    console.error(err);
+                });
+        } else {
+            this.openModal('Создать услугу', this.getServiceFormHTML(null));
+            this.setupServiceForm(null);
+        }
+    },
+    
+    getServiceFormHTML(service) {
+        const advantages = service?.advantages || [];
+        const photos = service?.photos || [];
+        
+        return `
+            <div style="max-height: 80vh; overflow-y: auto;">
+                <form id="service-form" enctype="multipart/form-data">
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px;">
+                        <button type="button" class="tab-btn active" data-tab="general" onclick="admin.switchServiceTab('general')">Общее</button>
+                        <button type="button" class="tab-btn" data-tab="seo" onclick="admin.switchServiceTab('seo')">SEO</button>
+                        <button type="button" class="tab-btn" data-tab="hero" onclick="admin.switchServiceTab('hero')">Hero</button>
+                        <button type="button" class="tab-btn" data-tab="content" onclick="admin.switchServiceTab('content')">Контент</button>
+                    </div>
+                    
+                    <!-- Общее -->
+                    <div id="service-tab-general" class="service-tab-content active">
+                        <div class="form-group">
+                            <label>Название (hero_title): *</label>
+                            <input type="text" name="hero_title" value="${service?.hero_title || ''}" required 
+                                oninput="admin.generateSlug(this.value, 'service-slug')">
+                        </div>
+                        <div class="form-group">
+                            <label>Slug (URL): *</label>
+                            <input type="text" name="slug" id="service-slug" value="${service?.slug || ''}" required>
+                            <small>Латинские буквы, дефисы. Будет использоваться в URL: /services/{slug}</small>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="is_active" ${(service?.is_active === true || service?.is_active === 1) ? 'checked' : ''}>
+                                Активна (страница доступна по URL)
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="show_in_menu" ${(service?.show_in_menu === true || service?.show_in_menu === 1) ? 'checked' : ''}>
+                                Показывать в меню
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>Порядок в меню:</label>
+                            <input type="number" name="menu_sort" value="${service?.menu_sort || 500}">
+                        </div>
+                    </div>
+                    
+                    <!-- SEO -->
+                    <div id="service-tab-seo" class="service-tab-content">
+                        <div class="form-group">
+                            <label>Meta Title:</label>
+                            <input type="text" name="meta_title" value="${service?.meta_title || ''}" 
+                                placeholder="Заголовок страницы (title)">
+                        </div>
+                        <div class="form-group">
+                            <label>Meta Description:</label>
+                            <textarea name="meta_description" rows="3" 
+                                placeholder="Описание для поисковых систем">${service?.meta_description || ''}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Meta Keywords:</label>
+                            <input type="text" name="meta_keywords" value="${service?.meta_keywords || ''}" 
+                                placeholder="Ключевые слова через запятую">
+                        </div>
+                    </div>
+                    
+                    <!-- Hero -->
+                    <div id="service-tab-hero" class="service-tab-content">
+                        <div class="form-group">
+                            <label>Фоновое изображение Hero:</label>
+                            <input type="file" name="hero_background_image" accept="image/*">
+                            ${service?.hero_background_image ? `
+                                <div style="margin-top: 10px;">
+                                    <img src="${service.hero_background_image}" style="max-width: 200px; max-height: 150px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <div><small>Текущее изображение</small></div>
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="form-group">
+                            <label>Заголовок Hero:</label>
+                            <input type="text" name="hero_title" value="${service?.hero_title || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Подзаголовок Hero:</label>
+                            <textarea name="hero_subtitle" rows="2">${service?.hero_subtitle || ''}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Текст кнопки Hero:</label>
+                            <input type="text" name="hero_button_text" value="${service?.hero_button_text || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Ссылка кнопки Hero:</label>
+                            <input type="text" name="hero_button_link" value="${service?.hero_button_link || ''}" 
+                                placeholder="URL или якорь (#section)">
+                        </div>
+                    </div>
+                    
+                    <!-- Контент -->
+                    <div id="service-tab-content" class="service-tab-content">
+                        <div class="form-group">
+                            <label>Заголовок вступления:</label>
+                            <input type="text" name="intro_title" value="${service?.intro_title || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Текст вступления (HTML):</label>
+                            <textarea name="intro_text" rows="5">${service?.intro_text || ''}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Изображение вступления:</label>
+                            <input type="file" name="intro_image" accept="image/*">
+                            ${service?.intro_image ? `
+                                <div style="margin-top: 10px;">
+                                    <img src="${service.intro_image}" style="max-width: 200px; max-height: 150px; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        <h3 style="margin-top: 30px;">Преимущества</h3>
+                        <div id="advantages-list">
+                            ${advantages.map((adv, index) => `
+                                <div class="advantage-item" style="border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 4px;">
+                                    <div class="form-group">
+                                        <label>Заголовок:</label>
+                                        <input type="text" name="advantage_title_${index}" value="${adv.title || ''}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Текст:</label>
+                                        <textarea name="advantage_text_${index}" rows="2">${adv.text || ''}</textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Иконка (эмодзи или текст):</label>
+                                        <input type="text" name="advantage_icon_${index}" value="${adv.icon || ''}">
+                                    </div>
+                                    <button type="button" class="btn btn-danger" onclick="admin.removeAdvantageItem(this)">Удалить</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <button type="button" class="btn btn-secondary" onclick="admin.addAdvantageItem()">+ Добавить преимущество</button>
+                        
+                        <h3 style="margin-top: 30px;">Фотографии</h3>
+                        <div id="photos-list">
+                            ${photos.map((photo, index) => `
+                                <div class="photo-item" style="border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 4px;">
+                                    <div class="form-group">
+                                        <label>URL изображения:</label>
+                                        <input type="text" name="photo_image_${index}" value="${photo.image || ''}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Подпись:</label>
+                                        <input type="text" name="photo_caption_${index}" value="${photo.caption || ''}">
+                                    </div>
+                                    <button type="button" class="btn btn-danger" onclick="admin.removePhotoItem(this)">Удалить</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <button type="button" class="btn btn-secondary" onclick="admin.addPhotoItem()">+ Добавить фото</button>
+                        
+                        <h3 style="margin-top: 30px;">Нижний CTA</h3>
+                        <div class="form-group">
+                            <label>Заголовок CTA:</label>
+                            <input type="text" name="bottom_cta_title" value="${service?.bottom_cta_title || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Текст CTA:</label>
+                            <textarea name="bottom_cta_text" rows="2">${service?.bottom_cta_text || ''}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Текст кнопки CTA:</label>
+                            <input type="text" name="bottom_cta_button_text" value="${service?.bottom_cta_button_text || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Ссылка кнопки CTA:</label>
+                            <input type="text" name="bottom_cta_button_link" value="${service?.bottom_cta_button_link || ''}">
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions" style="margin-top: 20px; border-top: 2px solid #ddd; padding-top: 15px;">
+                        <button type="button" class="btn" onclick="admin.closeModal()">Отмена</button>
+                        <button type="submit" class="btn btn-primary">Сохранить</button>
+                    </div>
+                </form>
+            </div>
+            <style>
+                .tab-btn { padding: 8px 15px; border: 1px solid #ddd; background: #f5f5f5; cursor: pointer; }
+                .tab-btn.active { background: #007bff; color: white; }
+                .service-tab-content { display: none; }
+                .service-tab-content.active { display: block; }
+            </style>
+        `;
+    },
+    
+    switchServiceTab(tabName) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.service-tab-content').forEach(content => content.classList.remove('active'));
+        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+        document.getElementById(`service-tab-${tabName}`).classList.add('active');
+    },
+    
+    generateSlug(text, targetId) {
+        const slug = text
+            .toLowerCase()
+            .trim()
+            .replace(/[^\w\s-]/g, '')
+            .replace(/[\s_-]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+        document.getElementById(targetId).value = slug;
+    },
+    
+    addAdvantageItem() {
+        const list = document.getElementById('advantages-list');
+        const index = list.children.length;
+        const item = document.createElement('div');
+        item.className = 'advantage-item';
+        item.style.cssText = 'border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 4px;';
+        item.innerHTML = `
+            <div class="form-group">
+                <label>Заголовок:</label>
+                <input type="text" name="advantage_title_${index}">
+            </div>
+            <div class="form-group">
+                <label>Текст:</label>
+                <textarea name="advantage_text_${index}" rows="2"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Иконка (эмодзи или текст):</label>
+                <input type="text" name="advantage_icon_${index}">
+            </div>
+            <button type="button" class="btn btn-danger" onclick="admin.removeAdvantageItem(this)">Удалить</button>
+        `;
+        list.appendChild(item);
+    },
+    
+    removeAdvantageItem(btn) {
+        btn.closest('.advantage-item').remove();
+    },
+    
+    addPhotoItem() {
+        const list = document.getElementById('photos-list');
+        const index = list.children.length;
+        const item = document.createElement('div');
+        item.className = 'photo-item';
+        item.style.cssText = 'border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 4px;';
+        item.innerHTML = `
+            <div class="form-group">
+                <label>URL изображения:</label>
+                <input type="text" name="photo_image_${index}">
+            </div>
+            <div class="form-group">
+                <label>Подпись:</label>
+                <input type="text" name="photo_caption_${index}">
+            </div>
+            <button type="button" class="btn btn-danger" onclick="admin.removePhotoItem(this)">Удалить</button>
+        `;
+        list.appendChild(item);
+    },
+    
+    removePhotoItem(btn) {
+        btn.closest('.photo-item').remove();
+    },
+    
+    setupServiceForm(id) {
+        // Сохраняем id для использования в обработчике
+        const serviceId = id;
+        
+        // Ждем, пока форма отрендерится в модальном окне
+        setTimeout(() => {
+            const form = document.getElementById('service-form');
+            if (!form) {
+                console.error('Form not found!');
+                this.showMessage('Ошибка: форма не найдена', 'error');
+                return;
+            }
+            
+            // Удаляем старые обработчики
+            const newForm = form.cloneNode(true);
+            form.parentNode.replaceChild(newForm, form);
+            const cleanForm = document.getElementById('service-form');
+            
+            if (!cleanForm) {
+                console.error('Clean form not found after clone!');
+                return;
+            }
+            
+            // Привязываем обработчик к форме
+            cleanForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            console.log('Form submit triggered');
+            
+            const formData = new FormData(cleanForm);
+            
+            // Собираем преимущества
+            const advantages = [];
+            document.querySelectorAll('.advantage-item').forEach((item, index) => {
+                const title = item.querySelector(`[name="advantage_title_${index}"]`)?.value;
+                if (title) {
+                    advantages.push({
+                        title: title,
+                        text: item.querySelector(`[name="advantage_text_${index}"]`)?.value || null,
+                        icon: item.querySelector(`[name="advantage_icon_${index}"]`)?.value || null,
+                        sort_order: index
+                    });
+                }
+            });
+            
+            // Собираем фотографии
+            const photos = [];
+            document.querySelectorAll('.photo-item').forEach((item, index) => {
+                const image = item.querySelector(`[name="photo_image_${index}"]`)?.value;
+                if (image) {
+                    photos.push({
+                        image: image,
+                        caption: item.querySelector(`[name="photo_caption_${index}"]`)?.value || null,
+                        sort_order: index
+                    });
+                }
+            });
+            
+            const data = new FormData();
+            data.append('slug', formData.get('slug'));
+            data.append('hero_title', formData.get('hero_title'));
+            
+            // Правильная обработка чекбоксов
+            const isActiveCheckbox = cleanForm.querySelector('[name="is_active"]');
+            const showInMenuCheckbox = cleanForm.querySelector('[name="show_in_menu"]');
+            const isActiveValue = isActiveCheckbox && isActiveCheckbox.checked ? '1' : '0';
+            const showInMenuValue = showInMenuCheckbox && showInMenuCheckbox.checked ? '1' : '0';
+            
+            console.log('Sending service data:', {
+                is_active_checked: isActiveCheckbox?.checked,
+                show_in_menu_checked: showInMenuCheckbox?.checked,
+                is_active_value: isActiveValue,
+                show_in_menu_value: showInMenuValue
+            });
+            
+            data.append('is_active', isActiveValue);
+            data.append('show_in_menu', showInMenuValue);
+            data.append('menu_sort', formData.get('menu_sort') || '500');
+            data.append('meta_title', formData.get('meta_title') || '');
+            data.append('meta_description', formData.get('meta_description') || '');
+            data.append('meta_keywords', formData.get('meta_keywords') || '');
+            data.append('hero_subtitle', formData.get('hero_subtitle') || '');
+            data.append('hero_button_text', formData.get('hero_button_text') || '');
+            data.append('hero_button_link', formData.get('hero_button_link') || '');
+            data.append('intro_title', formData.get('intro_title') || '');
+            data.append('intro_text', formData.get('intro_text') || '');
+            data.append('bottom_cta_title', formData.get('bottom_cta_title') || '');
+            data.append('bottom_cta_text', formData.get('bottom_cta_text') || '');
+            data.append('bottom_cta_button_text', formData.get('bottom_cta_button_text') || '');
+            data.append('bottom_cta_button_link', formData.get('bottom_cta_button_link') || '');
+            data.append('advantages', JSON.stringify(advantages));
+            data.append('photos', JSON.stringify(photos));
+            
+            if (formData.get('hero_background_image')?.size > 0) {
+                data.append('hero_background_image', formData.get('hero_background_image'));
+            }
+            if (formData.get('intro_image')?.size > 0) {
+                data.append('intro_image', formData.get('intro_image'));
+            }
+            
+            try {
+                // Показываем индикатор загрузки
+                const submitBtn = cleanForm.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    const originalText = submitBtn.textContent;
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Сохранение...';
+                }
+                
+                const url = serviceId ? `${API_BASE}/services/${serviceId}` : `${API_BASE}/services`;
+                const method = serviceId ? 'PUT' : 'POST';
+                
+                console.log('Sending request to:', url, 'Method:', method);
+                
+                const response = await fetch(url, {
+                    method,
+                    body: data
+                });
+                
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    let errorMessage = 'Ошибка сохранения';
+                    try {
+                        const error = await response.json();
+                        errorMessage = error.error || errorMessage;
+                    } catch (e) {
+                        errorMessage = `Ошибка ${response.status}: ${response.statusText}`;
+                    }
+                    throw new Error(errorMessage);
+                }
+                
+                const result = await response.json();
+                console.log('Service saved successfully:', result);
+                
+                this.showMessage('Услуга сохранена успешно');
+                this.closeModal();
+                this.loadServices();
+            } catch (error) {
+                console.error('Error saving service:', error);
+                this.showMessage(error.message || 'Ошибка сохранения услуги', 'error');
+                
+                // Восстанавливаем кнопку
+                const submitBtn = cleanForm.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Сохранить';
+                }
+            }
+            });
+            
+            // Также привязываем обработчик к кнопке напрямую (на случай проблем с формой)
+            const submitButton = cleanForm.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    cleanForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+                });
+            }
+        }, 100); // Небольшая задержка для рендеринга модального окна
+    },
+    
+    async deleteService(id) {
+        if (!confirm('Вы уверены, что хотите удалить эту услугу? Страница станет недоступна, ссылка исчезнет из меню.')) return;
+        
+        try {
+            const response = await fetch(`${API_BASE}/services/${id}`, { method: 'DELETE' });
+            if (!response.ok) throw new Error('Ошибка удаления');
+            
+            this.showMessage('Услуга удалена успешно');
+            this.loadServices();
+        } catch (error) {
+            this.showMessage('Ошибка удаления услуги', 'error');
         }
     }
 };

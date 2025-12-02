@@ -20,6 +20,7 @@
             <button class="tab" data-tab="extras">Доп. услуги</button>
             <button class="tab" data-tab="extras-prices">Цены доп. услуг</button>
             <button class="tab" data-tab="season-rules">Сезонные правила</button>
+            <button class="tab" data-tab="services">Услуги</button>
         </div>
         
         <!-- Залы -->
@@ -170,6 +171,39 @@
                         </tr>
                     </thead>
                     <tbody id="season-rules-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Услуги -->
+        <div id="services" class="tab-content">
+            <div class="content-card">
+                <div class="content-header">
+                    <h2>Управление услугами</h2>
+                    <button class="btn btn-primary" onclick="admin.openServiceModal()">+ Создать услугу</button>
+                </div>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <input type="text" id="services-search" class="form-control" placeholder="Поиск по названию или slug..." onkeyup="admin.filterServices()">
+                    <label style="margin-top: 10px;">
+                        <input type="checkbox" id="services-filter-active" onchange="admin.filterServices()">
+                        Только активные
+                    </label>
+                </div>
+                <div id="services-loading" class="loading">Загрузка...</div>
+                <table class="table" id="services-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Название</th>
+                            <th>Slug</th>
+                            <th>Статус</th>
+                            <th>В меню</th>
+                            <th>Порядок</th>
+                            <th>Создано</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="services-table-body"></tbody>
                 </table>
             </div>
         </div>

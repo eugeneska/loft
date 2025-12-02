@@ -200,6 +200,63 @@ function createTables() {
         )
     `);
     
+    // Таблица услуг
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS services (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            slug TEXT UNIQUE NOT NULL,
+            is_active INTEGER DEFAULT 0,
+            show_in_menu INTEGER DEFAULT 0,
+            menu_sort INTEGER DEFAULT 500,
+            meta_title TEXT,
+            meta_description TEXT,
+            meta_keywords TEXT,
+            hero_background_image TEXT,
+            hero_title TEXT NOT NULL,
+            hero_subtitle TEXT,
+            hero_button_text TEXT,
+            hero_button_link TEXT,
+            intro_title TEXT,
+            intro_text TEXT,
+            intro_image TEXT,
+            bottom_cta_title TEXT,
+            bottom_cta_text TEXT,
+            bottom_cta_button_text TEXT,
+            bottom_cta_button_link TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            deleted_at DATETIME
+        )
+    `);
+    
+    // Таблица преимуществ услуг
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS service_advantages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            service_id INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            text TEXT,
+            icon TEXT,
+            image TEXT,
+            sort_order INTEGER DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE CASCADE
+        )
+    `);
+    
+    // Таблица фотографий услуг
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS service_photos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            service_id INTEGER NOT NULL,
+            image TEXT NOT NULL,
+            caption TEXT,
+            sort_order INTEGER DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE CASCADE
+        )
+    `);
+    
     console.log('Database tables created successfully');
 }
 

@@ -28,6 +28,8 @@ const extrasPricesRoutes = require('./routes/extrasPrices');
 const seasonRulesRoutes = require('./routes/seasonRules');
 const pricingApiRoutes = require('./routes/pricingApi');
 const authRoutes = require('./routes/auth');
+const servicesRoutes = require('./routes/services');
+const servicePageRoutes = require('./routes/servicePage');
 
 // API routes (должны быть перед статическими файлами)
 app.use('/api/halls', hallsRoutes);
@@ -38,6 +40,10 @@ app.use('/api/extras-prices', extrasPricesRoutes);
 app.use('/api/season-rules', seasonRulesRoutes);
 app.use('/api/pricing', pricingApiRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/services', servicesRoutes);
+
+// Public service pages (важно: ДО статических файлов)
+app.use('/services', servicePageRoutes);
 
 // Admin panel routes (важно: ДО статических файлов)
 app.get('/admin/login.html', (req, res) => {

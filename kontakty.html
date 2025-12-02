@@ -717,31 +717,28 @@
     <header id="header">
         <div class="header-content">
             <div class="header-logo">
-                <a href="index.html"><img src="images/logo.png" alt="ARMALOFT"></a>
+                <a href="/"><img src="/images/logo.png" alt="ARMALOFT"></a>
             </div>
             <nav>
                 <ul class="nav-menu">
                     <li class="nav-item has-dropdown">
                         <a href="#" class="nav-link">Аренда</a>
                         <ul class="dropdown">
-                            <li><a href="index.html" class="dropdown-item">Залы</a></li>
-                            <li><a href="https://example.com" target="_blank" class="dropdown-item">Антикафе</a></li>
+                            <li><a href="/#rooms" class="dropdown-item">Залы</a></li>
+                            <li><a href="https://delu-vremya-antikafe.ru/" target="_blank" class="dropdown-item">Антикафе</a></li>
                         </ul>
                     </li>
                     <li class="nav-item has-dropdown">
                         <a href="#" class="nav-link">Услуги</a>
                         <ul class="dropdown">
-                            <li><a href="index.html#cafe" class="dropdown-item">Кафе</a></li>
-                            <li><a href="index.html#catering" class="dropdown-item">Кейтеринг</a></li>
-                            <li><a href="index.html#photo" class="dropdown-item">Видео и фотосъемки</a></li>
-                            <li><a href="index.html#pylon" class="dropdown-item">Пилон</a></li>
+                            <!-- Динамически заполняется через services-menu.js -->
                         </ul>
                     </li>
                     <li class="nav-item">
-                        <a href="dogovor.html" class="nav-link">Договор</a>
+                        <a href="/dogovor.html" class="nav-link">Договор</a>
                     </li>
                     <li class="nav-item">
-                        <a href="kontakty.html" class="nav-link">Контакты</a>
+                        <a href="/kontakty.html" class="nav-link">Контакты</a>
                     </li>
                 </ul>
                 <button class="mobile-menu-toggle" aria-label="Меню">
@@ -759,28 +756,18 @@
             <span></span>
             <span></span>
         </button>
-        <ul>
-            <li class="nav-item has-dropdown">
+        <ul class="nav-menu">
+            <li class="nav-item">
                 <a href="#" class="nav-link">Аренда</a>
-                <ul class="dropdown">
-                    <li><a href="index.html" class="dropdown-item">Залы</a></li>
-                    <li><a href="https://example.com" target="_blank" class="dropdown-item">Антикафе</a></li>
-                </ul>
             </li>
-            <li class="nav-item has-dropdown">
+            <li class="nav-item">
                 <a href="#" class="nav-link">Услуги</a>
-                <ul class="dropdown">
-                    <li><a href="index.html#cafe" class="dropdown-item">Кафе</a></li>
-                    <li><a href="index.html#catering" class="dropdown-item">Кейтеринг</a></li>
-                    <li><a href="index.html#photo" class="dropdown-item">Видео и фотосъемки</a></li>
-                    <li><a href="index.html#pylon" class="dropdown-item">Пилон</a></li>
-                </ul>
             </li>
             <li class="nav-item">
-                <a href="dogovor.html" class="nav-link">Договор</a>
+                <a href="/dogovor.html" class="nav-link">Договор</a>
             </li>
             <li class="nav-item">
-                <a href="kontakty.html" class="nav-link">Контакты</a>
+                <a href="/kontakty.html" class="nav-link">Контакты</a>
             </li>
         </ul>
     </div>
@@ -957,6 +944,7 @@
             }
         });
     </script>
+    <script src="/js/services-menu.js"></script>
 </body>
 </html>
 
