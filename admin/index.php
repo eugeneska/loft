@@ -44,6 +44,8 @@ $user = [
             <button class="tab" data-tab="extras-prices">Цены доп. услуг</button>
             <button class="tab" data-tab="season-rules">Сезонные правила</button>
             <button class="tab" data-tab="services">Услуги</button>
+            <button class="tab" data-tab="merchant">Мерчант</button>
+            <button class="tab" data-tab="settings">Настройки</button>
         </div>
         
         <!-- Залы -->
@@ -228,6 +230,60 @@ $user = [
                     </thead>
                     <tbody id="services-table-body"></tbody>
                 </table>
+            </div>
+        </div>
+        
+        <!-- Мерчант -->
+        <div id="merchant" class="tab-content">
+            <div class="content-card">
+                <div class="content-header">
+                    <h2>Настройки мерчанта</h2>
+                    <button class="btn btn-primary" onclick="admin.openMerchantModal()">+ Добавить мерчант</button>
+                </div>
+                <div id="merchant-loading" class="loading">Загрузка...</div>
+                <div id="merchant-content" style="display: none;">
+                    <table class="table" id="merchant-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Название мерчанта</th>
+                                <th>Merchant ID</th>
+                                <th>Terminal ID</th>
+                                <th>SBP Merchant ID</th>
+                                <th>Обновлено</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="merchant-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Настройки -->
+        <div id="settings" class="tab-content">
+            <div class="content-card">
+                <div class="content-header">
+                    <h2>Настройки приложения</h2>
+                </div>
+                <div id="settings-loading" class="loading">Загрузка...</div>
+                <div id="settings-content" style="display: none;">
+                    <form id="settings-form">
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                <input type="checkbox" id="use-payment-module" name="use_payment_module" style="width: auto; height: auto;">
+                                <span>Использовать платежный модуль при бронировании зала</span>
+                            </label>
+                            <small style="display: block; margin-top: 5px; color: #666;">
+                                Если включено: при бронировании будет кнопка "Перейти к оплате".<br>
+                                Если выключено: при бронировании будет кнопка "Отправить" (заявка отправляется без оплаты).
+                            </small>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Сохранить настройки</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

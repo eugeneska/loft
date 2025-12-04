@@ -60,6 +60,12 @@ const admin = {
             case 'services':
                 this.loadServices();
                 break;
+            case 'merchant':
+                this.loadMerchant();
+                break;
+            case 'settings':
+                this.loadSettings();
+                break;
         }
     },
     
@@ -1483,6 +1489,211 @@ const admin = {
         } catch (error) {
             this.showMessage('Ошибка удаления услуги', 'error');
         }
+    },
+    
+    // ==================== MERCHANT ====================
+    
+    async loadMerchant() {
+        const loadingEl = document.getElementById('merchant-loading');
+        const contentEl = document.getElementById('merchant-content');
+        
+        try {
+            loadingEl.style.display = 'block';
+            contentEl.style.display = 'none';
+            
+            const response = await fetch(`${API_BASE}/merchant`);
+            if (!response.ok) throw new Error('Ошибка загрузки');
+            
+            const merchants = await response.json();
+            
+            const tbody = document.getElementById('merchant-table-body');
+            if (merchants.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">Нет данных. <button class="btn btn-primary" onclick="admin.openMerchantModal()">Создать настройки</button></td></tr>';
+            } else {
+                tbody.innerHTML = merchants.map(merchant => `
+                    <tr>
+                        <td>${merchant.id}</td>
+                        <td>${merchant.merchant_name}</td>
+                        <td><code>${merchant.merchant_id}</code></td>
+                        <td><code>${merchant.terminal_id}</code></td>
+                        <td><code>${merchant.sbp_merchant_id}</code></td>
+                        <td>${merchant.updated_at ? new Date(merchant.updated_at).toLocaleString('ru-RU') : '-'}</td>
+                        <td>
+                            <button class="btn btn-secondary" onclick="admin.openMerchantModal(${merchant.id})">Редактировать</button>
+                            <button class="btn btn-danger" onclick="admin.deleteMerchant(${merchant.id})">Удалить</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+            
+            loadingEl.style.display = 'none';
+            contentEl.style.display = 'block';
+        } catch (error) {
+            console.error('Error loading merchant:', error);
+            loadingEl.innerHTML = `<span style="color: red;">Ошибка загрузки: ${error.message}</span>`;
+        }
+    },
+    
+    openMerchantModal(id = null) {
+        if (id) {
+            fetch(`${API_BASE}/merchant/${id}`)
+                .then(r => r.json())
+                .then(merchant => {
+                    this.openModal('Редактировать настройки мерчанта', this.getMerchantFormHTML(merchant));
+                    this.setupMerchantForm(id);
+                })
+                .catch(err => {
+                    this.showMessage('Ошибка загрузки данных', 'error');
+                    console.error(err);
+                });
+        } else {
+            this.openModal('Добавить настройки мерчанта', this.getMerchantFormHTML(null));
+            this.setupMerchantForm(null);
+        }
+    },
+    
+    getMerchantFormHTML(merchant) {
+        return `
+            <form id="merchant-form">
+                <div class="form-group">
+                    <label>Название мерчанта:</label>
+                    <input type="text" name="merchant_name" value="${merchant?.merchant_name || ''}" required>
+                </div>
+                <div class="form-group">
+                    <label>Merchant ID:</label>
+                    <input type="text" name="merchant_id" value="${merchant?.merchant_id || ''}" required>
+                </div>
+                <div class="form-group">
+                    <label>Terminal ID:</label>
+                    <input type="text" name="terminal_id" value="${merchant?.terminal_id || ''}" required>
+                </div>
+                <div class="form-group">
+                    <label>SBP Merchant ID:</label>
+                    <input type="text" name="sbp_merchant_id" value="${merchant?.sbp_merchant_id || ''}" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="admin.closeModal()">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        `;
+    },
+    
+    setupMerchantForm(id) {
+        const form = document.getElementById('merchant-form');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const data = {
+                merchant_name: formData.get('merchant_name'),
+                merchant_id: formData.get('merchant_id'),
+                terminal_id: formData.get('terminal_id'),
+                sbp_merchant_id: formData.get('sbp_merchant_id')
+            };
+            
+            try {
+                const url = id ? `${API_BASE}/merchant/${id}` : `${API_BASE}/merchant`;
+                const method = id ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Ошибка сохранения');
+                }
+                
+                this.showMessage('Настройки мерчанта сохранены успешно');
+                this.closeModal();
+                this.loadMerchant();
+            } catch (error) {
+                this.showMessage(error.message, 'error');
+            }
+        });
+    },
+    
+    async deleteMerchant(id) {
+        if (!confirm('Вы уверены, что хотите удалить эти настройки мерчанта?')) return;
+        
+        try {
+            const response = await fetch(`${API_BASE}/merchant/${id}`, { method: 'DELETE' });
+            if (!response.ok) throw new Error('Ошибка удаления');
+            
+            this.showMessage('Настройки мерчанта удалены успешно');
+            this.loadMerchant();
+        } catch (error) {
+            this.showMessage('Ошибка удаления настроек мерчанта', 'error');
+        }
+    },
+    
+    // ==================== SETTINGS ====================
+    
+    async loadSettings() {
+        const loadingEl = document.getElementById('settings-loading');
+        const contentEl = document.getElementById('settings-content');
+        
+        try {
+            loadingEl.style.display = 'block';
+            contentEl.style.display = 'none';
+            
+            const response = await fetch(`${API_BASE}/settings`);
+            if (!response.ok) throw new Error('Ошибка загрузки');
+            
+            const settings = await response.json();
+            
+            // Заполняем форму
+            const checkbox = document.getElementById('use-payment-module');
+            if (checkbox) {
+                checkbox.checked = settings.use_payment_module === true || settings.use_payment_module === 1;
+            }
+            
+            // Настраиваем форму
+            this.setupSettingsForm();
+            
+            loadingEl.style.display = 'none';
+            contentEl.style.display = 'block';
+        } catch (error) {
+            console.error('Error loading settings:', error);
+            loadingEl.innerHTML = `<span style="color: red;">Ошибка загрузки: ${error.message}</span>`;
+        }
+    },
+    
+    setupSettingsForm() {
+        const form = document.getElementById('settings-form');
+        if (!form) return;
+        
+        // Удаляем старые обработчики
+        const newForm = form.cloneNode(true);
+        form.parentNode.replaceChild(newForm, form);
+        const cleanForm = document.getElementById('settings-form');
+        
+        cleanForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(cleanForm);
+            const data = {
+                use_payment_module: formData.get('use_payment_module') === 'on'
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/settings`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Ошибка сохранения');
+                }
+                
+                this.showMessage('Настройки сохранены успешно');
+            } catch (error) {
+                this.showMessage(error.message, 'error');
+            }
+        });
     }
 };
 

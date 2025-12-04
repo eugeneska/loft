@@ -82,45 +82,8 @@
                 showBreakdown: true
             });
             
-            // Переопределение обработчика отправки формы
-            bookingForm.addEventListener('submit', function formSubmitHandler(e) {
-                e.preventDefault();
-                
-                if (!window.pricingIntegration) {
-                    alert('Модуль расчёта стоимости не загружен');
-                    return;
-                }
-                
-                // Валидация и получение стоимости
-                const validation = window.pricingIntegration.validateForm();
-                if (!validation.valid) {
-                    alert(validation.error);
-                    return;
-                }
-                
-                const totalPrice = validation.calculation.total;
-                const formData = new FormData(bookingForm);
-                const date = formData.get('date');
-                const startTime = formData.get('time-from');
-                const endTime = formData.get('time-to');
-                const guests = formData.get('guests');
-                
-                // Формирование сообщения
-                const message = `Бронирование создано!\n\n` +
-                    `Зал: ${validation.calculation.details.hall_name}\n` +
-                    `Дата: ${date}\n` +
-                    `Время: ${startTime} - ${endTime}\n` +
-                    `Гостей: ${guests}\n` +
-                    `Стоимость: ${totalPrice.toLocaleString('ru-RU')} ₽\n\n` +
-                    `Мы свяжемся с вами в ближайшее время.`;
-                
-                alert(message);
-                bookingForm.reset();
-                
-                if (window.pricingIntegration.pricingUI) {
-                    window.pricingIntegration.pricingUI.clear();
-                }
-            });
+            // Обработчик отправки формы удален - теперь форма обрабатывается через booking-modal.js
+            // Форма будет открывать модальное окно для ввода имени и телефона
             
             console.log('Модуль расчёта стоимости инициализирован для зала:', hallId);
         } catch (error) {

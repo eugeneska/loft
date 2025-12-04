@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700;800;900&family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/pricing-ui.css">
+    <link rel="stylesheet" href="css/booking-modal.css">
     
     <style>
         * {
@@ -1249,7 +1250,7 @@
                 </div>
 
                 <!-- Форма бронирования -->
-                <div class="booking-form-container">
+                <div class="booking-form-container" data-hall-id="merkuri">
                     <h2 class="booking-form-title">Бронирование зала</h2>
                     <form class="booking-form" id="bookingForm">
                         <div class="booking-form-group">
@@ -1807,6 +1808,11 @@
             }
         }
 
+        // Форма бронирования
+        const bookingForm = document.getElementById('bookingForm');
+        // Форма бронирования теперь обрабатывается через booking-modal.js
+        // Старый код удален, так как используется модальное окно с оплатой
+
         // Установка минимальной даты на сегодня
         const dateInput = document.getElementById('booking-date');
         const today = new Date().toISOString().split('T')[0];
@@ -2122,6 +2128,13 @@
         }
 
     </script>
+
+    <!-- Booking Modal -->
+    <script src="js/booking-modal.js"></script>
+
+    <!-- T-Bank Payment Integration -->
+    <script src="js/tbank-payment-init.js"></script>
+    <script src="https://integrationjs.tbank.ru/integration.js" onload="onPaymentIntegrationLoad()" async></script>
 </body>
 </html>
 

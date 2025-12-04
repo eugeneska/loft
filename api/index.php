@@ -83,6 +83,18 @@ try {
             require_once __DIR__ . '/routes/auth.php';
             break;
             
+        case 'merchant':
+            require_once __DIR__ . '/routes/merchant.php';
+            break;
+            
+        case 'booking':
+            require_once __DIR__ . '/routes/booking.php';
+            break;
+            
+        case 'settings':
+            require_once __DIR__ . '/routes/settings.php';
+            break;
+            
         case 'services':
             // Check if this is a page request (not API)
             // If subRoute is not 'public', 'admin', or numeric, it's likely a slug (page request)
