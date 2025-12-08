@@ -9,6 +9,8 @@ class BookingModal {
         this.bookingData = {};
         this.pricingData = null;
         this.usePaymentModule = true; // По умолчанию включено
+        this.paymentPercent = 50; // По умолчанию 50%
+        this.paymentTermsText = ''; // Текст условий оплаты
         this.init();
     }
 
@@ -24,6 +26,8 @@ class BookingModal {
             if (response.ok) {
                 const settings = await response.json();
                 this.usePaymentModule = settings.use_payment_module !== false;
+                this.paymentPercent = settings.payment_percent || 50;
+                this.paymentTermsText = settings.payment_terms_text || '';
                 this.updatePaymentButton();
             }
         } catch (error) {
@@ -70,7 +74,6 @@ class BookingModal {
                 <div class="booking-modal-step" data-step="2">
                     <h2 class="booking-modal-title">Оплата</h2>
                     <div class="booking-modal-payment-container" id="paymentContainer">
-                        <div class="booking-modal-loading">Инициализация платежной системы...</div>
                     </div>
                     <div class="booking-modal-buttons">
                         <button type="button" class="booking-modal-button booking-modal-button-secondary" data-action="back">Назад</button>
@@ -184,8 +187,48 @@ class BookingModal {
         }
 
         if (step === 2) {
+            // Показываем текст условий сразу, до инициализации платежной системы
+            this.showPaymentTerms();
             this.initPayment();
         }
+    }
+    
+    showPaymentTerms() {
+        const paymentContainer = this.modal.querySelector('#paymentContainer');
+        if (!paymentContainer || !this.pricingData) return;
+        
+        // Используем процент из настроек
+        const paymentAmount = this.pricingData.totalPrice * (this.paymentPercent / 100);
+        
+        // Формируем текст условий с подстановкой переменных
+        let termsText = this.paymentTermsText || '';
+        
+        // Если текст не задан, используем дефолтный
+        if (!termsText || !termsText.trim()) {
+            termsText = `Для бронирования мы берем аванс в размере {payment_percent}% от полной суммы. Данная сумма возвращается в случае отмены брони не позднее 7 дней, если бронь на выходные, и 3 дней, если бронь на будний день. Оплачивая, вы соглашаетесь с <a href="/dogovor.html" target="_blank" style="color: #CC7A6F; text-decoration: underline;">договором оферты</a>.`;
+        }
+        
+        // Подстановка переменных
+        termsText = termsText.replace(/{payment_percent}/g, this.paymentPercent);
+        termsText = termsText.replace(/{refund_weekend_days}/g, '7');
+        termsText = termsText.replace(/{refund_weekday_days}/g, '3');
+        
+        paymentContainer.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+                <p style="color: #FFFFF0; margin-bottom: 10px; font-family: 'Montserrat', sans-serif; font-size: 14px;">
+                    Полная сумма: <span style="text-decoration: line-through; opacity: 0.7;">${this.pricingData.totalPrice.toLocaleString('ru-RU')} ₽</span>
+                </p>
+                <p style="color: #FFFFF0; margin-bottom: 20px; font-family: 'Montserrat', sans-serif;">
+                    К оплате (${this.paymentPercent}%): <strong style="color: #CC7A6F; font-size: 24px;">${paymentAmount.toLocaleString('ru-RU')} ₽</strong>
+                </p>
+                <div style="background: rgba(255, 255, 240, 0.1); border-left: 3px solid #CC7A6F; padding: 15px; margin-bottom: 20px; text-align: left; border-radius: 4px;">
+                    <div style="color: #FFFFF0; font-family: 'Montserrat', sans-serif; font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word;">
+                        ${termsText}
+                    </div>
+                </div>
+            </div>
+        `;
+        
     }
 
     updateSummary() {
@@ -215,6 +258,10 @@ class BookingModal {
             <div class="booking-modal-summary-total">
                 <span>Итого:</span>
                 <span>${totalPrice.toLocaleString('ru-RU')} ₽</span>
+            </div>
+            <div class="booking-modal-summary-item" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 240, 0.2);">
+                <span style="font-size: 14px; opacity: 0.8;">К оплате (${this.paymentPercent}%):</span>
+                <span style="color: #CC7A6F; font-weight: 600; font-size: 18px;">${(totalPrice * (this.paymentPercent / 100)).toLocaleString('ru-RU')} ₽</span>
             </div>
         `;
     }
@@ -329,7 +376,11 @@ class BookingModal {
 
     async initPayment() {
         const paymentContainer = this.modal.querySelector('#paymentContainer');
-        paymentContainer.innerHTML = '<div class="booking-modal-loading">Инициализация платежной системы...</div>';
+        
+        // Показываем текст условий сразу, если еще не показан
+        if (!paymentContainer.querySelector('.booking-modal-payment-container > div')) {
+            this.showPaymentTerms();
+        }
 
         try {
             console.log('Initializing payment with Tbank Integration.js widget...');
@@ -354,7 +405,9 @@ class BookingModal {
             const customerName = this.bookingData.name || '';
             const customerPhone = this.bookingData.phone || '';
             const orderId = this.bookingData.orderId;
-            const amount = Math.round(this.pricingData.totalPrice * 100); // в копейках
+            // Используем процент из настроек
+            const paymentAmount = this.pricingData.totalPrice * (this.paymentPercent / 100);
+            const amount = Math.round(paymentAmount * 100); // в копейках
 
             if (!orderId) {
                 throw new Error('OrderId не найден. Сначала создайте заказ.');
@@ -539,9 +592,11 @@ class BookingModal {
     async createPayment() {
         // Если заказ уже создан (имеем orderId), используем его
         if (this.bookingData.orderId) {
+            // Используем процент из настроек
+            const paymentAmount = this.pricingData.totalPrice * (this.paymentPercent / 100);
             return {
                 orderId: this.bookingData.orderId,
-                amount: this.pricingData.totalPrice * 100,
+                amount: paymentAmount * 100,
                 description: `Бронирование зала ${this.pricingData.hall}`
             };
         }
@@ -587,20 +642,48 @@ class BookingModal {
 
     renderPaymentButton(paymentData) {
         const paymentContainer = this.modal.querySelector('#paymentContainer');
-        paymentContainer.innerHTML = `
-            <div style="text-align: center; padding: 20px;">
-                <p style="color: #FFFFF0; margin-bottom: 20px; font-family: 'Montserrat', sans-serif;">
-                    Сумма к оплате: <strong style="color: #CC7A6F; font-size: 24px;">${this.pricingData.totalPrice.toLocaleString('ru-RU')} ₽</strong>
-                </p>
-                <button id="paymentButton" class="booking-modal-button booking-modal-button-primary" style="width: 100%;">
-                    Оплатить
-                </button>
-                <div id="paymentError" style="margin-top: 15px; color: #ff6b6b; display: none; font-size: 14px;"></div>
-            </div>
-        `;
-
-        const paymentButton = paymentContainer.querySelector('#paymentButton');
-        const errorDiv = paymentContainer.querySelector('#paymentError');
+        
+        // Если текст условий еще не показан, показываем его
+        if (!paymentContainer.querySelector('.booking-modal-payment-container > div')) {
+            this.showPaymentTerms();
+        }
+        
+        // Обновляем только кнопку оплаты и убираем индикатор загрузки
+        const loadingDiv = paymentContainer.querySelector('.booking-modal-loading');
+        if (loadingDiv) {
+            loadingDiv.remove();
+        }
+        
+        // Находим или создаем кнопку оплаты
+        let paymentButton = paymentContainer.querySelector('#paymentButton');
+        if (!paymentButton) {
+            // Если кнопки нет, добавляем её перед errorDiv
+            const errorDiv = paymentContainer.querySelector('#paymentError');
+            paymentButton = document.createElement('button');
+            paymentButton.id = 'paymentButton';
+            paymentButton.className = 'booking-modal-button booking-modal-button-primary';
+            paymentButton.style.cssText = 'width: 100%;';
+            paymentButton.textContent = 'Оплатить';
+            
+            if (errorDiv) {
+                errorDiv.parentNode.insertBefore(paymentButton, errorDiv);
+            } else {
+                const termsDiv = paymentContainer.querySelector('div[style*="background: rgba(255, 255, 240, 0.1)"]');
+                if (termsDiv && termsDiv.parentNode) {
+                    termsDiv.parentNode.appendChild(paymentButton);
+                } else {
+                    paymentContainer.appendChild(paymentButton);
+                }
+            }
+        }
+        
+        const errorDiv = paymentContainer.querySelector('#paymentError') || (() => {
+            const div = document.createElement('div');
+            div.id = 'paymentError';
+            div.style.cssText = 'margin-top: 15px; color: #ff6b6b; display: none; font-size: 14px;';
+            paymentContainer.appendChild(div);
+            return div;
+        })();
         
         paymentButton.addEventListener('click', async () => {
             // Проверяем доступность PaymentIntegration
@@ -786,7 +869,9 @@ class BookingModal {
                 // - orderId
                 // - description
                 // Поля name и phone НЕ должны передаваться в create() - они уже сохранены на бэкенде
-                const amountInKopecks = Math.round(this.pricingData.totalPrice * 100); // в копейках
+                // Используем процент из настроек
+                const paymentAmount = this.pricingData.totalPrice * (this.paymentPercent / 100);
+                const amountInKopecks = Math.round(paymentAmount * 100); // в копейках
                 
                 // Создаем ТОЛЬКО обязательные параметры - БЕЗ name и phone
                 const paymentParams = {
@@ -806,7 +891,8 @@ class BookingModal {
                 // и сохранены в базе данных. API Т-Банка не принимает эти поля в методе create()
 
                 console.log('Starting payment:');
-                console.log('  Amount in rubles:', this.pricingData.totalPrice, '₽');
+                console.log('  Full amount:', this.pricingData.totalPrice, '₽');
+                console.log('  Payment amount (50%):', paymentAmount, '₽');
                 console.log('  Amount in kopecks:', amountInKopecks);
                 console.log('  Payment params:', paymentParams);
                 console.log('Booking data:', this.bookingData);

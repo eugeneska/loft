@@ -1734,6 +1734,16 @@ const admin = {
                 checkbox.checked = settings.use_payment_module === true || settings.use_payment_module === 1;
             }
             
+            const paymentPercentInput = document.getElementById('payment-percent');
+            if (paymentPercentInput) {
+                paymentPercentInput.value = settings.payment_percent || 50;
+            }
+            
+            const paymentTermsTextarea = document.getElementById('payment-terms-text');
+            if (paymentTermsTextarea) {
+                paymentTermsTextarea.value = settings.payment_terms_text || '';
+            }
+            
             // Настраиваем форму
             this.setupSettingsForm();
             
@@ -1758,7 +1768,9 @@ const admin = {
             e.preventDefault();
             const formData = new FormData(cleanForm);
             const data = {
-                use_payment_module: formData.get('use_payment_module') === 'on'
+                use_payment_module: formData.get('use_payment_module') === 'on',
+                payment_percent: parseFloat(formData.get('payment_percent')) || 50,
+                payment_terms_text: formData.get('payment_terms_text') || ''
             };
             
             try {

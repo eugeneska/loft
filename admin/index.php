@@ -282,6 +282,17 @@ $user = [
                                 Если выключено: при бронировании будет кнопка "Отправить" (заявка отправляется без оплаты).
                             </small>
                         </div>
+                        <div class="form-group">
+                            <label for="payment-percent">Процент предоплаты (%):</label>
+                            <input type="number" id="payment-percent" name="payment_percent" class="form-control" min="0" max="100" step="0.1" value="50">
+                            <small style="display: block; margin-top: 5px; color: #666;">
+                                Процент от полной суммы, который взимается при бронировании (например, 50 для 50%).
+                            </small>
+                        </div>
+                        <div class="form-group">
+                            <label for="payment-terms-text">Текст условий оплаты и возврата:</label>
+                            <textarea id="payment-terms-text" name="payment_terms_text" class="form-control" rows="8" style="resize: vertical;"></textarea>
+                        </div>
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary">Сохранить настройки</button>
                         </div>

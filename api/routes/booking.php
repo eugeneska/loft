@@ -17,7 +17,7 @@ header('Content-Type: application/json; charset=utf-8');
  */
 function createYClientsBooking($bookingData) {
     // ТЕСТОВЫЙ РЕЖИМ: установите в true для тестирования без реального создания бронирований
-    $YClients_TEST_MODE = true; // Измените на false для реальных бронирований
+    $YClients_TEST_MODE = false; // Измените на false для реальных бронирований
     
     // Конфигурация YClients API
     $yclientsBearerToken = 'nux5dyunjmauan8zar4r';
@@ -291,10 +291,16 @@ switch ($_SERVER['REQUEST_METHOD']) {
                 // Return payment data
                 // В реальной интеграции здесь должен быть вызов API Т-Банка для создания платежа
                 // Пока возвращаем данные для инициализации оплаты
+                // Получаем процент предоплаты из настроек
+                $settings = $db->fetchOne("SELECT payment_percent FROM settings ORDER BY id DESC LIMIT 1");
+                $paymentPercent = isset($settings['payment_percent']) && $settings['payment_percent'] !== null
+                    ? (float)$settings['payment_percent'] / 100
+                    : 0.5; // По умолчанию 50%
+                $paymentAmount = $pricing['totalPrice'] * $paymentPercent;
                 echo json_encode([
                     'success' => true,
                     'orderId' => $orderId,
-                    'amount' => $pricing['totalPrice'] * 100, // в копейках
+                    'amount' => $paymentAmount * 100, // в копейках
                     'description' => 'Бронирование зала ' . ($pricing['hall'] ?? ''),
                     'paymentUrl' => null // Будет заполнено при реальной интеграции
                 ], JSON_UNESCAPED_UNICODE);
@@ -497,7 +503,15 @@ switch ($_SERVER['REQUEST_METHOD']) {
             $message .= "Имя: *" . ($booking['name'] ?? 'N/A') . "*\n";
             $message .= "Телефон: *" . ($booking['phone'] ?? 'N/A') . "*\n";
             $message .= "\n💰 *Расчет:*\n";
-            $message .= "Сумма: *" . number_format($pricing['totalPrice'] ?? 0, 0, ',', ' ') . " ₽*\n";
+            $totalPrice = $pricing['totalPrice'] ?? 0;
+            // Получаем процент предоплаты из настроек
+            $settings = $db->fetchOne("SELECT payment_percent FROM settings ORDER BY id DESC LIMIT 1");
+            $paymentPercent = isset($settings['payment_percent']) && $settings['payment_percent'] !== null
+                ? (float)$settings['payment_percent']
+                : 50; // По умолчанию 50%
+            $paymentAmount = $totalPrice * ($paymentPercent / 100);
+            $message .= "Полная сумма: *" . number_format($totalPrice, 0, ',', ' ') . " ₽*\n";
+            $message .= "К оплате ({$paymentPercent}%): *" . number_format($paymentAmount, 0, ',', ' ') . " ₽*\n";
             $message .= "Номер заказа: *" . $orderId . "*\n";
             $message .= "Статус оплаты: *" . ($paymentStatus === 'success' ? 'Оплачено ✅' : 'Ожидает оплаты') . "*\n";
 
