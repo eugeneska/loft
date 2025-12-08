@@ -200,6 +200,20 @@ class BookingModal {
         // Используем процент из настроек
         const paymentAmount = this.pricingData.totalPrice * (this.paymentPercent / 100);
         
+        paymentContainer.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+                <p style="color: #FFFFF0; margin-bottom: 10px; font-family: 'Montserrat', sans-serif; font-size: 14px;">
+                    Полная сумма: <span style="text-decoration: line-through; opacity: 0.7;">${this.pricingData.totalPrice.toLocaleString('ru-RU')} ₽</span>
+                </p>
+                <p style="color: #FFFFF0; margin-bottom: 20px; font-family: 'Montserrat', sans-serif;">
+                    К оплате (${this.paymentPercent}%): <strong style="color: #CC7A6F; font-size: 24px;">${paymentAmount.toLocaleString('ru-RU')} ₽</strong>
+                </p>
+            </div>
+        `;
+        
+    }
+    
+    getPaymentTermsText() {
         // Формируем текст условий с подстановкой переменных
         let termsText = this.paymentTermsText || '';
         
@@ -213,22 +227,7 @@ class BookingModal {
         termsText = termsText.replace(/{refund_weekend_days}/g, '7');
         termsText = termsText.replace(/{refund_weekday_days}/g, '3');
         
-        paymentContainer.innerHTML = `
-            <div style="text-align: center; padding: 20px;">
-                <p style="color: #FFFFF0; margin-bottom: 10px; font-family: 'Montserrat', sans-serif; font-size: 14px;">
-                    Полная сумма: <span style="text-decoration: line-through; opacity: 0.7;">${this.pricingData.totalPrice.toLocaleString('ru-RU')} ₽</span>
-                </p>
-                <p style="color: #FFFFF0; margin-bottom: 20px; font-family: 'Montserrat', sans-serif;">
-                    К оплате (${this.paymentPercent}%): <strong style="color: #CC7A6F; font-size: 24px;">${paymentAmount.toLocaleString('ru-RU')} ₽</strong>
-                </p>
-                <div style="background: rgba(255, 255, 240, 0.1); border-left: 3px solid #CC7A6F; padding: 15px; margin-bottom: 20px; text-align: left; border-radius: 4px;">
-                    <div style="color: #FFFFF0; font-family: 'Montserrat', sans-serif; font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word;">
-                        ${termsText}
-                    </div>
-                </div>
-            </div>
-        `;
-        
+        return termsText;
     }
 
     updateSummary() {
@@ -263,6 +262,13 @@ class BookingModal {
                 <span style="font-size: 14px; opacity: 0.8;">К оплате (${this.paymentPercent}%):</span>
                 <span style="color: #CC7A6F; font-weight: 600; font-size: 18px;">${(totalPrice * (this.paymentPercent / 100)).toLocaleString('ru-RU')} ₽</span>
             </div>
+            ${this.getPaymentTermsText() ? `
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255, 255, 240, 0.2);">
+                <div style="color: #FFFFF0; font-family: 'Montserrat', sans-serif; font-size: 12px; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; opacity: 0.9;">
+                    ${this.getPaymentTermsText()}
+                </div>
+            </div>
+            ` : ''}
         `;
     }
 
