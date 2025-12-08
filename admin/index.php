@@ -96,7 +96,10 @@ $user = [
         <!-- Цены залов -->
         <div id="hall-prices" class="tab-content">
             <div class="content-card">
-                <h2>Цены залов</h2>
+                <div class="content-header">
+                    <h2>Цены залов</h2>
+                    <button class="btn btn-primary" id="add-hall-price-btn" onclick="admin.openHallPriceModal(null)" style="display: none;">+ Добавить цены</button>
+                </div>
                 <div class="form-group">
                     <label>Выберите зал:</label>
                     <select id="hall-select" class="form-control" onchange="admin.loadHallPrices()">

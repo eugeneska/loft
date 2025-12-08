@@ -370,10 +370,15 @@ const admin = {
     
     async loadHallPrices() {
         const hallId = document.getElementById('hall-select').value;
+        const addBtn = document.getElementById('add-hall-price-btn');
+        
         if (!hallId) {
             document.getElementById('hall-prices-table').style.display = 'none';
+            addBtn.style.display = 'none';
             return;
         }
+        
+        addBtn.style.display = 'block';
         
         const loadingEl = document.getElementById('hall-prices-loading');
         const tableEl = document.getElementById('hall-prices-table');
@@ -415,23 +420,81 @@ const admin = {
         }
     },
     
-    openHallPriceModal(id) {
-        fetch(`${API_BASE}/hall-prices/${id}`)
-            .then(r => r.json())
-            .then(price => {
-                this.openModal(`Редактировать цены: ${price.hall_name} (${price.price_set_name})`, 
-                    this.getHallPriceFormHTML(price));
-                this.setupHallPriceForm(id);
-            })
-            .catch(err => {
+    async openHallPriceModal(id) {
+        const hallId = document.getElementById('hall-select').value;
+        if (!hallId && !id) {
+            this.showMessage('Сначала выберите зал', 'error');
+            return;
+        }
+        
+        if (id) {
+            // Редактирование существующей цены
+            fetch(`${API_BASE}/hall-prices/${id}`)
+                .then(r => r.json())
+                .then(price => {
+                    this.openModal(`Редактировать цены: ${price.hall_name} (${price.price_set_name})`, 
+                        this.getHallPriceFormHTML(price, id));
+                    this.setupHallPriceForm(id);
+                })
+                .catch(err => {
+                    this.showMessage('Ошибка загрузки данных', 'error');
+                    console.error(err);
+                });
+        } else {
+            // Создание новой цены
+            try {
+                const [hallsRes, priceSetsRes] = await Promise.all([
+                    fetch(`${API_BASE}/halls`),
+                    fetch(`${API_BASE}/price-sets`)
+                ]);
+                
+                const halls = await hallsRes.json();
+                const priceSets = await priceSetsRes.json();
+                
+                const hall = halls.find(h => h.id == hallId);
+                if (!hall) {
+                    this.showMessage('Зал не найден', 'error');
+                    return;
+                }
+                
+                // Получаем существующие прайс-сеты для этого зала
+                const existingPricesRes = await fetch(`${API_BASE}/hall-prices?hall_id=${hallId}`);
+                const existingPrices = await existingPricesRes.json();
+                const existingPriceSetIds = existingPrices.map(p => p.price_set_id);
+                
+                // Фильтруем прайс-сеты, оставляя только те, для которых еще нет цен
+                const availablePriceSets = priceSets.filter(ps => !existingPriceSetIds.includes(ps.id));
+                
+                if (availablePriceSets.length === 0) {
+                    this.showMessage('Для этого зала уже созданы цены для всех прайс-сетов', 'error');
+                    return;
+                }
+                
+                this.openModal(`Добавить цены: ${hall.name}`, 
+                    this.getHallPriceFormHTML({ hall_id: hallId, hall_name: hall.name }, null, availablePriceSets));
+                this.setupHallPriceForm(null, hallId);
+            } catch (error) {
                 this.showMessage('Ошибка загрузки данных', 'error');
-                console.error(err);
-            });
+                console.error(error);
+            }
+        }
     },
     
-    getHallPriceFormHTML(price) {
+    getHallPriceFormHTML(price, id = null, availablePriceSets = null) {
+        const isNew = id === null;
+        const priceSetSelect = isNew && availablePriceSets ? `
+            <div class="form-group">
+                <label>Прайс-сет:</label>
+                <select name="price_set_id" required>
+                    <option value="">-- Выберите прайс-сет --</option>
+                    ${availablePriceSets.map(ps => `<option value="${ps.id}">${ps.name}</option>`).join('')}
+                </select>
+            </div>
+        ` : '';
+        
         return `
             <form id="hall-price-form">
+                ${priceSetSelect}
                 <div class="form-group">
                     <label>Будни с 10:00 до 22:00 (₽/час):</label>
                     <input type="number" step="0.01" name="weekday_10_22" 
@@ -445,27 +508,27 @@ const admin = {
                 <div class="form-group">
                     <label>Пятница 17:00+ и суббота (₽/час):</label>
                     <input type="number" step="0.01" name="fri_sat_price" 
-                        value="${price.fri_sat_price}" required>
+                        value="${price.fri_sat_price || ''}" required>
                 </div>
                 <div class="form-group">
                     <label>Воскресенье (₽/час):</label>
                     <input type="number" step="0.01" name="sun_price" 
-                        value="${price.sun_price}" required>
+                        value="${price.sun_price || ''}" required>
                 </div>
                 <div class="form-group">
                     <label>Уборка до 30 гостей (₽):</label>
                     <input type="number" step="0.01" name="cleaning_up_to_30" 
-                        value="${price.cleaning_up_to_30}" required>
+                        value="${price.cleaning_up_to_30 || ''}" required>
                 </div>
                 <div class="form-group">
                     <label>Уборка свыше 30 гостей (₽):</label>
                     <input type="number" step="0.01" name="cleaning_over_30" 
-                        value="${price.cleaning_over_30}" required>
+                        value="${price.cleaning_over_30 || ''}" required>
                 </div>
                 <div class="form-group">
                     <label>Доплата за внеурочное время (₽/час):</label>
                     <input type="number" step="0.01" name="after_hours_fee" 
-                        value="${price.after_hours_fee}" required>
+                        value="${price.after_hours_fee || ''}" required>
                 </div>
                 <div class="form-group">
                     <label>Минимальное количество часов:</label>
@@ -489,11 +552,15 @@ const admin = {
         `;
     },
     
-    setupHallPriceForm(id) {
+    setupHallPriceForm(id, hallId = null) {
         const form = document.getElementById('hall-price-form');
-        form.addEventListener('submit', async (e) => {
+        // Удаляем старый обработчик, если есть
+        const newForm = form.cloneNode(true);
+        form.parentNode.replaceChild(newForm, form);
+        
+        newForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const formData = new FormData(form);
+            const formData = new FormData(newForm);
             const data = {
                 weekday_10_22: parseFloat(formData.get('weekday_10_22')),
                 weekday_22_00: parseFloat(formData.get('weekday_22_00')),
@@ -507,9 +574,26 @@ const admin = {
                 allow_food_alcohol_from_hours: parseInt(formData.get('allow_food_alcohol_from_hours'))
             };
             
+            // Если создание новой цены, добавляем hall_id и price_set_id
+            if (id === null) {
+                const selectedHallId = hallId || document.getElementById('hall-select').value;
+                const priceSetId = formData.get('price_set_id');
+                
+                if (!selectedHallId || !priceSetId) {
+                    this.showMessage('Необходимо выбрать зал и прайс-сет', 'error');
+                    return;
+                }
+                
+                data.hall_id = parseInt(selectedHallId);
+                data.price_set_id = parseInt(priceSetId);
+            }
+            
             try {
-                const response = await fetch(`${API_BASE}/hall-prices/${id}`, {
-                    method: 'PUT',
+                const url = id ? `${API_BASE}/hall-prices/${id}` : `${API_BASE}/hall-prices`;
+                const method = id ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method,
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
@@ -519,7 +603,7 @@ const admin = {
                     throw new Error(error.error || 'Ошибка сохранения');
                 }
                 
-                this.showMessage('Цены сохранены успешно');
+                this.showMessage(id ? 'Цены сохранены успешно' : 'Цены созданы успешно');
                 this.closeModal();
                 this.loadHallPrices();
             } catch (error) {
