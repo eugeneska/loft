@@ -10,6 +10,175 @@ $db = Database::getInstance();
 header('Content-Type: application/json; charset=utf-8');
 
 /**
+ * Создание записи в YClients через API
+ * 
+ * @param array $bookingData Данные бронирования
+ * @return array Результат создания записи
+ */
+function createYClientsBooking($bookingData) {
+    // ТЕСТОВЫЙ РЕЖИМ: установите в true для тестирования без реального создания бронирований
+    $YClients_TEST_MODE = true; // Измените на false для реальных бронирований
+    
+    // Конфигурация YClients API
+    $yclientsBearerToken = 'nux5dyunjmauan8zar4r';
+    $yclientsUserToken = '905010bc6e633654624061a480566ba9';
+    $yclientsCompanyId = '115469';
+    $yclientsApiBase = "https://api.yclients.com/api/v1/company/{$yclientsCompanyId}";
+    
+    // Маппинг залов на staff_id в YClients
+    $hallYClientsMapping = [
+        'armaloft' => '267195',
+        'mercury' => '3414531',
+        'merkuri' => '3414531',
+        'airplane' => '3610778',
+        'samolet' => '3610778',
+        'rufer' => '3295198',
+        'pulka' => '3295199'
+    ];
+    
+    $hall = $bookingData['hall'] ?? '';
+    $hallLower = strtolower($hall);
+    
+    // Получаем staff_id для зала
+    $staffId = null;
+    foreach ($hallYClientsMapping as $hallKey => $staffIdValue) {
+        if (strpos($hallLower, $hallKey) !== false) {
+            $staffId = $staffIdValue;
+            break;
+        }
+    }
+    
+    if (!$staffId) {
+        error_log("YClients: Hall '{$hall}' not found in mapping");
+        return ['success' => false, 'error' => 'Hall not found in mapping'];
+    }
+    
+    // Парсим дату и время
+    $bookingDate = $bookingData['date'] ?? '';
+    $timeFrom = $bookingData['timeFrom'] ?? '';
+    $timeTo = $bookingData['timeTo'] ?? '';
+    
+    if (!$bookingDate || !$timeFrom || !$timeTo) {
+        error_log("YClients: Missing required fields (date, timeFrom, timeTo)");
+        return ['success' => false, 'error' => 'Missing required fields'];
+    }
+    
+    // Форматируем дату и время для YClients API
+    // YClients ожидает формат: YYYY-MM-DD HH:MM:SS
+    $dateTimeFrom = $bookingDate . ' ' . $timeFrom . ':00';
+    $dateTimeTo = $bookingDate . ' ' . $timeTo . ':00';
+    
+    // Получаем имя и телефон клиента
+    $clientName = $bookingData['name'] ?? 'Клиент';
+    $clientPhone = preg_replace('/[^0-9]/', '', $bookingData['phone'] ?? '');
+    
+    // Формируем запрос к YClients API для создания записи
+    // Согласно документации YClients, используется POST /records
+    $yclientsUrl = "{$yclientsApiBase}/records";
+    
+    // Вычисляем длительность в минутах
+    $duration = calculateDuration($timeFrom, $timeTo);
+    
+    // Формируем данные для YClients API
+    // Формат: staff_id, services (массив ID услуг), date (YYYY-MM-DD HH:MM:SS), length (минуты), client (объект)
+    $yclientsData = [
+        'staff_id' => (int)$staffId,
+        'services' => [], // Можно добавить услуги, если нужно
+        'date' => $dateTimeFrom,
+        'length' => $duration,
+        'client' => [
+            'name' => $clientName,
+            'phone' => $clientPhone
+        ],
+        'comment' => "Бронирование зала {$hall}. Заказ: " . ($bookingData['orderId'] ?? 'N/A')
+    ];
+    
+    error_log("YClients booking request: " . json_encode($yclientsData, JSON_UNESCAPED_UNICODE));
+    
+    // ТЕСТОВЫЙ РЕЖИМ: только логируем, не отправляем реальный запрос
+    if ($YClients_TEST_MODE) {
+        error_log("");
+        error_log("═══════════════════════════════════════════════════════");
+        error_log("🧪 YCLIENTS ТЕСТОВЫЙ РЕЖИМ (запрос НЕ отправлен)");
+        error_log("═══════════════════════════════════════════════════════");
+        error_log("📍 URL: {$yclientsUrl}");
+        error_log("🏢 Зал: '{$hall}' → staff_id: {$staffId}");
+        error_log("📅 Дата: {$bookingDate}");
+        error_log("⏰ Время: {$timeFrom} - {$timeTo}");
+        error_log("⏱️  Длительность: {$duration} минут");
+        error_log("👤 Клиент: {$clientName}");
+        error_log("📞 Телефон: {$clientPhone}");
+        error_log("🆔 Order ID: " . ($bookingData['orderId'] ?? 'N/A'));
+        error_log("");
+        error_log("📦 Данные запроса (JSON):");
+        error_log(json_encode($yclientsData, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+        error_log("");
+        error_log("✅ В реальном режиме эти данные были бы отправлены в YClients");
+        error_log("═══════════════════════════════════════════════════════");
+        error_log("");
+        
+        // Возвращаем успешный результат для тестирования
+        return [
+            'success' => true, 
+            'test_mode' => true,
+            'message' => 'Тестовый режим: запрос не отправлен в YClients',
+            'data' => [
+                'url' => $yclientsUrl,
+                'request_data' => $yclientsData,
+                'staff_id' => $staffId,
+                'hall' => $hall
+            ]
+        ];
+    }
+    
+    // РЕАЛЬНЫЙ РЕЖИМ: отправляем запрос в YClients
+    $ch = curl_init($yclientsUrl);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($yclientsData, JSON_UNESCAPED_UNICODE));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Content-Type: application/json',
+        'Accept: application/vnd.api.v2+json',
+        "Authorization: Bearer {$yclientsBearerToken}, User {$yclientsUserToken}"
+    ]);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+    
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError = curl_error($ch);
+    curl_close($ch);
+    
+    if ($curlError) {
+        error_log("YClients API cURL error: {$curlError}");
+        return ['success' => false, 'error' => "YClients API connection error: {$curlError}"];
+    }
+    
+    $responseData = json_decode($response, true);
+    
+    if ($httpCode === 200 || $httpCode === 201) {
+        error_log("YClients booking created successfully. Response: " . json_encode($responseData, JSON_UNESCAPED_UNICODE));
+        return ['success' => true, 'data' => $responseData];
+    } else {
+        error_log("YClients API error (HTTP {$httpCode}): {$response}");
+        return ['success' => false, 'error' => "YClients API error: HTTP {$httpCode}", 'response' => $responseData];
+    }
+}
+
+/**
+ * Вычисление длительности бронирования в минутах
+ */
+function calculateDuration($timeFrom, $timeTo) {
+    $fromParts = explode(':', $timeFrom);
+    $toParts = explode(':', $timeTo);
+    
+    $fromMinutes = (int)$fromParts[0] * 60 + (int)($fromParts[1] ?? 0);
+    $toMinutes = (int)$toParts[0] * 60 + (int)($toParts[1] ?? 0);
+    
+    return $toMinutes - $fromMinutes;
+}
+
+/**
  * Генерация токена для подписи запроса к Tbank API
  * Согласно официальной документации Tbank:
  * 1. Берем только параметры корневого объекта (вложенные объекты DATA, Receipt НЕ участвуют!)
@@ -433,20 +602,61 @@ switch ($_SERVER['REQUEST_METHOD']) {
                 }
             }
 
-            if ($httpCode === 200) {
-                // Update booking status
-                if (!empty($orderId) && $orderId !== 'N/A') {
-                    try {
-                        $db->execute("
-                            UPDATE bookings 
-                            SET status = ?, telegram_sent = 1, updated_at = CURRENT_TIMESTAMP
-                            WHERE order_id = ?
-                        ", [$paymentStatus === 'success' ? 'paid' : 'pending', $orderId]);
-                    } catch (PDOException $e) {
-                        error_log('Error updating booking status: ' . $e->getMessage());
-                    }
+            // Обновляем статус бронирования независимо от результата Telegram
+            if (!empty($orderId) && $orderId !== 'N/A') {
+                try {
+                    $db->execute("
+                        UPDATE bookings 
+                        SET status = ?, telegram_sent = ?, updated_at = CURRENT_TIMESTAMP
+                        WHERE order_id = ?
+                    ", [
+                        $paymentStatus === 'success' ? 'paid' : 'pending',
+                        $httpCode === 200 ? 1 : 0,
+                        $orderId
+                    ]);
+                } catch (PDOException $e) {
+                    error_log('Error updating booking status: ' . $e->getMessage());
                 }
+            }
+            
+            // Создаем запись в YClients независимо от результата Telegram
+            // Вызываем только если оплата успешна или если оплата отключена
+            if ($paymentStatus === 'success' || $paymentStatus === 'pending') {
+                error_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                error_log("🔄 YCLIENTS: Начинаем создание бронирования");
+                error_log("📋 Order ID: {$orderId}");
+                error_log("💰 Статус оплаты: {$paymentStatus}");
+                
+                try {
+                    $yclientsResult = createYClientsBooking(array_merge($booking, [
+                        'orderId' => $orderId
+                    ]));
+                    
+                    if ($yclientsResult['success']) {
+                        if (isset($yclientsResult['test_mode']) && $yclientsResult['test_mode']) {
+                            error_log("✅ YCLIENTS: Тестовый режим - запрос НЕ отправлен (это нормально!)");
+                            error_log("📝 Проверьте логи выше для деталей запроса");
+                        } else {
+                            error_log("✅ YCLIENTS: Бронирование успешно создано в YClients");
+                            error_log("📝 Order ID: {$orderId}");
+                        }
+                    } else {
+                        error_log("❌ YCLIENTS: Ошибка создания бронирования");
+                        error_log("📝 Order ID: {$orderId}");
+                        error_log("📝 Ошибка: " . ($yclientsResult['error'] ?? 'Unknown'));
+                    }
+                } catch (Exception $e) {
+                    error_log("❌ YCLIENTS: Исключение при создании бронирования");
+                    error_log("📝 Order ID: {$orderId}");
+                    error_log("📝 Ошибка: " . $e->getMessage());
+                    // Не блокируем процесс из-за ошибки YClients
+                }
+                error_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            } else {
+                error_log("⏭️  YCLIENTS: Пропущено (статус оплаты: {$paymentStatus})");
+            }
 
+            if ($httpCode === 200) {
                 echo json_encode([
                     'success' => true,
                     'message' => 'Notification sent to Telegram'
@@ -470,6 +680,29 @@ switch ($_SERVER['REQUEST_METHOD']) {
                     'warning' => true
                 ], JSON_UNESCAPED_UNICODE);
             }
+        } elseif ($action === 'test-yclients') {
+            // Тестирование интеграции с YClients без создания реального бронирования
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            if (!$data || !isset($data['booking'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Invalid request data. booking field is required']);
+                exit;
+            }
+            
+            $booking = $data['booking'];
+            
+            // Вызываем функцию в тестовом режиме
+            $result = createYClientsBooking(array_merge($booking, [
+                'orderId' => 'TEST_' . time()
+            ]));
+            
+            echo json_encode([
+                'success' => true,
+                'test_mode' => true,
+                'message' => 'Тестовый запрос выполнен. Проверьте логи сервера для деталей.',
+                'result' => $result
+            ], JSON_UNESCAPED_UNICODE);
         } elseif ($action === 'test-telegram') {
             // Test Telegram notification
             $data = json_decode(file_get_contents('php://input'), true);
@@ -540,6 +773,112 @@ switch ($_SERVER['REQUEST_METHOD']) {
                 http_response_code(500);
                 echo json_encode(['error' => 'Failed to send test message', 'details' => $response]);
             }
+        } elseif ($action === 'tbank-callback') {
+            // Обработка callback от Tbank при успешной оплате
+            $callbackData = json_decode(file_get_contents('php://input'), true);
+            
+            if (!$callbackData) {
+                // Пробуем получить данные из POST
+                $callbackData = $_POST;
+            }
+            
+            error_log('Tbank callback received: ' . json_encode($callbackData, JSON_UNESCAPED_UNICODE));
+            
+            // Проверяем статус оплаты
+            $status = $callbackData['Status'] ?? $callbackData['status'] ?? null;
+            $orderId = $callbackData['OrderId'] ?? $callbackData['orderId'] ?? null;
+            
+            if ($status === 'CONFIRMED' || $status === 'confirmed') {
+                // Оплата успешна
+                if ($orderId) {
+                    try {
+                        // Получаем данные бронирования из БД
+                        $booking = $db->fetchOne("
+                            SELECT * FROM bookings WHERE order_id = ?
+                        ", [$orderId]);
+                        
+                        if ($booking) {
+                            // Обновляем статус на 'paid'
+                            $db->execute("
+                                UPDATE bookings 
+                                SET status = 'paid', updated_at = CURRENT_TIMESTAMP
+                                WHERE order_id = ?
+                            ", [$orderId]);
+                            
+                             error_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                             error_log("🔄 YCLIENTS: Callback от Tbank - создание бронирования");
+                             error_log("📋 Order ID: {$orderId}");
+                             error_log("💰 Статус: CONFIRMED (оплата успешна)");
+                             
+                             // Создаем запись в YClients
+                             try {
+                                 $yclientsResult = createYClientsBooking([
+                                     'hall' => $booking['hall'],
+                                     'date' => $booking['booking_date'],
+                                     'timeFrom' => $booking['time_from'],
+                                     'timeTo' => $booking['time_to'],
+                                     'name' => $booking['client_name'],
+                                     'phone' => $booking['client_phone'],
+                                     'orderId' => $orderId
+                                 ]);
+                                 
+                                 if ($yclientsResult['success']) {
+                                     if (isset($yclientsResult['test_mode']) && $yclientsResult['test_mode']) {
+                                         error_log("✅ YCLIENTS: Тестовый режим - запрос НЕ отправлен (это нормально!)");
+                                     } else {
+                                         error_log("✅ YCLIENTS: Бронирование успешно создано в YClients из callback");
+                                     }
+                                 } else {
+                                     error_log("❌ YCLIENTS: Ошибка создания бронирования из callback");
+                                     error_log("📝 Ошибка: " . ($yclientsResult['error'] ?? 'Unknown'));
+                                 }
+                             } catch (Exception $e) {
+                                 error_log("❌ YCLIENTS: Исключение при создании бронирования из callback");
+                                 error_log("📝 Ошибка: " . $e->getMessage());
+                             }
+                             error_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                            
+                            // Отправляем уведомление в Telegram
+                            try {
+                                $telegramBotToken = '8410055486:AAGtyvO9L5rXAdpx-UFZ9D8Wxfwb1DTHGII';
+                                $telegramChatId = '7913987008';
+                                
+                                $message = "✅ *Оплата подтверждена*\n\n";
+                                $message .= "Номер заказа: *{$orderId}*\n";
+                                $message .= "Зал: *{$booking['hall']}*\n";
+                                $message .= "Дата: *{$booking['booking_date']}*\n";
+                                $message .= "Время: *{$booking['time_from']} - {$booking['time_to']}*\n";
+                                $message .= "Клиент: *{$booking['client_name']}*\n";
+                                $message .= "Телефон: *{$booking['client_phone']}*\n";
+                                
+                                $telegramUrl = "https://api.telegram.org/bot{$telegramBotToken}/sendMessage";
+                                $telegramData = [
+                                    'chat_id' => is_numeric($telegramChatId) ? (int)$telegramChatId : $telegramChatId,
+                                    'text' => $message,
+                                    'parse_mode' => 'Markdown'
+                                ];
+                                
+                                $ch = curl_init($telegramUrl);
+                                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                                curl_setopt($ch, CURLOPT_POST, true);
+                                curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($telegramData));
+                                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                                curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+                                curl_exec($ch);
+                                curl_close($ch);
+                            } catch (Exception $e) {
+                                error_log("Error sending Telegram notification from callback: " . $e->getMessage());
+                            }
+                        }
+                    } catch (PDOException $e) {
+                        error_log('Error processing Tbank callback: ' . $e->getMessage());
+                    }
+                }
+            }
+            
+            // Всегда возвращаем успех для Tbank (чтобы они не повторяли запрос)
+            http_response_code(200);
+            echo 'OK';
         } else {
             http_response_code(404);
             echo json_encode(['error' => 'Action not found']);
