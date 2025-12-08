@@ -619,12 +619,16 @@ switch ($_SERVER['REQUEST_METHOD']) {
             // Обновляем статус бронирования независимо от результата Telegram
             if (!empty($orderId) && $orderId !== 'N/A') {
                 try {
+                    // Определяем статус: если оплата отключена или успешна - 'paid', иначе 'pending'
+                    $paymentDisabled = $data['paymentDisabled'] ?? false;
+                    $finalStatus = ($paymentStatus === 'success' || $paymentStatus === 'no_payment' || $paymentDisabled) ? 'paid' : 'pending';
+                    
                     $db->execute("
                         UPDATE bookings 
                         SET status = ?, telegram_sent = ?, updated_at = CURRENT_TIMESTAMP
                         WHERE order_id = ?
                     ", [
-                        $paymentStatus === 'success' ? 'paid' : 'pending',
+                        $finalStatus,
                         $httpCode === 200 ? 1 : 0,
                         $orderId
                     ]);
@@ -634,12 +638,19 @@ switch ($_SERVER['REQUEST_METHOD']) {
             }
             
             // Создаем запись в YClients независимо от результата Telegram
-            // Вызываем только если оплата успешна или если оплата отключена
-            if ($paymentStatus === 'success' || $paymentStatus === 'pending') {
+            // Вызываем только если:
+            // 1. Оплата успешна (success) - после успешной оплаты
+            // 2. Оплата отключена (no_payment или paymentDisabled) - сразу при отправке формы
+            // НЕ создаем при pending (ожидание оплаты)
+            $paymentDisabled = $data['paymentDisabled'] ?? false;
+            $shouldCreateBooking = ($paymentStatus === 'success' || $paymentStatus === 'no_payment' || $paymentDisabled);
+            
+            if ($shouldCreateBooking) {
                 error_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
                 error_log("🔄 YCLIENTS: Начинаем создание бронирования");
                 error_log("📋 Order ID: {$orderId}");
                 error_log("💰 Статус оплаты: {$paymentStatus}");
+                error_log("💳 Оплата отключена: " . ($paymentDisabled ? 'да' : 'нет'));
                 
                 try {
                     $yclientsResult = createYClientsBooking(array_merge($booking, [
