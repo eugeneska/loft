@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Бронирование успешно - Armaloft</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700;800;900&family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(to bottom, #3A3A3A 0%, #3A3A3A 30%, #F5F5DC 30%, #F5F5DC 100%);
+            color: #2C2C2C;
+            overflow-x: hidden;
+            font-weight: 400;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 35px 60px;
+            transition: all 0.3s ease;
+            background: rgba(44, 44, 44, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header-logo {
+            height: auto;
+            width: 150px;
+            max-width: 150px;
+        }
+
+        .header-logo img {
+            width: 100%;
+            height: auto;
+        }
+
+        .success-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 200px 60px 100px;
+            text-align: center;
+            flex: 1;
+        }
+
+        .success-icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 40px;
+            background: #CC7A6F;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: scaleIn 0.5s ease;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .success-icon svg {
+            width: 60px;
+            height: 60px;
+            fill: #FFFFF0;
+        }
+
+        .success-title {
+            font-size: 48px;
+            font-weight: 700;
+            color: #FFFFF0;
+            text-transform: uppercase;
+            font-family: 'Jost', sans-serif;
+            margin-bottom: 30px;
+            animation: fadeInUp 0.6s ease 0.2s both;
+        }
+
+        .success-message {
+            font-size: 24px;
+            font-weight: 400;
+            color: #2C2C2C;
+            font-family: 'Montserrat', sans-serif;
+            line-height: 1.6;
+            margin-bottom: 50px;
+            animation: fadeInUp 0.6s ease 0.4s both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .success-button {
+            display: inline-block;
+            padding: 18px 50px;
+            background: #CC7A6F;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            font-family: 'Montserrat', sans-serif;
+            text-decoration: none;
+            animation: fadeInUp 0.6s ease 0.6s both;
+        }
+
+        .success-button:hover {
+            background: #b86a60;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(204, 122, 111, 0.3);
+        }
+
+        footer {
+            background: #2C2C2C;
+            padding: 60px 60px 40px;
+            color: #FFFFF0;
+            margin-top: auto;
+        }
+
+        .footer-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 60px;
+            align-items: start;
+        }
+
+        .footer-logo {
+            width: 150px;
+            height: auto;
+            margin-left: 100px;
+            margin-top: 40px;
+        }
+
+        .footer-logo img {
+            width: 100%;
+            height: auto;
+        }
+
+        .footer-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .footer-nav-link {
+            color: #FFFFF0;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 400;
+            font-family: 'Montserrat', sans-serif;
+            text-transform: uppercase;
+            transition: color 0.3s ease;
+            display: inline-block;
+        }
+
+        .footer-nav-link:hover {
+            color: #CC7A6F;
+        }
+
+        .footer-right {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .footer-contact {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .footer-phone {
+            font-size: 18px;
+            color: #FFFFF0;
+            font-weight: 600;
+            font-family: 'Montserrat', sans-serif;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-phone:hover {
+            color: #CC7A6F;
+        }
+
+        .footer-address {
+            font-size: 14px;
+            color: #FFFFF0;
+            line-height: 1.6;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .footer-bottom {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 240, 0.2);
+            text-align: center;
+        }
+
+        .footer-copyright {
+            font-size: 12px;
+            color: #FFFFF0;
+            font-family: 'Montserrat', sans-serif;
+            opacity: 0.7;
+        }
+
+        @media (max-width: 1024px) {
+            .footer-container {
+                grid-template-columns: 1fr;
+                gap: 40px;
+                text-align: center;
+            }
+
+            .footer-logo {
+                margin: 0 auto;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 20px 20px;
+            }
+
+            .success-container {
+                padding: 150px 30px 80px;
+            }
+
+            .success-title {
+                font-size: 36px;
+            }
+
+            .success-message {
+                font-size: 20px;
+            }
+
+            .success-icon {
+                width: 100px;
+                height: 100px;
+            }
+
+            .success-icon svg {
+                width: 50px;
+                height: 50px;
+            }
+
+            footer {
+                padding: 40px 20px 30px;
+            }
+
+            .footer-container {
+                gap: 30px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .success-title {
+                font-size: 28px;
+            }
+
+            .success-message {
+                font-size: 18px;
+            }
+
+            .success-button {
+                padding: 16px 40px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="header-logo">
+                <a href="index.html"><img src="images/logo.png" alt="ARMALOFT"></a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="success-container">
+            <div class="success-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                </svg>
+            </div>
+            <h1 class="success-title">Спасибо!</h1>
+            <p class="success-message">Вы успешно забронировали зал. Мы свяжемся с вами в ближайшее время для подтверждения бронирования.</p>
+            <a href="index.html" class="success-button">Вернуться на главную</a>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-logo">
+                <img src="images/logo.png" alt="ARMALOFT">
+            </div>
+            <nav class="footer-nav">
+                <a href="index.html" class="footer-nav-link">Главная</a>
+                <a href="kontakty.html" class="footer-nav-link">Контакты</a>
+            </nav>
+            <div class="footer-right">
+                <div class="footer-contact">
+                    <a href="tel:+79296535982" class="footer-phone">+79296535982</a>
+                    <div class="footer-address">
+                        м. Курская, Нижний Сусальный пер 5 стр 10
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p class="footer-copyright">© 2025 Armaloft All Rights Reserved</p>
+        </div>
+    </footer>
+</body>
+</html>
+
