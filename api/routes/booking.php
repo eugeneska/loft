@@ -23,7 +23,11 @@ function createYClientsBooking($bookingData) {
     $yclientsBearerToken = 'nux5dyunjmauan8zar4r';
     $yclientsUserToken = '905010bc6e633654624061a480566ba9';
     $yclientsCompanyId = '115469';
+    // YClients API v2 использует другой базовый URL
+    // Попробуем оба варианта: v1 и v2
     $yclientsApiBase = "https://api.yclients.com/api/v1/company/{$yclientsCompanyId}";
+    // Альтернативный вариант для v2 (если v1 не работает):
+    // $yclientsApiBase = "https://api.yclients.com/api/v2/company/{$yclientsCompanyId}";
     
     // Маппинг залов на staff_id в YClients
     $hallYClientsMapping = [
@@ -36,22 +40,50 @@ function createYClientsBooking($bookingData) {
         'pulka' => '3295199'
     ];
     
+    // Маппинг залов на service_id в YClients (ID услуги для бронирования)
+    // Если услуга не указана для зала, используется дефолтная
+    $hallServiceMapping = [
+        'armaloft' => '1456577', // ID услуги "Бронирование студии 1 час" или другая услуга для этого зала
+        'mercury' => '1456577',
+        'merkuri' => '1456577',
+        'airplane' => '1456577',
+        'samolet' => '1456577',
+        'rufer' => '1456577',
+        'pulka' => '1456577'
+    ];
+    
+    // Дефолтный service_id, если не найден в маппинге
+    $defaultServiceId = '1456577'; // "Бронирование студии 1 час"
+    
     $hall = $bookingData['hall'] ?? '';
-    $hallLower = strtolower($hall);
+    $hallLower = strtolower(trim($hall));
+    
+    // Логируем исходное значение зала для отладки
+    error_log("YClients: Processing hall '{$hall}' (lowercase: '{$hallLower}')");
     
     // Получаем staff_id для зала
     $staffId = null;
+    $matchedKey = null;
     foreach ($hallYClientsMapping as $hallKey => $staffIdValue) {
         if (strpos($hallLower, $hallKey) !== false) {
             $staffId = $staffIdValue;
+            $matchedKey = $hallKey;
             break;
         }
     }
     
     if (!$staffId) {
-        error_log("YClients: Hall '{$hall}' not found in mapping");
-        return ['success' => false, 'error' => 'Hall not found in mapping'];
+        error_log("❌ YClients: Hall '{$hall}' (lowercase: '{$hallLower}') not found in mapping");
+        error_log("📝 Available hall keys: " . implode(', ', array_keys($hallYClientsMapping)));
+        error_log("📝 Full booking data: " . json_encode($bookingData, JSON_UNESCAPED_UNICODE));
+        return ['success' => false, 'error' => "Hall '{$hall}' not found in mapping. Available: " . implode(', ', array_keys($hallYClientsMapping))];
     }
+    
+    error_log("✅ YClients: Hall '{$hall}' matched to key '{$matchedKey}' → staff_id: {$staffId}");
+    
+    // Получаем service_id для зала
+    $serviceId = $hallServiceMapping[$matchedKey] ?? $defaultServiceId;
+    error_log("✅ YClients: Service ID for hall '{$matchedKey}': {$serviceId}");
     
     // Парсим дату и время
     $bookingDate = $bookingData['date'] ?? '';
@@ -65,35 +97,117 @@ function createYClientsBooking($bookingData) {
     
     // Форматируем дату и время для YClients API
     // YClients ожидает формат: YYYY-MM-DD HH:MM:SS
-    $dateTimeFrom = $bookingDate . ' ' . $timeFrom . ':00';
-    $dateTimeTo = $bookingDate . ' ' . $timeTo . ':00';
+    // Нормализуем время: убираем секунды если есть, оставляем формат HH:MM
+    $timeFromClean = trim($timeFrom);
+    $timeToClean = trim($timeTo);
     
-    // Получаем имя и телефон клиента
-    $clientName = $bookingData['name'] ?? 'Клиент';
+    // Если время в формате HH:MM:SS, убираем секунды
+    if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $timeFromClean)) {
+        $timeFromClean = substr($timeFromClean, 0, 5); // Берем только HH:MM
+    }
+    if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $timeToClean)) {
+        $timeToClean = substr($timeToClean, 0, 5); // Берем только HH:MM
+    }
+    
+    // Проверяем, что время в формате HH:MM
+    if (!preg_match('/^\d{2}:\d{2}$/', $timeFromClean) || !preg_match('/^\d{2}:\d{2}$/', $timeToClean)) {
+        error_log("YClients: Invalid time format. timeFrom: '{$timeFrom}' (cleaned: '{$timeFromClean}'), timeTo: '{$timeTo}' (cleaned: '{$timeToClean}')");
+        return ['success' => false, 'error' => "Invalid time format. Expected HH:MM, got timeFrom: '{$timeFrom}', timeTo: '{$timeTo}'"];
+    }
+    
+    $dateTimeFrom = $bookingDate . ' ' . $timeFromClean . ':00';
+    
+    // Получаем имя, телефон и email клиента
+    $clientName = trim($bookingData['name'] ?? 'Клиент');
     $clientPhone = preg_replace('/[^0-9]/', '', $bookingData['phone'] ?? '');
+    $clientEmail = trim($bookingData['email'] ?? '');
+    
+    // Валидация обязательных полей клиента
+    if (empty($clientName) || strlen($clientName) < 2) {
+        error_log("YClients: Invalid client name: '{$clientName}'");
+        return ['success' => false, 'error' => 'Invalid client name'];
+    }
+    
+    if (empty($clientPhone) || strlen($clientPhone) < 10) {
+        error_log("YClients: Invalid client phone: '{$clientPhone}'");
+        return ['success' => false, 'error' => 'Invalid client phone'];
+    }
+    
+    // Email обязателен для YClients API
+    // Если email не предоставлен, используем тестовый email
+    if (empty($clientEmail) || !filter_var($clientEmail, FILTER_VALIDATE_EMAIL)) {
+        // Используем тестовый email для YClients API
+        $clientEmail = "d@yclients.com";
+        error_log("⚠️ YClients: Email not provided or invalid, using test email: {$clientEmail}");
+    }
     
     // Формируем запрос к YClients API для создания записи
-    // Согласно документации YClients, используется POST /records
-    $yclientsUrl = "{$yclientsApiBase}/records";
+    // Правильный endpoint: https://api.yclients.com/api/v1/book_record/{company_id}
+    $yclientsUrl = "https://api.yclients.com/api/v1/book_record/{$yclientsCompanyId}";
     
     // Вычисляем длительность в минутах
     $duration = calculateDuration($timeFrom, $timeTo);
     
-    // Формируем данные для YClients API
-    // Формат: staff_id, services (массив ID услуг), date (YYYY-MM-DD HH:MM:SS), length (минуты), client (объект)
+    // Формируем данные для YClients API согласно правильному формату
+    // Формат: phone и fullname на верхнем уровне, appointments - массив записей
+    // Формируем данные для YClients API согласно правильному формату
+    $orderId = $bookingData['orderId'] ?? 'N/A';
+    $orderComment = "Бронирование зала {$hall}. Заказ: {$orderId}";
+    
     $yclientsData = [
-        'staff_id' => (int)$staffId,
-        'services' => [], // Можно добавить услуги, если нужно
-        'date' => $dateTimeFrom,
-        'length' => $duration,
-        'client' => [
-            'name' => $clientName,
-            'phone' => $clientPhone
-        ],
-        'comment' => "Бронирование зала {$hall}. Заказ: " . ($bookingData['orderId'] ?? 'N/A')
+        'phone' => $clientPhone,
+        'fullname' => $clientName,
+        'email' => $clientEmail, // ОБЯЗАТЕЛЬНОЕ поле для YClients API
+        'comment' => $orderComment,
+        'type' => 'mobile', // Тип записи
+        'notify_by_sms' => 0, // Уведомления по SMS (0 = отключено)
+        'notify_by_email' => 0, // Уведомления по email (0 = отключено)
+        'api_id' => $orderId, // ID заказа для отслеживания
+        'custom_fields' => [], // Кастомные поля клиента (пустой объект)
+        'appointments' => [
+            [
+                'id' => 1, // ОБЯЗАТЕЛЬНО! Уникальный ID для каждой записи
+                'services' => [(int)$serviceId], // Массив ID услуг - ОБЯЗАТЕЛЬНО должен содержать хотя бы одну услугу
+                'staff_id' => (int)$staffId,
+                'datetime' => $dateTimeFrom, // Формат: YYYY-MM-DD HH:MM:SS
+                'custom_fields' => [] // Кастомные поля записи (пустой объект)
+            ]
+        ]
     ];
     
-    error_log("YClients booking request: " . json_encode($yclientsData, JSON_UNESCAPED_UNICODE));
+    // Добавляем комментарий, если API поддерживает (может быть в другом месте или не поддерживаться)
+    // Комментарий можно добавить в отдельное поле, если API это поддерживает
+    // Пока оставляем без комментария, так как в примере его нет
+    
+    // Добавляем комментарий с информацией о заказе (опциональное поле)
+    $orderComment = "Бронирование зала {$hall}. Заказ: " . ($bookingData['orderId'] ?? 'N/A');
+    if (!empty($orderComment)) {
+        $yclientsData['comment'] = $orderComment;
+    }
+    
+    error_log("✅ YClients: Using service_id: {$serviceId} for booking");
+    error_log("✅ YClients: Client email: {$clientEmail}");
+    
+    // Если API вернет ошибку, попробуем альтернативный формат (для совместимости)
+    // Но сначала пробуем стандартный формат
+    
+    // Детальное логирование запроса
+    error_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    error_log("📤 YCLIENTS: Отправка запроса на создание бронирования");
+    error_log("📍 URL: {$yclientsUrl}");
+    error_log("🏢 Зал: '{$hall}' → staff_id: {$staffId}");
+    error_log("🎯 Service ID: {$serviceId} (обязательная услуга)");
+    error_log("📅 Дата: {$bookingDate}");
+    error_log("⏰ Время: {$timeFromClean} - {$timeToClean}");
+    error_log("📆 Дата/время для API: {$dateTimeFrom}");
+    error_log("⏱️  Длительность: {$duration} минут");
+    error_log("👤 Клиент: {$clientName}");
+    error_log("📞 Телефон: {$clientPhone}");
+    error_log("📧 Email: {$clientEmail}");
+    error_log("🆔 Order ID: " . ($bookingData['orderId'] ?? 'N/A'));
+    error_log("📦 Данные запроса (JSON):");
+    error_log(json_encode($yclientsData, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+    error_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     
     // ТЕСТОВЫЙ РЕЖИМ: только логируем, не отправляем реальный запрос
     if ($YClients_TEST_MODE) {
@@ -103,8 +217,10 @@ function createYClientsBooking($bookingData) {
         error_log("═══════════════════════════════════════════════════════");
         error_log("📍 URL: {$yclientsUrl}");
         error_log("🏢 Зал: '{$hall}' → staff_id: {$staffId}");
+        error_log("🎯 Service ID: {$serviceId} (обязательная услуга)");
         error_log("📅 Дата: {$bookingDate}");
         error_log("⏰ Время: {$timeFrom} - {$timeTo}");
+        error_log("📆 Дата/время для API: {$dateTimeFrom}");
         error_log("⏱️  Длительность: {$duration} минут");
         error_log("👤 Клиент: {$clientName}");
         error_log("📞 Телефон: {$clientPhone}");
@@ -132,10 +248,15 @@ function createYClientsBooking($bookingData) {
     }
     
     // РЕАЛЬНЫЙ РЕЖИМ: отправляем запрос в YClients
+    // Пробуем разные варианты формата запроса, если первый не сработает
+    
+    // Вариант 1: Стандартный формат API v2
+    $requestBody = json_encode($yclientsData, JSON_UNESCAPED_UNICODE);
+    
     $ch = curl_init($yclientsUrl);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($yclientsData, JSON_UNESCAPED_UNICODE));
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $requestBody);
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
         'Content-Type: application/json',
         'Accept: application/vnd.api.v2+json',
@@ -143,10 +264,12 @@ function createYClientsBooking($bookingData) {
     ]);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+    curl_setopt($ch, CURLOPT_VERBOSE, false); // Отключаем verbose для продакшена
     
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $curlError = curl_error($ch);
+    $curlInfo = curl_getinfo($ch);
     curl_close($ch);
     
     if ($curlError) {
@@ -156,12 +279,63 @@ function createYClientsBooking($bookingData) {
     
     $responseData = json_decode($response, true);
     
+    // Детальное логирование ответа
+    error_log("YClients API response (HTTP {$httpCode}): " . substr($response, 0, 1000));
+    error_log("YClients API request URL: {$curlInfo['url']}");
+    
+    // Если получили 404, пробуем альтернативный формат данных
+    if ($httpCode === 404) {
+        error_log("⚠️ YClients API returned 404, trying alternative data format...");
+        
+        // Альтернативный формат: возможно, нужно передавать client_id вместо объекта client
+        // Или использовать другой endpoint
+        // Пока логируем для отладки
+        error_log("📝 Original request data: " . $requestBody);
+        error_log("📝 Response: " . $response);
+        
+        // Возможно, проблема в том, что staff_id не существует или формат данных неправильный
+        // Проверяем, что staff_id валидный
+        if (!is_numeric($staffId) || $staffId <= 0) {
+            error_log("❌ Invalid staff_id: {$staffId}");
+            return ['success' => false, 'error' => "Invalid staff_id: {$staffId}", 'response' => $responseData, 'http_code' => $httpCode];
+        }
+    }
+    
     if ($httpCode === 200 || $httpCode === 201) {
-        error_log("YClients booking created successfully. Response: " . json_encode($responseData, JSON_UNESCAPED_UNICODE));
-        return ['success' => true, 'data' => $responseData];
+        // Проверяем структуру ответа YClients
+        if (isset($responseData['data']) || isset($responseData['id']) || (isset($responseData['success']) && $responseData['success'] === true)) {
+            error_log("✅ YClients booking created successfully. Response: " . json_encode($responseData, JSON_UNESCAPED_UNICODE));
+            return ['success' => true, 'data' => $responseData];
+        } else {
+            // Ответ 200/201, но структура неожиданная - возможно ошибка в данных
+            error_log("⚠️ YClients API returned {$httpCode} but unexpected response structure: " . json_encode($responseData, JSON_UNESCAPED_UNICODE));
+            return ['success' => false, 'error' => 'Unexpected response structure', 'response' => $responseData];
+        }
     } else {
-        error_log("YClients API error (HTTP {$httpCode}): {$response}");
-        return ['success' => false, 'error' => "YClients API error: HTTP {$httpCode}", 'response' => $responseData];
+        // Детальная обработка ошибок
+        $errorMessage = "YClients API error: HTTP {$httpCode}";
+        if (isset($responseData['meta']['message'])) {
+            $errorMessage .= " - " . $responseData['meta']['message'];
+        } elseif (isset($responseData['message'])) {
+            $errorMessage .= " - " . $responseData['message'];
+        } elseif (isset($responseData['error'])) {
+            $errorMessage .= " - " . (is_string($responseData['error']) ? $responseData['error'] : json_encode($responseData['error']));
+        }
+        
+        // Дополнительная диагностика для 404
+        if ($httpCode === 404) {
+            $errorMessage .= " (Возможные причины: неправильный endpoint, неверный staff_id, или формат данных не соответствует API)";
+            error_log("🔍 Диагностика 404:");
+            error_log("   - URL: {$yclientsUrl}");
+            error_log("   - Staff ID: {$staffId}");
+            error_log("   - Company ID: {$yclientsCompanyId}");
+            error_log("   - Request body: " . substr($requestBody, 0, 500));
+        }
+        
+        error_log("❌ {$errorMessage}");
+        error_log("📝 Full response: " . json_encode($responseData, JSON_UNESCAPED_UNICODE));
+        
+        return ['success' => false, 'error' => $errorMessage, 'response' => $responseData, 'http_code' => $httpCode];
     }
 }
 
@@ -664,11 +838,20 @@ switch ($_SERVER['REQUEST_METHOD']) {
                         } else {
                             error_log("✅ YCLIENTS: Бронирование успешно создано в YClients");
                             error_log("📝 Order ID: {$orderId}");
+                            if (isset($yclientsResult['data'])) {
+                                error_log("📝 YClients Response Data: " . json_encode($yclientsResult['data'], JSON_UNESCAPED_UNICODE));
+                            }
                         }
                     } else {
                         error_log("❌ YCLIENTS: Ошибка создания бронирования");
                         error_log("📝 Order ID: {$orderId}");
                         error_log("📝 Ошибка: " . ($yclientsResult['error'] ?? 'Unknown'));
+                        if (isset($yclientsResult['http_code'])) {
+                            error_log("📝 HTTP Code: " . $yclientsResult['http_code']);
+                        }
+                        if (isset($yclientsResult['response'])) {
+                            error_log("📝 YClients Response: " . json_encode($yclientsResult['response'], JSON_UNESCAPED_UNICODE));
+                        }
                     }
                 } catch (Exception $e) {
                     error_log("❌ YCLIENTS: Исключение при создании бронирования");
@@ -852,14 +1035,27 @@ switch ($_SERVER['REQUEST_METHOD']) {
                                          error_log("✅ YCLIENTS: Тестовый режим - запрос НЕ отправлен (это нормально!)");
                                      } else {
                                          error_log("✅ YCLIENTS: Бронирование успешно создано в YClients из callback");
+                                         error_log("📝 Order ID: {$orderId}");
+                                         if (isset($yclientsResult['data'])) {
+                                             error_log("📝 YClients Response Data: " . json_encode($yclientsResult['data'], JSON_UNESCAPED_UNICODE));
+                                         }
                                      }
                                  } else {
                                      error_log("❌ YCLIENTS: Ошибка создания бронирования из callback");
+                                     error_log("📝 Order ID: {$orderId}");
                                      error_log("📝 Ошибка: " . ($yclientsResult['error'] ?? 'Unknown'));
+                                     if (isset($yclientsResult['http_code'])) {
+                                         error_log("📝 HTTP Code: " . $yclientsResult['http_code']);
+                                     }
+                                     if (isset($yclientsResult['response'])) {
+                                         error_log("📝 YClients Response: " . json_encode($yclientsResult['response'], JSON_UNESCAPED_UNICODE));
+                                     }
                                  }
                              } catch (Exception $e) {
                                  error_log("❌ YCLIENTS: Исключение при создании бронирования из callback");
+                                 error_log("📝 Order ID: {$orderId}");
                                  error_log("📝 Ошибка: " . $e->getMessage());
+                                 error_log("📝 Stack trace: " . $e->getTraceAsString());
                              }
                              error_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
                             
