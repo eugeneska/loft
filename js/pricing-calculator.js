@@ -634,7 +634,8 @@ if (typeof window !== 'undefined') {
         getDecemberPrices: () => DECEMBER_PRICES,
         validateFoodAlcohol,
         calculateHours,
-        updateFromAPI: updatePricingDataFromAPI
+        updateFromAPI: updatePricingDataFromAPI,
+        getHallPricing: getHallPricing // Экспортируем функцию для получения настроек зала
     };
     
     // Если API данные уже загружены, обновляем константы

@@ -50,7 +50,11 @@ class PricingIntegration {
         
         // Первоначальный расчёт (если данные уже заполнены)
         if (this.options.autoCalculate) {
-            setTimeout(() => this.calculate(), 100);
+            setTimeout(() => {
+                this.calculate();
+                // Обновляем доступные опции времени окончания
+                this.updateEndTimeOptions();
+            }, 100);
         }
     }
     
@@ -109,6 +113,261 @@ class PricingIntegration {
                 });
             }
         });
+        
+        // Автоматическая установка времени окончания при выборе времени начала
+        if (this.timeFromSelect && this.timeToSelect) {
+            this.timeFromSelect.addEventListener('change', () => {
+                this.autoSetEndTime();
+            });
+            
+            // Также при изменении даты пересчитываем время окончания
+            if (this.dateInput) {
+                this.dateInput.addEventListener('change', () => {
+                    if (this.timeFromSelect.value) {
+                        this.autoSetEndTime();
+                    }
+                });
+            }
+            
+            // Валидация при ручном изменении времени окончания
+            this.timeToSelect.addEventListener('change', () => {
+                this.validateEndTime();
+            });
+            
+            // Обновление доступных опций времени окончания при изменении времени начала
+            this.timeFromSelect.addEventListener('change', () => {
+                this.updateEndTimeOptions();
+            });
+            
+            if (this.dateInput) {
+                this.dateInput.addEventListener('change', () => {
+                    if (this.timeFromSelect.value) {
+                        this.updateEndTimeOptions();
+                    }
+                });
+            }
+        }
+    }
+    
+    /**
+     * Автоматическая установка времени окончания на основе минимального количества часов
+     */
+    autoSetEndTime() {
+        if (!this.timeFromSelect || !this.timeToSelect || !this.dateInput || !this.hallId) {
+            return;
+        }
+        
+        const timeFrom = this.timeFromSelect.value;
+        const date = this.dateInput.value;
+        
+        if (!timeFrom || !date) {
+            return;
+        }
+        
+        // Получаем минимальное количество часов для зала
+        const bookingDate = new Date(date + 'T00:00:00');
+        const dayOfWeek = bookingDate.getDay();
+        const isSaturday = dayOfWeek === 6;
+        
+        // Получаем настройки зала через PricingCalculator
+        if (!window.PricingCalculator || typeof window.PricingCalculator.getHallPricing !== 'function') {
+            console.warn('PricingCalculator.getHallPricing не доступен');
+            return;
+        }
+        
+        const hallPricing = window.PricingCalculator.getHallPricing(this.hallId, date);
+        if (!hallPricing) {
+            console.warn('Настройки зала не найдены для:', this.hallId);
+            return;
+        }
+        
+        const minHoursRequired = isSaturday && hallPricing.min_hours_saturday !== undefined 
+            ? hallPricing.min_hours_saturday 
+            : (hallPricing.min_hours !== undefined ? hallPricing.min_hours : 2);
+        
+        // Вычисляем время окончания = время начала + минимальное количество часов
+        const [fromHours, fromMinutes] = timeFrom.split(':').map(Number);
+        let endHours = fromHours + minHoursRequired;
+        let endMinutes = fromMinutes;
+        
+        // Обработка перехода через полночь
+        if (endHours >= 24) {
+            endHours = endHours % 24;
+        }
+        
+        // Форматируем время окончания
+        const endTime = `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+        
+        // Проверяем, существует ли такая опция в select
+        const endTimeOption = Array.from(this.timeToSelect.options).find(
+            option => option.value === endTime
+        );
+        
+        if (endTimeOption) {
+            // Устанавливаем время окончания
+            this.timeToSelect.value = endTime;
+            
+            // Триггерим событие change для пересчёта
+            this.timeToSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        } else {
+            // Если точного времени нет, ищем ближайшее большее
+            const [fromH, fromM] = timeFrom.split(':').map(Number);
+            const fromTotalMinutes = fromH * 60 + fromM;
+            const minTotalMinutes = fromTotalMinutes + (minHoursRequired * 60);
+            
+            const allOptions = Array.from(this.timeToSelect.options)
+                .filter(opt => opt.value && opt.value !== '')
+                .map(opt => {
+                    const [h, m] = opt.value.split(':').map(Number);
+                    let totalMinutes = h * 60 + m;
+                    // Если время меньше времени начала, считаем что это следующий день
+                    if (totalMinutes < fromTotalMinutes) {
+                        totalMinutes += 24 * 60;
+                    }
+                    return { value: opt.value, hours: h, minutes: m, totalMinutes };
+                })
+                .filter(opt => opt.totalMinutes >= minTotalMinutes)
+                .sort((a, b) => a.totalMinutes - b.totalMinutes);
+            
+            if (allOptions.length > 0) {
+                this.timeToSelect.value = allOptions[0].value;
+                this.timeToSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            } else {
+                console.warn('Не найдено подходящее время окончания для минимального количества часов:', minHoursRequired);
+            }
+        }
+    }
+    
+    /**
+     * Обновление доступных опций времени окончания на основе минимального количества часов
+     */
+    updateEndTimeOptions() {
+        if (!this.timeFromSelect || !this.timeToSelect || !this.dateInput || !this.hallId) {
+            return;
+        }
+        
+        const timeFrom = this.timeFromSelect.value;
+        const date = this.dateInput.value;
+        
+        if (!timeFrom || !date) {
+            // Если время начала не выбрано, делаем все опции доступными
+            Array.from(this.timeToSelect.options).forEach(opt => {
+                opt.disabled = false;
+            });
+            return;
+        }
+        
+        // Получаем минимальное количество часов
+        const bookingDate = new Date(date + 'T00:00:00');
+        const dayOfWeek = bookingDate.getDay();
+        const isSaturday = dayOfWeek === 6;
+        
+        if (!window.PricingCalculator || typeof window.PricingCalculator.getHallPricing !== 'function') {
+            return;
+        }
+        
+        const hallPricing = window.PricingCalculator.getHallPricing(this.hallId, date);
+        if (!hallPricing) {
+            return;
+        }
+        
+        const minHoursRequired = isSaturday && hallPricing.min_hours_saturday !== undefined 
+            ? hallPricing.min_hours_saturday 
+            : (hallPricing.min_hours !== undefined ? hallPricing.min_hours : 2);
+        
+        // Вычисляем минимальное время окончания
+        const [fromH, fromM] = timeFrom.split(':').map(Number);
+        const fromTotalMinutes = fromH * 60 + fromM;
+        const minEndTotalMinutes = fromTotalMinutes + (minHoursRequired * 60);
+        
+        // Обновляем доступность опций
+        Array.from(this.timeToSelect.options).forEach(opt => {
+            if (!opt.value || opt.value === '') {
+                // Опция "До" всегда доступна
+                opt.disabled = false;
+                return;
+            }
+            
+            const [toH, toM] = opt.value.split(':').map(Number);
+            let toTotalMinutes = toH * 60 + toM;
+            
+            // Если время меньше времени начала, считаем что это следующий день
+            if (toTotalMinutes < fromTotalMinutes) {
+                toTotalMinutes += 24 * 60;
+            }
+            
+            // Отключаем опции, которые меньше минимального времени окончания
+            opt.disabled = toTotalMinutes < minEndTotalMinutes;
+        });
+        
+        // Если текущее выбранное время меньше минимума, автоматически устанавливаем правильное
+        const currentTimeTo = this.timeToSelect.value;
+        if (currentTimeTo) {
+            const [currentToH, currentToM] = currentTimeTo.split(':').map(Number);
+            let currentToTotalMinutes = currentToH * 60 + currentToM;
+            if (currentToTotalMinutes < fromTotalMinutes) {
+                currentToTotalMinutes += 24 * 60;
+            }
+            
+            if (currentToTotalMinutes < minEndTotalMinutes) {
+                this.autoSetEndTime();
+            }
+        }
+    }
+    
+    /**
+     * Валидация времени окончания - проверка минимального количества часов
+     */
+    validateEndTime() {
+        if (!this.timeFromSelect || !this.timeToSelect || !this.dateInput || !this.hallId) {
+            return;
+        }
+        
+        const timeFrom = this.timeFromSelect.value;
+        const timeTo = this.timeToSelect.value;
+        const date = this.dateInput.value;
+        
+        if (!timeFrom || !timeTo || !date) {
+            return;
+        }
+        
+        // Получаем минимальное количество часов
+        const bookingDate = new Date(date + 'T00:00:00');
+        const dayOfWeek = bookingDate.getDay();
+        const isSaturday = dayOfWeek === 6;
+        
+        if (!window.PricingCalculator || typeof window.PricingCalculator.getHallPricing !== 'function') {
+            return;
+        }
+        
+        const hallPricing = window.PricingCalculator.getHallPricing(this.hallId, date);
+        if (!hallPricing) {
+            return;
+        }
+        
+        const minHoursRequired = isSaturday && hallPricing.min_hours_saturday !== undefined 
+            ? hallPricing.min_hours_saturday 
+            : (hallPricing.min_hours !== undefined ? hallPricing.min_hours : 2);
+        
+        // Вычисляем длительность
+        const [fromH, fromM] = timeFrom.split(':').map(Number);
+        const [toH, toM] = timeTo.split(':').map(Number);
+        
+        let fromTotalMinutes = fromH * 60 + fromM;
+        let toTotalMinutes = toH * 60 + toM;
+        
+        // Если время окончания меньше времени начала, считаем что это следующий день
+        if (toTotalMinutes < fromTotalMinutes) {
+            toTotalMinutes += 24 * 60;
+        }
+        
+        const durationMinutes = toTotalMinutes - fromTotalMinutes;
+        const durationHours = durationMinutes / 60;
+        
+        // Если длительность меньше минимальной, автоматически устанавливаем правильное время
+        if (durationHours < minHoursRequired) {
+            this.autoSetEndTime();
+        }
     }
     
     /**

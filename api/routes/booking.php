@@ -10,6 +10,101 @@ $db = Database::getInstance();
 header('Content-Type: application/json; charset=utf-8');
 
 /**
+ * Вычисление длительности бронирования в минутах
+ */
+function calculateDuration($timeFrom, $timeTo) {
+    $fromParts = explode(':', $timeFrom);
+    $toParts = explode(':', $timeTo);
+    
+    $fromMinutes = (int)$fromParts[0] * 60 + (int)($fromParts[1] ?? 0);
+    $toMinutes = (int)$toParts[0] * 60 + (int)($toParts[1] ?? 0);
+    
+    return $toMinutes - $fromMinutes;
+}
+
+/**
+ * Валидация минимального количества часов бронирования
+ * 
+ * @param string $hall Код зала (например, 'armaloft', 'merkuri')
+ * @param string $bookingDate Дата бронирования (формат: YYYY-MM-DD)
+ * @param string $timeFrom Время начала (формат: HH:MM)
+ * @param string $timeTo Время окончания (формат: HH:MM)
+ * @param object $db Экземпляр базы данных
+ * @return array ['valid' => bool, 'error' => string|null, 'minHours' => int]
+ */
+function validateBookingDuration($hall, $bookingDate, $timeFrom, $timeTo, $db) {
+    // Получаем настройки зала из БД
+    $hallSettings = $db->fetchOne("
+        SELECT min_hours, min_hours_saturday 
+        FROM hall_prices 
+        WHERE hall_id = (
+            SELECT id FROM halls WHERE name = ? OR slug = ? OR code = ? LIMIT 1
+        )
+        ORDER BY id DESC 
+        LIMIT 1
+    ", [$hall, $hall, $hall]);
+    
+    // Если настройки не найдены, пробуем найти по названию зала
+    if (!$hallSettings) {
+        // Пробуем найти зал по различным вариантам названия
+        $hallNameVariants = [
+            $hall,
+            strtolower($hall),
+            ucfirst($hall),
+            strtoupper($hall)
+        ];
+        
+        foreach ($hallNameVariants as $variant) {
+            $hallSettings = $db->fetchOne("
+                SELECT min_hours, min_hours_saturday 
+                FROM hall_prices 
+                WHERE hall_id = (
+                    SELECT id FROM halls WHERE name LIKE ? OR slug LIKE ? OR code LIKE ? LIMIT 1
+                )
+                ORDER BY id DESC 
+                LIMIT 1
+            ", ["%{$variant}%", "%{$variant}%", "%{$variant}%"]);
+            
+            if ($hallSettings) break;
+        }
+    }
+    
+    // Вычисляем длительность бронирования в часах
+    $duration = calculateDuration($timeFrom, $timeTo);
+    $durationHours = round($duration / 60); // Длительность в часах
+    
+    // Определяем день недели (0 = воскресенье, 6 = суббота)
+    $dateObj = DateTime::createFromFormat('Y-m-d', $bookingDate);
+    if (!$dateObj) {
+        return ['valid' => false, 'error' => 'Invalid date format', 'minHours' => 2];
+    }
+    
+    $dayOfWeek = (int)$dateObj->format('w'); // 0-6, где 0 = воскресенье
+    $isSaturday = ($dayOfWeek === 6);
+    
+    // Получаем минимальное количество часов
+    $minHoursRequired = 2; // По умолчанию 2 часа
+    if ($hallSettings) {
+        if ($isSaturday && isset($hallSettings['min_hours_saturday']) && $hallSettings['min_hours_saturday'] !== null) {
+            $minHoursRequired = (int)$hallSettings['min_hours_saturday'];
+        } elseif (isset($hallSettings['min_hours']) && $hallSettings['min_hours'] !== null) {
+            $minHoursRequired = (int)$hallSettings['min_hours'];
+        }
+    }
+    
+    // Проверяем, что длительность >= минимального количества часов
+    if ($durationHours < $minHoursRequired) {
+        $hoursWord = $minHoursRequired === 1 ? 'час' : ($minHoursRequired < 5 ? 'часа' : 'часов');
+        $errorMessage = "Минимальная аренда {$minHoursRequired} {$hoursWord}. Выбрано: {$durationHours} " . ($durationHours === 1 ? 'час' : ($durationHours < 5 ? 'часа' : 'часов'));
+        error_log("❌ Booking duration validation failed. Hall: {$hall}, Required: {$minHoursRequired} hours, Got: {$durationHours} hours");
+        return ['valid' => false, 'error' => $errorMessage, 'minHours' => $minHoursRequired];
+    }
+    
+    error_log("✅ Booking duration validated. Hall: {$hall}, Required: {$minHoursRequired} hours, Got: {$durationHours} hours");
+    return ['valid' => true, 'error' => null, 'minHours' => $minHoursRequired];
+}
+
+/**
  * Создание записи в YClients через API
  * 
  * @param array $bookingData Данные бронирования
@@ -94,6 +189,17 @@ function createYClientsBooking($bookingData) {
         error_log("YClients: Missing required fields (date, timeFrom, timeTo)");
         return ['success' => false, 'error' => 'Missing required fields'];
     }
+    
+    // ВАЛИДАЦИЯ: Проверяем минимальное количество часов бронирования
+    global $db;
+    $validation = validateBookingDuration($matchedKey, $bookingDate, $timeFrom, $timeTo, $db);
+    
+    if (!$validation['valid']) {
+        error_log("❌ YClients: Booking duration validation failed: " . $validation['error']);
+        return ['success' => false, 'error' => $validation['error']];
+    }
+    
+    $durationHours = round(calculateDuration($timeFrom, $timeTo) / 60);
     
     // Форматируем дату и время для YClients API
     // YClients ожидает формат: YYYY-MM-DD HH:MM:SS
@@ -364,19 +470,6 @@ function createYClientsBooking($bookingData) {
 }
 
 /**
- * Вычисление длительности бронирования в минутах
- */
-function calculateDuration($timeFrom, $timeTo) {
-    $fromParts = explode(':', $timeFrom);
-    $toParts = explode(':', $timeTo);
-    
-    $fromMinutes = (int)$fromParts[0] * 60 + (int)($fromParts[1] ?? 0);
-    $toMinutes = (int)$toParts[0] * 60 + (int)($toParts[1] ?? 0);
-    
-    return $toMinutes - $fromMinutes;
-}
-
-/**
  * Генерация токена для подписи запроса к Tbank API
  * Согласно официальной документации Tbank:
  * 1. Берем только параметры корневого объекта (вложенные объекты DATA, Receipt НЕ участвуют!)
@@ -458,6 +551,23 @@ switch ($_SERVER['REQUEST_METHOD']) {
                 http_response_code(400);
                 echo json_encode(['error' => 'Имя и телефон обязательны для заполнения']);
                 exit;
+            }
+            
+            // ВАЛИДАЦИЯ: Проверяем минимальное количество часов бронирования
+            if (isset($booking['hall']) && isset($booking['date']) && isset($booking['timeFrom']) && isset($booking['timeTo'])) {
+                $validation = validateBookingDuration(
+                    $booking['hall'],
+                    $booking['date'],
+                    $booking['timeFrom'],
+                    $booking['timeTo'],
+                    $db
+                );
+                
+                if (!$validation['valid']) {
+                    http_response_code(400);
+                    echo json_encode(['error' => $validation['error']], JSON_UNESCAPED_UNICODE);
+                    exit;
+                }
             }
 
             // Generate unique order ID
