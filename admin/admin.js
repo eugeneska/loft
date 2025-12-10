@@ -405,7 +405,6 @@ const admin = {
                     <td>${price.after_hours_fee} ₽</td>
                     <td>${price.min_hours}</td>
                     <td>${price.min_hours_saturday || price.min_hours || '-'}</td>
-                    <td>${price.allow_food_alcohol_from_hours}</td>
                     <td>
                         <button class="btn btn-secondary" onclick="admin.openHallPriceModal(${price.id})">Редактировать</button>
                     </td>
@@ -539,11 +538,6 @@ const admin = {
                     <input type="number" name="min_hours_saturday" 
                         value="${price.min_hours_saturday || price.min_hours || 2}" required>
                 </div>
-                <div class="form-group">
-                    <label>Еда/алкоголь разрешены с (часы аренды, минимум):</label>
-                    <input type="number" name="allow_food_alcohol_from_hours" 
-                        value="${price.allow_food_alcohol_from_hours || 2}" required>
-                </div>
                 <div class="form-actions">
                     <button type="button" class="btn" onclick="admin.closeModal()">Отмена</button>
                     <button type="submit" class="btn btn-primary">Сохранить</button>
@@ -553,14 +547,45 @@ const admin = {
     },
     
     setupHallPriceForm(id, hallId = null) {
-        const form = document.getElementById('hall-price-form');
-        // Удаляем старый обработчик, если есть
+        const self = this;
+        // Используем requestAnimationFrame для гарантии, что форма уже в DOM
+        requestAnimationFrame(() => {
+            const form = document.getElementById('hall-price-form');
+            if (!form) {
+                console.error('Form not found, retrying...');
+                // Повторная попытка через небольшую задержку
+                setTimeout(() => {
+                    const retryForm = document.getElementById('hall-price-form');
+                    if (!retryForm) {
+                        console.error('Form still not found after retry');
+                        return;
+                    }
+                    self.attachHallPriceFormHandler(retryForm, id, hallId);
+                }, 50);
+                return;
+            }
+            
+            self.attachHallPriceFormHandler(form, id, hallId);
+        });
+    },
+    
+    attachHallPriceFormHandler(form, id, hallId) {
+        const self = this;
+        // Удаляем старый обработчик через клонирование
         const newForm = form.cloneNode(true);
         form.parentNode.replaceChild(newForm, form);
         
-        newForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(newForm);
+        // Получаем обновленную форму из DOM
+        const updatedForm = document.getElementById('hall-price-form');
+        if (!updatedForm) {
+            console.error('Form not found after replacement');
+            return;
+        }
+        
+        console.log('Attaching submit handler to form');
+        updatedForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const formData = new FormData(updatedForm);
             const data = {
                 weekday_10_22: parseFloat(formData.get('weekday_10_22')),
                 weekday_22_00: parseFloat(formData.get('weekday_22_00')),
@@ -571,7 +596,7 @@ const admin = {
                 after_hours_fee: parseFloat(formData.get('after_hours_fee')),
                 min_hours: parseInt(formData.get('min_hours')),
                 min_hours_saturday: parseInt(formData.get('min_hours_saturday')),
-                allow_food_alcohol_from_hours: parseInt(formData.get('allow_food_alcohol_from_hours'))
+                allow_food_alcohol_from_hours: 2 // Значение по умолчанию, поле скрыто из формы
             };
             
             // Если создание новой цены, добавляем hall_id и price_set_id
@@ -580,7 +605,7 @@ const admin = {
                 const priceSetId = formData.get('price_set_id');
                 
                 if (!selectedHallId || !priceSetId) {
-                    this.showMessage('Необходимо выбрать зал и прайс-сет', 'error');
+                    self.showMessage('Необходимо выбрать зал и прайс-сет', 'error');
                     return;
                 }
                 
@@ -603,11 +628,11 @@ const admin = {
                     throw new Error(error.error || 'Ошибка сохранения');
                 }
                 
-                this.showMessage(id ? 'Цены сохранены успешно' : 'Цены созданы успешно');
-                this.closeModal();
-                this.loadHallPrices();
+                self.showMessage(id ? 'Цены сохранены успешно' : 'Цены созданы успешно');
+                self.closeModal();
+                self.loadHallPrices();
             } catch (error) {
-                this.showMessage(error.message, 'error');
+                self.showMessage(error.message, 'error');
             }
         });
     },
@@ -698,6 +723,13 @@ const admin = {
                     <label>Порядок сортировки:</label>
                     <input type="number" name="sort_order" value="${extra?.sort_order || 0}">
                 </div>
+                ${!extra ? `
+                <div class="form-group">
+                    <label>Базовая цена (для стандартного прайс-сета, ₽):</label>
+                    <input type="number" step="0.01" name="base_price">
+                    <small style="color: #666; font-size: 12px;">Если указана, будет автоматически создана цена для стандартного прайс-сета</small>
+                </div>
+                ` : ''}
                 <div class="form-actions">
                     <button type="button" class="btn" onclick="admin.closeModal()">Отмена</button>
                     <button type="submit" class="btn btn-primary">Сохранить</button>
@@ -735,9 +767,53 @@ const admin = {
                     throw new Error(error.error || 'Ошибка сохранения');
                 }
                 
+                const savedExtra = await response.json();
+                
+                // Если создается новая услуга и указана базовая цена, создаем цену для стандартного прайс-сета
+                if (!id) {
+                    const basePrice = formData.get('base_price');
+                    if (basePrice && parseFloat(basePrice) > 0) {
+                        try {
+                            // Получаем список прайс-сетов
+                            const priceSetsRes = await fetch(`${API_BASE}/price-sets`);
+                            if (priceSetsRes.ok) {
+                                const priceSets = await priceSetsRes.json();
+                                // Ищем стандартный прайс-сет (code='standard')
+                                const standardPriceSet = priceSets.find(ps => ps.code === 'standard');
+                                
+                                if (standardPriceSet) {
+                                    // Создаем цену для стандартного прайс-сета
+                                    const priceData = {
+                                        extra_id: savedExtra.id,
+                                        price_set_id: standardPriceSet.id,
+                                        base_price: parseFloat(basePrice),
+                                        additional_unit_price: null,
+                                        unit_description: null
+                                    };
+                                    
+                                    const priceResponse = await fetch(`${API_BASE}/extras-prices`, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify(priceData)
+                                    });
+                                    
+                                    if (!priceResponse.ok) {
+                                        console.warn('Не удалось создать цену для стандартного прайс-сета');
+                                    }
+                                }
+                            }
+                        } catch (priceError) {
+                            console.warn('Ошибка при создании базовой цены:', priceError);
+                            // Не прерываем процесс, просто логируем ошибку
+                        }
+                    }
+                }
+                
                 this.showMessage('Услуга сохранена успешно');
                 this.closeModal();
                 this.loadExtras();
+                // Обновляем список услуг в разделе "Цены доп. услуг"
+                this.loadExtrasForSelect();
             } catch (error) {
                 this.showMessage(error.message, 'error');
             }
@@ -753,6 +829,14 @@ const admin = {
             
             this.showMessage('Услуга удалена успешно');
             this.loadExtras();
+            // Обновляем список услуг в разделе "Цены доп. услуг"
+            this.loadExtrasForSelect();
+            // Очищаем таблицу цен, если удаленная услуга была выбрана
+            const select = document.getElementById('extra-select');
+            if (select && select.value == id) {
+                select.value = '';
+                document.getElementById('extras-prices-table').style.display = 'none';
+            }
         } catch (error) {
             this.showMessage('Ошибка удаления услуги', 'error');
         }
@@ -763,13 +847,29 @@ const admin = {
     async loadExtrasForSelect() {
         try {
             const response = await fetch(`${API_BASE}/extras`);
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Ошибка загрузки: ${response.status} ${errorText}`);
+            }
+            
             const extras = await response.json();
             
+            if (!Array.isArray(extras)) {
+                console.error('Expected array but got:', extras);
+                return;
+            }
+            
             const select = document.getElementById('extra-select');
-            select.innerHTML = '<option value="">-- Выберите услугу --</option>' +
-                extras.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+            if (select) {
+                select.innerHTML = '<option value="">-- Выберите услугу --</option>' +
+                    extras.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+            }
         } catch (error) {
-            console.error('Error loading extras:', error);
+            console.error('Error loading extras for select:', error);
+            const select = document.getElementById('extra-select');
+            if (select) {
+                select.innerHTML = '<option value="">-- Ошибка загрузки --</option>';
+            }
         }
     },
     

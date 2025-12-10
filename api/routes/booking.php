@@ -271,7 +271,7 @@ function createYClientsBooking($bookingData) {
         $appointments[] = [
             'id' => $appointmentId++, // ОБЯЗАТЕЛЬНО! Уникальный ID для каждой записи
             'services' => [(int)$serviceId], // Массив ID услуг - ОБЯЗАТЕЛЬНО должен содержать хотя бы одну услугу
-            'staff_id' => (int)$staffId,
+        'staff_id' => (int)$staffId,
             'datetime' => $appointmentDateTime->format('Y-m-d H:i:s'), // Формат: YYYY-MM-DD HH:MM:SS
             'custom_fields' => [] // Кастомные поля записи (пустой объект)
         ];
@@ -435,12 +435,12 @@ function createYClientsBooking($bookingData) {
         // Проверяем структуру ответа YClients
         if (isset($responseData['data']) || isset($responseData['id']) || (isset($responseData['success']) && $responseData['success'] === true)) {
             error_log("✅ YClients booking created successfully. Response: " . json_encode($responseData, JSON_UNESCAPED_UNICODE));
-            return ['success' => true, 'data' => $responseData];
-        } else {
+        return ['success' => true, 'data' => $responseData];
+    } else {
             // Ответ 200/201, но структура неожиданная - возможно ошибка в данных
             error_log("⚠️ YClients API returned {$httpCode} but unexpected response structure: " . json_encode($responseData, JSON_UNESCAPED_UNICODE));
             return ['success' => false, 'error' => 'Unexpected response structure', 'response' => $responseData];
-        }
+    }
     } else {
         // Детальная обработка ошибок
         $errorMessage = "YClients API error: HTTP {$httpCode}";
