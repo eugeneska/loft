@@ -421,7 +421,9 @@
         try {
             // Получаем занятые часы для выбранного зала
             if (window.getBusyHours && typeof window.getBusyHours === 'function') {
-                const busyHours = await window.getBusyHours(cardHallId, selectedDate);
+                const busyData = await window.getBusyHours(cardHallId, selectedDate);
+                const busyHours = Array.isArray(busyData) ? busyData : (busyData?.hours || []);
+                const busyIntervals = busyData?.intervals || [];
 
                 // Сохраняем текущие выбранные значения
                 const selectedFrom = timeFromSelect.value;
@@ -429,33 +431,49 @@
 
                 // Отключаем занятые часы
                 if (window.disableBusyHoursInHeroForm && typeof window.disableBusyHoursInHeroForm === 'function') {
-                    window.disableBusyHoursInHeroForm(busyHours);
+                    window.disableBusyHoursInHeroForm(busyHours, busyIntervals);
                 } else {
                     // Fallback - отключаем вручную
-                    [timeFromSelect, timeToSelect].forEach(select => {
-                        if (!select) return;
-                        select.querySelectorAll('option').forEach(option => {
+                    // Для "время от" отключаем только занятые часы
+                    if (timeFromSelect) {
+                        timeFromSelect.querySelectorAll('option').forEach(option => {
                             if (option.value && option.value !== '') {
                                 option.disabled = false;
                                 const hour = parseInt(option.value.split(':')[0]);
-                                if (busyHours.includes(hour)) {
+                                if (Array.isArray(busyHours) && busyHours.includes(hour)) {
                                     option.disabled = true;
                                 }
                             }
                         });
-                    });
+                    }
+                    
+                    // Для "время до" отключаем занятые часы
+                    // (Если busyHours - это объект с hours и intervals, используем hours)
+                    const hoursArray = Array.isArray(busyHours) ? busyHours : (busyHours?.hours || []);
+                    if (timeToSelect) {
+                        timeToSelect.querySelectorAll('option').forEach(option => {
+                            if (option.value && option.value !== '') {
+                                option.disabled = false;
+                                const hour = parseInt(option.value.split(':')[0]);
+                                if (hoursArray.includes(hour)) {
+                                    option.disabled = true;
+                                }
+                            }
+                        });
+                    }
                 }
 
                 // Сбрасываем выбранное время, если оно стало недоступным
+                const hoursArray = Array.isArray(busyHours) ? busyHours : (busyHours?.hours || []);
                 if (selectedFrom) {
                     const selectedHour = parseInt(selectedFrom.split(':')[0]);
-                    if (busyHours.includes(selectedHour)) {
+                    if (hoursArray.includes(selectedHour)) {
                         timeFromSelect.value = '';
                     }
                 }
                 if (selectedTo) {
                     const selectedHour = parseInt(selectedTo.split(':')[0]);
-                    if (busyHours.includes(selectedHour)) {
+                    if (hoursArray.includes(selectedHour)) {
                         timeToSelect.value = '';
                     }
                 }

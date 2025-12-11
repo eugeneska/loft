@@ -1893,7 +1893,10 @@
                     }
                 });
 
-                return Array.from(busyHours);
+                return {
+                    hours: Array.from(busyHours),
+                    intervals: busyIntervals
+                };
             } catch (error) {
                 console.error('Ошибка при получении занятых часов:', error);
                 return [];
@@ -1901,25 +1904,49 @@
         }
 
         // Отключение занятых часов в селектах
-        function disableBusyHours(busyHours) {
+        function disableBusyHours(busyHours, busyIntervals = []) {
             const timeFromSelect = document.getElementById('booking-time-from');
             const timeToSelect = document.getElementById('booking-time-to');
 
-            [timeFromSelect, timeToSelect].forEach(select => {
-                if (!select) return;
-                
-                // Сначала включаем все опции
-                select.querySelectorAll('option').forEach(option => {
+            // Для "время от" отключаем только часы начала бронирований
+            if (timeFromSelect) {
+                timeFromSelect.querySelectorAll('option').forEach(option => {
                     if (option.value && option.value !== '') {
                         option.disabled = false;
                         const hour = parseInt(option.value.split(':')[0]);
-                        // Отключаем занятые часы
-                        if (busyHours.includes(hour)) {
+                        const hoursArray = Array.isArray(busyHours) ? busyHours : (busyHours?.hours || []);
+                        if (hoursArray.includes(hour)) {
                             option.disabled = true;
                         }
                     }
                 });
-            });
+            }
+
+            // Для "время до" отключаем часы начала И час окончания бронирований
+            if (timeToSelect) {
+                // Создаем Set с часами окончания
+                const endHours = new Set();
+                busyIntervals.forEach(interval => {
+                    if (interval.to) {
+                        const toHour = interval.to === '00:00:00' ? 24 : parseInt(interval.to.split(':')[0]);
+                        if (toHour < 24) {
+                            endHours.add(toHour);
+                        }
+                    }
+                });
+
+                timeToSelect.querySelectorAll('option').forEach(option => {
+                    if (option.value && option.value !== '') {
+                        option.disabled = false;
+                        const hour = parseInt(option.value.split(':')[0]);
+                        const hoursArray = Array.isArray(busyHours) ? busyHours : (busyHours?.hours || []);
+                        // Отключаем занятые часы И час окончания
+                        if (hoursArray.includes(hour) || endHours.has(hour)) {
+                            option.disabled = true;
+                        }
+                    }
+                });
+            }
         }
 
         // Обработчик изменения даты
@@ -1935,25 +1962,28 @@
             if (timeToSelect) timeToSelect.disabled = true;
 
             // Получаем занятые часы для зала МЕРКУРИ
-            const busyHours = await getBusyHours('mercury', selectedDate);
+            const busyData = await getBusyHours('mercury', selectedDate);
+            const busyHours = busyData.hours || busyData || []; // Обратная совместимость
+            const busyIntervals = busyData.intervals || [];
             
             // Сохраняем текущие выбранные значения
             const selectedFrom = timeFromSelect ? timeFromSelect.value : '';
             const selectedTo = timeToSelect ? timeToSelect.value : '';
             
             // Отключаем занятые часы
-            disableBusyHours(busyHours);
+            disableBusyHours(busyHours, busyIntervals);
 
             // Сбрасываем выбранное время, если оно стало недоступным
+            const hoursArray = Array.isArray(busyHours) ? busyHours : (busyHours?.hours || []);
             if (timeFromSelect && selectedFrom) {
                 const selectedHour = parseInt(selectedFrom.split(':')[0]);
-                if (busyHours.includes(selectedHour)) {
+                if (hoursArray.includes(selectedHour)) {
                     timeFromSelect.value = '';
                 }
             }
             if (timeToSelect && selectedTo) {
                 const selectedHour = parseInt(selectedTo.split(':')[0]);
-                if (busyHours.includes(selectedHour)) {
+                if (hoursArray.includes(selectedHour)) {
                     timeToSelect.value = '';
                 }
             }

@@ -39,10 +39,25 @@ function updatePricingDataFromAPI(apiData) {
     }
     
     // Обновляем EXTRA_SERVICES
-    if (converted.extras) {
-        Object.keys(converted.extras).forEach(extraCode => {
-            EXTRA_SERVICES[extraCode] = converted.extras[extraCode];
+    if (converted.extras && Object.keys(converted.extras).length > 0) {
+        // Полностью очищаем EXTRA_SERVICES перед добавлением данных из API
+        // API - это источник истины, захардкоженные данные используются только как fallback
+        Object.keys(EXTRA_SERVICES).forEach(key => {
+            delete EXTRA_SERVICES[key];
         });
+        
+        // Добавляем услуги из API
+        Object.keys(converted.extras).forEach(extraCode => {
+            const extra = converted.extras[extraCode];
+            // Добавляем только если у услуги есть валидная цена
+            if (extra && extra.price != null && extra.price !== undefined && !isNaN(extra.price) && extra.price > 0) {
+                EXTRA_SERVICES[extraCode] = extra;
+            }
+        });
+        
+        console.log('EXTRA_SERVICES полностью заменены данными из API:', Object.keys(EXTRA_SERVICES));
+    } else {
+        console.log('Нет данных из API для доп. услуг, используем захардкоженные');
     }
     
     console.log('Pricing data updated from API');

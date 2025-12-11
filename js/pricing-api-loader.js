@@ -111,12 +111,15 @@ function convertApiDataToCalculatorFormat(apiData) {
         
         if (!standardPrice && Object.keys(extra.priceSets || {}).length === 0) return;
         
-        if (extra.pricingType === 'fixed') {
-            extras[code] = {
-                name: extra.name,
-                price: standardPrice.basePrice || 0,
-                type: 'fixed'
-            };
+        if (extra.pricingType === 'fixed' && standardPrice) {
+            const basePrice = standardPrice.basePrice != null ? parseFloat(standardPrice.basePrice) : 0;
+            if (basePrice > 0) {
+                extras[code] = {
+                    name: extra.name,
+                    price: basePrice,
+                    type: 'fixed'
+                };
+            }
         } else if (extra.pricingType === 'per_unit') {
             // Для per_unit нужно определить per (например, из unitDescription "за каждые 10 человек")
             const unitDesc = (standardPrice.unitDescription || '').toLowerCase();
@@ -129,58 +132,75 @@ function convertApiDataToCalculatorFormat(apiData) {
                 unitDesc.includes('за экземпляр') ||
                 (!unitDesc.includes('человек') && !unitDesc.includes('чел'))) {
                 // Обрабатываем как fixed
-                extras[code] = {
-                    name: extra.name,
-                    price: parseFloat(standardPrice.basePrice) || 0,
-                    type: 'fixed'
-                };
+                const basePrice = standardPrice.basePrice != null ? parseFloat(standardPrice.basePrice) : 0;
+                if (basePrice > 0) {
+                    extras[code] = {
+                        name: extra.name,
+                        price: basePrice,
+                        type: 'fixed'
+                    };
+                }
                 return;
             }
             
             // Ищем число в описании ("за каждые 10 человек")
             const perMatch = standardPrice.unitDescription?.match(/(\d+)/);
+            const basePrice = standardPrice.basePrice != null ? parseFloat(standardPrice.basePrice) : 0;
+            
             if (!perMatch) {
                 // Если не нашли число, но это per_unit для людей - по умолчанию per = 1
                 console.warn(`Не найдено число для per_unit услуги ${code}, используем per=1`);
-                extras[code] = {
-                    name: extra.name,
-                    price: parseFloat(standardPrice.basePrice) || 0,
-                    per: 1,
-                    type: 'per_person'
-                };
+                if (basePrice > 0) {
+                    extras[code] = {
+                        name: extra.name,
+                        price: basePrice,
+                        per: 1,
+                        type: 'per_person'
+                    };
+                }
                 return;
             }
             
             const per = parseInt(perMatch[1]);
             
-            extras[code] = {
-                name: extra.name,
-                price: parseFloat(standardPrice.basePrice) || 0,
-                per: per,
-                type: 'per_person'
-            };
+            if (basePrice > 0) {
+                extras[code] = {
+                    name: extra.name,
+                    price: basePrice,
+                    per: per,
+                    type: 'per_person'
+                };
+            }
         } else if (extra.pricingType === 'complex') {
             // Для complex создаем hookah_1 и hookah_2
-            if (code === 'hookah') {
-                extras['hookah_1'] = {
-                    name: `${extra.name} (первый)`,
-                    price: standardPrice.basePrice || 0,
-                    type: 'fixed'
-                };
+            if (code === 'hookah' && standardPrice) {
+                const basePrice = standardPrice.basePrice != null ? parseFloat(standardPrice.basePrice) : 0;
+                const additionalPrice = standardPrice.additionalUnitPrice != null ? parseFloat(standardPrice.additionalUnitPrice) : null;
                 
-                if (standardPrice.additionalUnitPrice) {
-                    extras['hookah_2'] = {
-                        name: `${extra.name} (второй)`,
-                        price: standardPrice.additionalUnitPrice,
+                if (basePrice > 0) {
+                    extras['hookah_1'] = {
+                        name: `${extra.name} (первый)`,
+                        price: basePrice,
                         type: 'fixed'
                     };
                 }
-            } else {
-                extras[code] = {
-                    name: extra.name,
-                    price: standardPrice.basePrice || 0,
-                    type: 'fixed'
-                };
+                
+                if (additionalPrice != null && additionalPrice > 0) {
+                    extras['hookah_2'] = {
+                        name: `${extra.name} (второй)`,
+                        price: additionalPrice,
+                        type: 'fixed'
+                    };
+                }
+            } else if (standardPrice) {
+                const basePrice = standardPrice.basePrice != null ? parseFloat(standardPrice.basePrice) : 0;
+                if (basePrice > 0) {
+                    extras[code] = {
+                        name: extra.name,
+                        price: basePrice,
+                        type: 'fixed'
+                    };
+                }
             }
         }
     });

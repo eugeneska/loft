@@ -53,7 +53,7 @@ class PricingIntegration {
             setTimeout(() => {
                 this.calculate();
                 // Обновляем доступные опции времени окончания
-                this.updateEndTimeOptions();
+                this.updateEndTimeOptions().catch(err => console.error('Ошибка в updateEndTimeOptions:', err));
             }, 100);
         }
     }
@@ -117,14 +117,14 @@ class PricingIntegration {
         // Автоматическая установка времени окончания при выборе времени начала
         if (this.timeFromSelect && this.timeToSelect) {
             this.timeFromSelect.addEventListener('change', () => {
-                this.autoSetEndTime();
+                this.autoSetEndTime().catch(err => console.error('Ошибка в autoSetEndTime:', err));
             });
             
             // Также при изменении даты пересчитываем время окончания
             if (this.dateInput) {
                 this.dateInput.addEventListener('change', () => {
                     if (this.timeFromSelect.value) {
-                        this.autoSetEndTime();
+                        this.autoSetEndTime().catch(err => console.error('Ошибка в autoSetEndTime:', err));
                     }
                 });
             }
@@ -136,13 +136,13 @@ class PricingIntegration {
             
             // Обновление доступных опций времени окончания при изменении времени начала
             this.timeFromSelect.addEventListener('change', () => {
-                this.updateEndTimeOptions();
+                this.updateEndTimeOptions().catch(err => console.error('Ошибка в updateEndTimeOptions:', err));
             });
             
             if (this.dateInput) {
                 this.dateInput.addEventListener('change', () => {
                     if (this.timeFromSelect.value) {
-                        this.updateEndTimeOptions();
+                        this.updateEndTimeOptions().catch(err => console.error('Ошибка в updateEndTimeOptions:', err));
                     }
                 });
             }
@@ -151,8 +151,9 @@ class PricingIntegration {
     
     /**
      * Автоматическая установка времени окончания на основе минимального количества часов
+     * Учитывает занятые часы и выбирает ближайшее свободное время
      */
-    autoSetEndTime() {
+    async autoSetEndTime() {
         if (!this.timeFromSelect || !this.timeToSelect || !this.dateInput || !this.hallId) {
             return;
         }
@@ -185,63 +186,136 @@ class PricingIntegration {
             ? hallPricing.min_hours_saturday 
             : (hallPricing.min_hours !== undefined ? hallPricing.min_hours : 2);
         
-        // Вычисляем время окончания = время начала + минимальное количество часов
-        const [fromHours, fromMinutes] = timeFrom.split(':').map(Number);
-        let endHours = fromHours + minHoursRequired;
-        let endMinutes = fromMinutes;
+        // Получаем занятые часы из API
+        let busyHours = [];
+        let busyIntervals = [];
+        let endHours = new Set();
         
-        // Обработка перехода через полночь
-        if (endHours >= 24) {
-            endHours = endHours % 24;
+        try {
+            if (window.getBusyHours && typeof window.getBusyHours === 'function') {
+                // Маппинг ID залов для getBusyHours (некоторые залы используют другие ID)
+                const hallIdForBusyHours = {
+                    'merkuri': 'mercury',  // merkuri.html использует 'mercury'
+                    'samolet': 'airplane', // samolet.html использует 'airplane'
+                    'armaloft': 'armaloft',
+                    'pulka': 'pulka',
+                    'rufer': 'rufer'
+                };
+                
+                const busyHoursHallId = hallIdForBusyHours[this.hallId] || this.hallId;
+                const busyData = await window.getBusyHours(busyHoursHallId, date);
+                busyHours = Array.isArray(busyData) ? busyData : (busyData?.hours || []);
+                busyIntervals = busyData?.intervals || [];
+                
+                // Создаем Set с часами окончания занятых интервалов
+                busyIntervals.forEach(interval => {
+                    if (interval.to) {
+                        const toHour = interval.to === '00:00:00' ? 24 : parseInt(interval.to.split(':')[0]);
+                        if (toHour < 24) {
+                            endHours.add(toHour);
+                        }
+                    }
+                });
+            }
+        } catch (error) {
+            console.warn('Ошибка при получении занятых часов в autoSetEndTime:', error);
         }
         
-        // Форматируем время окончания
-        const endTime = `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+        // Вычисляем время окончания = время начала + минимальное количество часов
+        const [fromH, fromM] = timeFrom.split(':').map(Number);
+        const fromTotalMinutes = fromH * 60 + fromM;
+        const minTotalMinutes = fromTotalMinutes + (minHoursRequired * 60);
         
-        // Проверяем, существует ли такая опция в select
-        const endTimeOption = Array.from(this.timeToSelect.options).find(
-            option => option.value === endTime
-        );
+        // Ищем ближайшее свободное время, которое:
+        // 1. Не меньше минимального времени окончания
+        // 2. Не занято
+        // 3. Не является часом окончания занятого интервала
+        const allOptions = Array.from(this.timeToSelect.options)
+            .filter(opt => opt.value && opt.value !== '')
+            .map(opt => {
+                const [h, m] = opt.value.split(':').map(Number);
+                let totalMinutes = h * 60 + m;
+                // Если время меньше времени начала, считаем что это следующий день
+                if (totalMinutes < fromTotalMinutes) {
+                    totalMinutes += 24 * 60;
+                }
+                return { 
+                    value: opt.value, 
+                    hours: h, 
+                    minutes: m, 
+                    totalMinutes,
+                    isBusy: busyHours.includes(h),
+                    isEndHour: endHours.has(h)
+                };
+            })
+            .filter(opt => {
+                // Фильтруем опции, которые:
+                // 1. Не меньше минимального времени окончания
+                // 2. Не заняты
+                // 3. Не являются часом окончания занятого интервала
+                // 4. Не пересекаются с занятыми интервалами
+                
+                // Функция для проверки пересечения интервала [from, to] с занятыми интервалами
+                const intersectsWithBusyInterval = (fromMinutes, toMinutes) => {
+                    for (const interval of busyIntervals) {
+                        if (!interval.from || !interval.to) continue;
+                        
+                        const intervalFromHour = parseInt(interval.from.split(':')[0]);
+                        const intervalFromMin = parseInt(interval.from.split(':')[1] || 0);
+                        let intervalFromMinutes = intervalFromHour * 60 + intervalFromMin;
+                        
+                        let intervalToHour = interval.to === '00:00:00' ? 24 : parseInt(interval.to.split(':')[0]);
+                        const intervalToMin = interval.to === '00:00:00' ? 0 : parseInt(interval.to.split(':')[1] || 0);
+                        let intervalToMinutes = intervalToHour * 60 + intervalToMin;
+                        
+                        // Если интервал переходит через полночь
+                        if (intervalToMinutes < intervalFromMinutes) {
+                            intervalToMinutes += 24 * 60;
+                        }
+                        
+                        // Нормализуем время до, если оно переходит через полночь
+                        let normalizedToMinutes = toMinutes;
+                        if (normalizedToMinutes < fromMinutes) {
+                            normalizedToMinutes += 24 * 60;
+                        }
+                        
+                        // Проверяем пересечение интервалов
+                        const fromInside = fromMinutes >= intervalFromMinutes && fromMinutes < intervalToMinutes;
+                        const toInside = normalizedToMinutes > intervalFromMinutes && normalizedToMinutes <= intervalToMinutes;
+                        const intervalInside = intervalFromMinutes >= fromMinutes && intervalToMinutes <= normalizedToMinutes;
+                        
+                        if (fromInside || toInside || intervalInside) {
+                            return true;
+                        }
+                    }
+                    return false;
+                };
+                
+                const intersectsBusy = intersectsWithBusyInterval(fromTotalMinutes, opt.totalMinutes);
+                
+                return opt.totalMinutes >= minTotalMinutes && !opt.isBusy && !opt.isEndHour && !intersectsBusy;
+            })
+            .sort((a, b) => a.totalMinutes - b.totalMinutes);
         
-        if (endTimeOption) {
-            // Устанавливаем время окончания
-            this.timeToSelect.value = endTime;
+        if (allOptions.length > 0) {
+            // Устанавливаем ближайшее свободное время
+            this.timeToSelect.value = allOptions[0].value;
             
             // Триггерим событие change для пересчёта
             this.timeToSelect.dispatchEvent(new Event('change', { bubbles: true }));
         } else {
-            // Если точного времени нет, ищем ближайшее большее
-            const [fromH, fromM] = timeFrom.split(':').map(Number);
-            const fromTotalMinutes = fromH * 60 + fromM;
-            const minTotalMinutes = fromTotalMinutes + (minHoursRequired * 60);
-            
-            const allOptions = Array.from(this.timeToSelect.options)
-                .filter(opt => opt.value && opt.value !== '')
-                .map(opt => {
-                    const [h, m] = opt.value.split(':').map(Number);
-                    let totalMinutes = h * 60 + m;
-                    // Если время меньше времени начала, считаем что это следующий день
-                    if (totalMinutes < fromTotalMinutes) {
-                        totalMinutes += 24 * 60;
-                    }
-                    return { value: opt.value, hours: h, minutes: m, totalMinutes };
-                })
-                .filter(opt => opt.totalMinutes >= minTotalMinutes)
-                .sort((a, b) => a.totalMinutes - b.totalMinutes);
-            
-            if (allOptions.length > 0) {
-                this.timeToSelect.value = allOptions[0].value;
-                this.timeToSelect.dispatchEvent(new Event('change', { bubbles: true }));
-            } else {
-                console.warn('Не найдено подходящее время окончания для минимального количества часов:', minHoursRequired);
-            }
+            // Если не найдено свободное время, не устанавливаем ничего автоматически
+            // Пользователь должен выбрать время вручную
+            console.warn('Не найдено свободное время окончания. Пожалуйста, выберите время вручную.');
+            // Очищаем поле, чтобы пользователь выбрал время вручную
+            this.timeToSelect.value = '';
         }
     }
     
     /**
-     * Обновление доступных опций времени окончания на основе минимального количества часов
+     * Обновление доступных опций времени окончания на основе минимального количества часов И занятых часов
      */
-    updateEndTimeOptions() {
+    async updateEndTimeOptions() {
         if (!this.timeFromSelect || !this.timeToSelect || !this.dateInput || !this.hallId) {
             return;
         }
@@ -280,6 +354,79 @@ class PricingIntegration {
         const fromTotalMinutes = fromH * 60 + fromM;
         const minEndTotalMinutes = fromTotalMinutes + (minHoursRequired * 60);
         
+        // Получаем занятые часы из API
+        let busyHours = [];
+        let busyIntervals = [];
+        let endHours = new Set();
+        
+        try {
+            // Пробуем получить занятые часы через глобальную функцию getBusyHours
+            if (window.getBusyHours && typeof window.getBusyHours === 'function') {
+                // Маппинг ID залов для getBusyHours (некоторые залы используют другие ID)
+                const hallIdForBusyHours = {
+                    'merkuri': 'mercury',  // merkuri.html использует 'mercury'
+                    'samolet': 'airplane', // samolet.html использует 'airplane'
+                    'armaloft': 'armaloft',
+                    'pulka': 'pulka',
+                    'rufer': 'rufer'
+                };
+                
+                const busyHoursHallId = hallIdForBusyHours[this.hallId] || this.hallId;
+                const busyData = await window.getBusyHours(busyHoursHallId, date);
+                busyHours = Array.isArray(busyData) ? busyData : (busyData?.hours || []);
+                busyIntervals = busyData?.intervals || [];
+                
+                // Создаем Set с часами окончания занятых интервалов
+                busyIntervals.forEach(interval => {
+                    if (interval.to) {
+                        const toHour = interval.to === '00:00:00' ? 24 : parseInt(interval.to.split(':')[0]);
+                        if (toHour < 24) {
+                            endHours.add(toHour);
+                        }
+                    }
+                });
+            }
+        } catch (error) {
+            console.warn('Ошибка при получении занятых часов:', error);
+        }
+        
+        // Функция для проверки пересечения интервала [from, to] с занятыми интервалами
+        const intersectsWithBusyInterval = (fromMinutes, toMinutes) => {
+            for (const interval of busyIntervals) {
+                if (!interval.from || !interval.to) continue;
+                
+                const intervalFromHour = parseInt(interval.from.split(':')[0]);
+                const intervalFromMin = parseInt(interval.from.split(':')[1] || 0);
+                let intervalFromMinutes = intervalFromHour * 60 + intervalFromMin;
+                
+                let intervalToHour = interval.to === '00:00:00' ? 24 : parseInt(interval.to.split(':')[0]);
+                const intervalToMin = interval.to === '00:00:00' ? 0 : parseInt(interval.to.split(':')[1] || 0);
+                let intervalToMinutes = intervalToHour * 60 + intervalToMin;
+                
+                // Если интервал переходит через полночь
+                if (intervalToMinutes < intervalFromMinutes) {
+                    intervalToMinutes += 24 * 60;
+                }
+                
+                // Нормализуем время до, если оно переходит через полночь
+                let normalizedToMinutes = toMinutes;
+                if (normalizedToMinutes < fromMinutes) {
+                    normalizedToMinutes += 24 * 60;
+                }
+                
+                // Проверяем пересечение интервалов
+                // Интервалы пересекаются, если начало одного внутри другого или наоборот
+                const fromInside = fromMinutes >= intervalFromMinutes && fromMinutes < intervalToMinutes;
+                const toInside = normalizedToMinutes > intervalFromMinutes && normalizedToMinutes <= intervalToMinutes;
+                const intervalInside = intervalFromMinutes >= fromMinutes && intervalToMinutes <= normalizedToMinutes;
+                
+                if (fromInside || toInside || intervalInside) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        
         // Обновляем доступность опций
         Array.from(this.timeToSelect.options).forEach(opt => {
             if (!opt.value || opt.value === '') {
@@ -296,11 +443,27 @@ class PricingIntegration {
                 toTotalMinutes += 24 * 60;
             }
             
-            // Отключаем опции, которые меньше минимального времени окончания
-            opt.disabled = toTotalMinutes < minEndTotalMinutes;
+            // Проверяем, меньше ли время минимального времени окончания
+            const isLessThanMin = toTotalMinutes < minEndTotalMinutes;
+            
+            // Проверяем, занят ли этот час
+            const isBusyHour = busyHours.includes(toH);
+            
+            // Проверяем, является ли это часом окончания занятого интервала
+            const isEndHour = endHours.has(toH);
+            
+            // Проверяем, пересекается ли интервал [timeFrom, timeTo] с занятыми интервалами
+            const intersectsBusy = intersectsWithBusyInterval(fromTotalMinutes, toTotalMinutes);
+            
+            // Отключаем опции, которые:
+            // 1. Меньше минимального времени окончания ИЛИ
+            // 2. Заняты ИЛИ
+            // 3. Являются часом окончания занятого интервала ИЛИ
+            // 4. Пересекаются с занятыми интервалами
+            opt.disabled = isLessThanMin || isBusyHour || isEndHour || intersectsBusy;
         });
         
-        // Если текущее выбранное время меньше минимума, автоматически устанавливаем правильное
+        // Если текущее выбранное время меньше минимума или занято, автоматически устанавливаем правильное
         const currentTimeTo = this.timeToSelect.value;
         if (currentTimeTo) {
             const [currentToH, currentToM] = currentTimeTo.split(':').map(Number);
@@ -309,8 +472,12 @@ class PricingIntegration {
                 currentToTotalMinutes += 24 * 60;
             }
             
-            if (currentToTotalMinutes < minEndTotalMinutes) {
-                this.autoSetEndTime();
+            const isLessThanMin = currentToTotalMinutes < minEndTotalMinutes;
+            const isBusyHour = busyHours.includes(currentToH);
+            const isEndHour = endHours.has(currentToH);
+            
+            if (isLessThanMin || isBusyHour || isEndHour) {
+                this.autoSetEndTime().catch(err => console.error('Ошибка в autoSetEndTime:', err));
             }
         }
     }
@@ -366,7 +533,7 @@ class PricingIntegration {
         
         // Если длительность меньше минимальной, автоматически устанавливаем правильное время
         if (durationHours < minHoursRequired) {
-            this.autoSetEndTime();
+            this.autoSetEndTime().catch(err => console.error('Ошибка в autoSetEndTime:', err));
         }
     }
     

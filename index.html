@@ -3426,33 +3426,63 @@
                     }
                 });
 
-                return Array.from(busyHours).sort((a, b) => a - b);
+                return {
+                    hours: Array.from(busyHours).sort((a, b) => a - b),
+                    intervals: busyIntervals
+                };
             } catch (error) {
                 console.error('Ошибка при получении занятых часов:', error);
-                return [];
+                return { hours: [], intervals: [] };
             }
         }
 
         // Отключение занятых часов в селектах главной формы
-        function disableBusyHoursInHeroForm(busyHours) {
+        function disableBusyHoursInHeroForm(busyHours, busyIntervals = []) {
             const timeFromSelect = document.getElementById('hero-time-from');
             const timeToSelect = document.getElementById('hero-time-to');
 
-            [timeFromSelect, timeToSelect].forEach(select => {
-                if (!select) return;
-                
-                // Сначала включаем все опции
-                select.querySelectorAll('option').forEach(option => {
+            // Обрабатываем формат данных (может быть массив или объект)
+            const hoursArray = Array.isArray(busyHours) ? busyHours : (busyHours?.hours || []);
+            const intervals = busyIntervals.length > 0 ? busyIntervals : (busyHours?.intervals || []);
+
+            // Для "время от" отключаем только часы начала бронирований
+            if (timeFromSelect) {
+                timeFromSelect.querySelectorAll('option').forEach(option => {
                     if (option.value && option.value !== '') {
                         option.disabled = false;
                         const hour = parseInt(option.value.split(':')[0]);
-                        // Отключаем занятые часы
-                        if (busyHours.includes(hour)) {
+                        if (hoursArray.includes(hour)) {
                             option.disabled = true;
                         }
                     }
                 });
-            });
+            }
+
+            // Для "время до" отключаем часы начала И час окончания бронирований
+            if (timeToSelect) {
+                // Создаем Set с часами окончания
+                const endHours = new Set();
+                intervals.forEach(interval => {
+                    if (interval.to) {
+                        const [toH, toM] = interval.to.split(':').map(Number);
+                        const toHour = (toH === 0 && toM === 0) ? 24 : toH;
+                        if (toHour < 24) {
+                            endHours.add(toHour);
+                        }
+                    }
+                });
+
+                timeToSelect.querySelectorAll('option').forEach(option => {
+                    if (option.value && option.value !== '') {
+                        option.disabled = false;
+                        const hour = parseInt(option.value.split(':')[0]);
+                        // Отключаем занятые часы И час окончания
+                        if (hoursArray.includes(hour) || endHours.has(hour)) {
+                            option.disabled = true;
+                        }
+                    }
+                });
+            }
         }
 
         // Экспорт функций для использования в других модулях

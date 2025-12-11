@@ -68,8 +68,25 @@ class PricingUI {
         let html = '<div class="pricing-extra-services-title">Дополнительные услуги:</div>';
         html += '<div class="pricing-extra-services-list">';
         
+        // Отслеживаем уже показанные названия, чтобы избежать дублирования
+        const shownNames = new Set();
+        
         Object.entries(services).forEach(([id, service]) => {
+            // Пропускаем услуги без цены или с некорректной ценой
+            if (!service || service.price == null || service.price === undefined || isNaN(service.price) || service.price <= 0) {
+                console.warn(`Skipping extra service ${id} (${service?.name || 'unknown'}): invalid price`, service);
+                return;
+            }
+            
+            // Пропускаем услуги с дублирующимися названиями (оставляем первую)
+            if (shownNames.has(service.name)) {
+                console.warn(`Skipping duplicate extra service ${id} with name "${service.name}"`);
+                return;
+            }
+            shownNames.add(service.name);
+            
             const checkboxId = `service-${id}`;
+            const price = parseFloat(service.price) || 0;
             html += `
                 <div class="pricing-extra-service-item">
                     <label class="pricing-extra-service-label">
@@ -79,15 +96,15 @@ class PricingUI {
                             value="${id}" 
                             id="${checkboxId}"
                             data-service-name="${service.name}"
-                            data-service-price="${service.price}"
-                            data-service-type="${service.type}"
+                            data-service-price="${price}"
+                            data-service-type="${service.type || 'fixed'}"
                             ${service.per ? `data-service-per="${service.per}"` : ''}
                         >
                         <span class="pricing-extra-service-text">
                             ${service.name} 
                             ${service.type === 'per_person' && service.per 
-                                ? `(${service.price} ₽ за каждые ${service.per} чел.)`
-                                : `(${service.price} ₽)`
+                                ? `(${price} ₽ за каждые ${service.per} чел.)`
+                                : `(${price} ₽)`
                             }
                         </span>
                     </label>
@@ -97,6 +114,10 @@ class PricingUI {
         
         html += '</div>';
         this.extraServicesContainer.innerHTML = html;
+        
+        // Логирование для отладки
+        const serviceCount = shownNames.size;
+        console.log(`Rendered ${serviceCount} extra services (after deduplication):`, Array.from(shownNames));
         
         // Обработчики событий для чекбоксов
         const checkboxes = this.extraServicesContainer.querySelectorAll('.pricing-extra-service-checkbox');
