@@ -38,11 +38,11 @@ function validateBookingDuration($hall, $bookingDate, $timeFrom, $timeTo, $db) {
         SELECT min_hours, min_hours_saturday 
         FROM hall_prices 
         WHERE hall_id = (
-            SELECT id FROM halls WHERE name = ? OR slug = ? OR code = ? LIMIT 1
+            SELECT id FROM halls WHERE name = ? OR code = ? LIMIT 1
         )
         ORDER BY id DESC 
         LIMIT 1
-    ", [$hall, $hall, $hall]);
+    ", [$hall, $hall]);
     
     // Если настройки не найдены, пробуем найти по названию зала
     if (!$hallSettings) {
@@ -59,11 +59,11 @@ function validateBookingDuration($hall, $bookingDate, $timeFrom, $timeTo, $db) {
                 SELECT min_hours, min_hours_saturday 
                 FROM hall_prices 
                 WHERE hall_id = (
-                    SELECT id FROM halls WHERE name LIKE ? OR slug LIKE ? OR code LIKE ? LIMIT 1
+                    SELECT id FROM halls WHERE name LIKE ? OR code LIKE ? LIMIT 1
                 )
                 ORDER BY id DESC 
                 LIMIT 1
-            ", ["%{$variant}%", "%{$variant}%", "%{$variant}%"]);
+            ", ["%{$variant}%", "%{$variant}%"]);
             
             if ($hallSettings) break;
         }
@@ -784,9 +784,10 @@ switch ($_SERVER['REQUEST_METHOD']) {
             $orderId = $data['orderId'] ?? 'N/A';
             $paymentStatus = $data['paymentStatus'] ?? 'unknown';
 
-            // Telegram bot configuration (hardcoded)
-            $telegramBotToken = '8410055486:AAGtyvO9L5rXAdpx-UFZ9D8Wxfwb1DTHGII';
-            $telegramChatId = '7913987008';
+            // Telegram bot configuration (from settings or fallback to hardcoded)
+            $settings = $db->fetchOne("SELECT telegram_bot_token, telegram_chat_id FROM settings ORDER BY id DESC LIMIT 1");
+            $telegramBotToken = $settings['telegram_bot_token'] ?? '8410055486:AAGtyvO9L5rXAdpx-UFZ9D8Wxfwb1DTHGII';
+            $telegramChatId = $settings['telegram_chat_id'] ?? '7913987008';
 
             if (empty($telegramBotToken)) {
                 // Если нет настроек Telegram, просто сохраняем в БД
@@ -1050,9 +1051,10 @@ switch ($_SERVER['REQUEST_METHOD']) {
             $data = json_decode(file_get_contents('php://input'), true);
             $testMessage = $data['message'] ?? 'Тестовое сообщение';
             
-            // Telegram bot configuration (hardcoded)
-            $telegramBotToken = '8410055486:AAGtyvO9L5rXAdpx-UFZ9D8Wxfwb1DTHGII';
-            $telegramChatId = '7913987008';
+            // Telegram bot configuration (from settings or fallback to hardcoded)
+            $settings = $db->fetchOne("SELECT telegram_bot_token, telegram_chat_id FROM settings ORDER BY id DESC LIMIT 1");
+            $telegramBotToken = $settings['telegram_bot_token'] ?? '8410055486:AAGtyvO9L5rXAdpx-UFZ9D8Wxfwb1DTHGII';
+            $telegramChatId = $settings['telegram_chat_id'] ?? '7913987008';
 
             if (empty($telegramBotToken)) {
                 http_response_code(400);
@@ -1195,8 +1197,10 @@ switch ($_SERVER['REQUEST_METHOD']) {
                             
                             // Отправляем уведомление в Telegram
                             try {
-                                $telegramBotToken = '8410055486:AAGtyvO9L5rXAdpx-UFZ9D8Wxfwb1DTHGII';
-                                $telegramChatId = '7913987008';
+                                // Telegram bot configuration (from settings or fallback to hardcoded)
+                                $telegramSettings = $db->fetchOne("SELECT telegram_bot_token, telegram_chat_id FROM settings ORDER BY id DESC LIMIT 1");
+                                $telegramBotToken = $telegramSettings['telegram_bot_token'] ?? '8410055486:AAGtyvO9L5rXAdpx-UFZ9D8Wxfwb1DTHGII';
+                                $telegramChatId = $telegramSettings['telegram_chat_id'] ?? '7913987008';
                                 
                                 $message = "✅ *Оплата подтверждена*\n\n";
                                 $message .= "Номер заказа: *{$orderId}*\n";

@@ -293,11 +293,12 @@ class BookingModal {
         this.bookingData.name = name;
         this.bookingData.phone = phone;
 
+        // Всегда создаем заказ в БД
+        await this.createOrderInDB();
+        
         // Проверяем, включен ли платежный модуль
         if (this.usePaymentModule) {
-            // Создаем заказ в БД (без отправки в Telegram)
             // Telegram отправится после успешной оплаты
-            await this.createOrderInDB();
             // Переходим к оплате
             this.goToStep(2);
         } else {
@@ -345,30 +346,36 @@ class BookingModal {
             orderId = this.bookingData.orderId;
         }
 
-        // Отправляем уведомление в Telegram
-        if (orderId) {
-            try {
-                // Если оплата отключена, используем 'no_payment' чтобы указать, что нужно создать бронирование
-                // Если оплата включена, используем 'success' только после успешной оплаты
-                const paymentStatus = this.usePaymentModule ? 'success' : 'no_payment';
-                await fetch('/api/booking/send-telegram', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        booking: this.bookingData,
-                        pricing: this.pricingData,
-                        orderId: orderId,
-                        paymentStatus: paymentStatus,
-                        paymentDisabled: !this.usePaymentModule // Флаг, что оплата отключена
-                    })
-                });
+        // Отправляем уведомление в Telegram (даже если orderId не получен, используем временный)
+        const finalOrderId = orderId || 'TEMP_' + Date.now();
+        
+        try {
+            // Если оплата отключена, используем 'no_payment' чтобы указать, что нужно создать бронирование
+            // Если оплата включена, используем 'success' только после успешной оплаты
+            const paymentStatus = this.usePaymentModule ? 'success' : 'no_payment';
+            const response = await fetch('/api/booking/send-telegram', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    booking: this.bookingData,
+                    pricing: this.pricingData,
+                    orderId: finalOrderId,
+                    paymentStatus: paymentStatus,
+                    paymentDisabled: !this.usePaymentModule // Флаг, что оплата отключена
+                })
+            });
+            
+            if (response.ok) {
                 console.log('Заявка отправлена в Telegram');
-            } catch (error) {
-                console.error('Ошибка отправки в Telegram:', error);
-                // Не блокируем процесс из-за ошибки Telegram
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Ошибка отправки в Telegram:', errorData);
             }
+        } catch (error) {
+            console.error('Ошибка отправки в Telegram:', error);
+            // Не блокируем процесс из-за ошибки Telegram
         }
     }
     

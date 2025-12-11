@@ -550,7 +550,7 @@ const admin = {
         const self = this;
         // Используем requestAnimationFrame для гарантии, что форма уже в DOM
         requestAnimationFrame(() => {
-            const form = document.getElementById('hall-price-form');
+        const form = document.getElementById('hall-price-form');
             if (!form) {
                 console.error('Form not found, retrying...');
                 // Повторная попытка через небольшую задержку
@@ -584,7 +584,7 @@ const admin = {
         
         console.log('Attaching submit handler to form');
         updatedForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
+            e.preventDefault();
                 const formData = new FormData(updatedForm);
             const data = {
                 weekday_10_22: parseFloat(formData.get('weekday_10_22')),
@@ -861,8 +861,8 @@ const admin = {
             
             const select = document.getElementById('extra-select');
             if (select) {
-                select.innerHTML = '<option value="">-- Выберите услугу --</option>' +
-                    extras.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+            select.innerHTML = '<option value="">-- Выберите услугу --</option>' +
+                extras.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
             }
         } catch (error) {
             console.error('Error loading extras for select:', error);

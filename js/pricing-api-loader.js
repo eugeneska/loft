@@ -97,10 +97,19 @@ function convertApiDataToCalculatorFormat(apiData) {
     });
     
     // Конвертация дополнительных услуг
+    // Сохраняем все прайс-сеты, выбор будет происходить динамически при расчете
     Object.entries(apiData.extras || {}).forEach(([code, extra]) => {
+        // Сохраняем все прайс-сеты для этой услуги
+        extras[code] = {
+            name: extra.name,
+            pricingType: extra.pricingType,
+            priceSets: extra.priceSets || {}
+        };
+        
+        // Для обратной совместимости используем standard как fallback
         const standardPrice = extra.priceSets?.standard;
         
-        if (!standardPrice) return;
+        if (!standardPrice && Object.keys(extra.priceSets || {}).length === 0) return;
         
         if (extra.pricingType === 'fixed') {
             extras[code] = {

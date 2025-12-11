@@ -3,9 +3,12 @@
  * Отправка заявок на бронирование зала в Telegram
  */
 
-// Настройки Telegram бота
-$telegram_bot_token = "8410055486:AAGtyvO9L5rXAdpx-UFZ9D8Wxfwb1DTHGII";
-$telegram_chat_id = "7913987008";
+// Настройки Telegram бота (из БД или fallback)
+require_once __DIR__ . '/api/config/database.php';
+$db = Database::getInstance();
+$settings = $db->fetchOne("SELECT telegram_bot_token, telegram_chat_id FROM settings ORDER BY id DESC LIMIT 1");
+$telegram_bot_token = $settings['telegram_bot_token'] ?? "8410055486:AAGtyvO9L5rXAdpx-UFZ9D8Wxfwb1DTHGII";
+$telegram_chat_id = $settings['telegram_chat_id'] ?? "7913987008";
 
 // Получение данных из POST запроса
 $data = json_decode(file_get_contents('php://input'), true);
