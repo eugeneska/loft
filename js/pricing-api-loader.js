@@ -143,13 +143,43 @@ function convertApiDataToCalculatorFormat(apiData) {
                 return;
             }
             
-            // Ищем число в описании ("за каждые 10 человек")
-            const perMatch = standardPrice.unitDescription?.match(/(\d+)/);
+            // Ищем число в описании, которое относится к количеству людей
+            // Ищем паттерны: "за каждые N человек", "за N человек", "+ N чел", "по N человек" и т.д.
+            // НЕ берем число, если перед ним есть "руб", "₽", "цена" и т.д.
+            let perMatch = null;
+            const unitDesc = standardPrice.unitDescription || '';
+            
+            // Вариант 1: Ищем число перед словами "человек" или "чел"
+            // Это самый надежный способ - число должно быть непосредственно перед словом о людях
+            perMatch = unitDesc.match(/(\d+)\s*(?:человек|чел)/i);
+            
+            // Вариант 2: Если не нашли, ищем паттерн "за каждые N" или "+ N"
+            if (!perMatch) {
+                perMatch = unitDesc.match(/(?:за\s+каждые|за|по|\+)\s*(\d+)/i);
+            }
+            
+            // Вариант 3: Если все еще не нашли, ищем любое число, но НЕ если перед ним цена
+            if (!perMatch) {
+                // Исключаем числа, которые идут после слов о цене
+                const pricePattern = /(?:руб|₽|цена|стоимость|price)\s*(\d+)/i;
+                const priceMatch = unitDesc.match(pricePattern);
+                
+                // Если есть паттерн с ценой, ищем число в другой части строки
+                if (priceMatch) {
+                    // Убираем часть с ценой и ищем число в остатке
+                    const withoutPrice = unitDesc.replace(pricePattern, '');
+                    perMatch = withoutPrice.match(/(\d+)/);
+                } else {
+                    // Если нет паттерна с ценой, берем первое число
+                    perMatch = unitDesc.match(/(\d+)/);
+                }
+            }
+            
             const basePrice = standardPrice.basePrice != null ? parseFloat(standardPrice.basePrice) : 0;
             
             if (!perMatch) {
                 // Если не нашли число, но это per_unit для людей - по умолчанию per = 1
-                console.warn(`Не найдено число для per_unit услуги ${code}, используем per=1`);
+                console.warn(`Не найдено число для per_unit услуги ${code} в описании "${unitDesc}", используем per=1`);
                 if (basePrice > 0) {
                     extras[code] = {
                         name: extra.name,
@@ -162,6 +192,9 @@ function convertApiDataToCalculatorFormat(apiData) {
             }
             
             const per = parseInt(perMatch[1]);
+            
+            // Логируем для отладки
+            console.log(`Услуга ${code}: из описания "${unitDesc}" извлечено per=${per}`);
             
             if (basePrice > 0) {
                 extras[code] = {
