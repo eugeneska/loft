@@ -330,8 +330,31 @@ function getHallPricing(hallId, date) {
     if (window.PricingDataAPI && window.PricingDataAPI.isLoaded && window.PricingDataAPI.converted) {
         const hall = window.PricingDataAPI.converted.halls[hallId];
         if (hall) {
-            // Используем прайс для нужного сезона
-            const priceSet = season === 'december' ? hall.december : hall.standard;
+            // Определяем прайс-сет динамически по дате и сезонным правилам
+            let priceSetCode = 'standard';
+            if (window.PricingDataAPI.getPriceSetForDate) {
+                priceSetCode = window.PricingDataAPI.getPriceSetForDate(date);
+                console.log('🏛️ getHallPricing для зала', hallId, 'дата', date, 'выбран прайс-сет:', priceSetCode);
+            }
+            
+            // Используем динамический выбор прайс-сета
+            let priceSet = null;
+            if (hall.priceSets && hall.priceSets[priceSetCode]) {
+                priceSet = hall.priceSets[priceSetCode];
+                console.log('✅ Используется прайс-сет из priceSets:', priceSetCode);
+            } else if (priceSetCode === 'december' && hall.december) {
+                priceSet = hall.december;
+                console.log('✅ Используется прайс-сет december (fallback)');
+            } else if (hall.standard) {
+                priceSet = hall.standard;
+                console.log('⚠️ Используется прайс-сет standard (fallback), запрошен был:', priceSetCode);
+            } else if (hall.priceSets && Object.keys(hall.priceSets).length > 0) {
+                // Fallback на первый доступный прайс-сет
+                const firstPriceSetCode = Object.keys(hall.priceSets)[0];
+                priceSet = Object.values(hall.priceSets)[0];
+                console.log('⚠️ Используется первый доступный прайс-сет:', firstPriceSetCode);
+            }
+            
             if (priceSet) {
                 return {
                     ...priceSet,

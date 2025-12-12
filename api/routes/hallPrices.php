@@ -98,15 +98,18 @@ switch ($_SERVER['REQUEST_METHOD']) {
         }
         
         try {
+            // weekday_price используется как fallback значение, устанавливаем его равным weekday_10_22
+            $weekdayPrice = $weekday10_22 ?? $data['weekday_price'] ?? null;
+            
             $db->execute("
                 INSERT INTO hall_prices (
-                    hall_id, price_set_id, weekday_10_22, weekday_22_00, fri_sat_price, sun_price,
+                    hall_id, price_set_id, weekday_price, weekday_10_22, weekday_22_00, fri_sat_price, sun_price,
                     cleaning_up_to_30, cleaning_over_30, after_hours_fee,
                     min_hours, min_hours_saturday, allow_food_alcohol_from_hours
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ", [
-                $hallId, $priceSetId, $weekday10_22, $weekday22_00, $friSatPrice, $sunPrice,
+                $hallId, $priceSetId, $weekdayPrice, $weekday10_22, $weekday22_00, $friSatPrice, $sunPrice,
                 $cleaningUpTo30, $cleaningOver30, $afterHoursFee,
                 $minHours, $minHoursSaturday, $allowFoodAlcoholFromHours
             ]);
@@ -157,10 +160,14 @@ switch ($_SERVER['REQUEST_METHOD']) {
         $minHoursSaturday = $data['min_hours_saturday'] ?? null;
         $allowFoodAlcoholFromHours = $data['allow_food_alcohol_from_hours'] ?? null;
         
+        // weekday_price используется как fallback значение, обновляем его равным weekday_10_22 если он был изменен
+        $weekdayPrice = $weekday10_22 ?? null;
+        
         try {
             $db->execute("
                 UPDATE hall_prices 
-                SET weekday_10_22 = COALESCE(?, weekday_10_22, weekday_price),
+                SET weekday_price = COALESCE(?, weekday_price),
+                    weekday_10_22 = COALESCE(?, weekday_10_22, weekday_price),
                     weekday_22_00 = COALESCE(?, weekday_22_00, weekday_price),
                     fri_sat_price = COALESCE(?, fri_sat_price),
                     sun_price = COALESCE(?, sun_price),
@@ -173,7 +180,7 @@ switch ($_SERVER['REQUEST_METHOD']) {
                     updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
             ", [
-                $weekday10_22, $weekday22_00, $friSatPrice, $sunPrice,
+                $weekdayPrice, $weekday10_22, $weekday22_00, $friSatPrice, $sunPrice,
                 $cleaningUpTo30, $cleaningOver30, $afterHoursFee,
                 $minHours, $minHoursSaturday, $allowFoodAlcoholFromHours,
                 $id

@@ -41,7 +41,18 @@
                         const priceSetCode = window.PricingDataAPI?.getPriceSetForDate(date) || 
                                             window.getPricingSeason ? window.getPricingSeason(date) : 'standard';
                         
-                        const priceSet = priceSetCode === 'december' ? hall.december : hall.standard;
+                        // Используем все доступные прайс-сеты, а не только standard/december
+                        let priceSet = null;
+                        if (hall.priceSets && hall.priceSets[priceSetCode]) {
+                            priceSet = hall.priceSets[priceSetCode];
+                        } else if (priceSetCode === 'december' && hall.december) {
+                            priceSet = hall.december;
+                        } else if (hall.standard) {
+                            priceSet = hall.standard;
+                        } else if (hall.priceSets && Object.keys(hall.priceSets).length > 0) {
+                            // Fallback на первый доступный прайс-сет
+                            priceSet = Object.values(hall.priceSets)[0];
+                        }
                         
                         if (priceSet) {
                             return {
@@ -154,9 +165,34 @@
                 
                 // Определяем прайс-сет по дате
                 const priceSetCode = window.PricingDataAPI.getPriceSetForDate(bookingDate);
-                const priceSet = priceSetCode === 'december' ? hall.december : hall.standard;
+                
+                console.log('💰 Расчет цены:', {
+                    hallId,
+                    date: bookingDate.toISOString().split('T')[0],
+                    priceSetCode,
+                    availablePriceSets: hall.priceSets ? Object.keys(hall.priceSets) : []
+                });
+                
+                // Используем все доступные прайс-сеты
+                let priceSet = null;
+                if (hall.priceSets && hall.priceSets[priceSetCode]) {
+                    priceSet = hall.priceSets[priceSetCode];
+                    console.log('✅ Используется прайс-сет:', priceSetCode, priceSet);
+                } else if (priceSetCode === 'december' && hall.december) {
+                    priceSet = hall.december;
+                    console.log('✅ Используется прайс-сет december (fallback)');
+                } else if (hall.standard) {
+                    priceSet = hall.standard;
+                    console.log('⚠️ Используется прайс-сет standard (fallback), запрошен был:', priceSetCode);
+                } else if (hall.priceSets && Object.keys(hall.priceSets).length > 0) {
+                    // Fallback на первый доступный прайс-сет
+                    const firstPriceSetCode = Object.keys(hall.priceSets)[0];
+                    priceSet = Object.values(hall.priceSets)[0];
+                    console.log('⚠️ Используется первый доступный прайс-сет:', firstPriceSetCode);
+                }
                 
                 if (!priceSet) {
+                    console.error('❌ Прайс для данного периода не найден');
                     return {
                         error: 'Прайс для данного периода не найден',
                         valid: false
@@ -183,7 +219,19 @@
                 let basePrice;
                 switch (dayCategory) {
                     case 'weekday':
-                        basePrice = priceSet.weekday_price;
+                        // Используем разные цены в зависимости от времени начала
+                        const [startHour, startMin] = startTime.split(':').map(Number);
+                        if (priceSet.weekday_10_22 !== undefined || priceSet.weekday_22_00 !== undefined) {
+                            // Используем новые поля с разделением по времени
+                            if (startHour >= 22) {
+                                basePrice = priceSet.weekday_22_00 || priceSet.weekday_price;
+                            } else {
+                                basePrice = priceSet.weekday_10_22 || priceSet.weekday_price;
+                            }
+                        } else {
+                            // Используем старое поле для обратной совместимости
+                            basePrice = priceSet.weekday_price;
+                        }
                         break;
                     case 'fri_sat':
                         basePrice = priceSet.fri_sat_price;
@@ -194,6 +242,15 @@
                     default:
                         basePrice = priceSet.weekday_price;
                 }
+                
+                console.log('💰 Базовая цена определена:', {
+                    dayCategory,
+                    startTime,
+                    basePrice,
+                    weekday_10_22: priceSet.weekday_10_22,
+                    weekday_22_00: priceSet.weekday_22_00,
+                    weekday_price: priceSet.weekday_price
+                });
                 
                 // Расчёт компонентов
                 const baseCost = basePrice * hours;

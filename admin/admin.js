@@ -433,7 +433,10 @@ const admin = {
                 .then(price => {
                     this.openModal(`Редактировать цены: ${price.hall_name} (${price.price_set_name})`, 
                         this.getHallPriceFormHTML(price, id));
-                    this.setupHallPriceForm(id);
+                    // Небольшая задержка для гарантии, что DOM обновлен
+                    setTimeout(() => {
+                        this.setupHallPriceForm(id);
+                    }, 10);
                 })
                 .catch(err => {
                     this.showMessage('Ошибка загрузки данных', 'error');
@@ -471,7 +474,10 @@ const admin = {
                 
                 this.openModal(`Добавить цены: ${hall.name}`, 
                     this.getHallPriceFormHTML({ hall_id: hallId, hall_name: hall.name }, null, availablePriceSets));
-                this.setupHallPriceForm(null, hallId);
+                // Небольшая задержка для гарантии, что DOM обновлен
+                setTimeout(() => {
+                    this.setupHallPriceForm(null, hallId);
+                }, 10);
             } catch (error) {
                 this.showMessage('Ошибка загрузки данных', 'error');
                 console.error(error);
@@ -548,9 +554,9 @@ const admin = {
     
     setupHallPriceForm(id, hallId = null) {
         const self = this;
-        // Используем requestAnimationFrame для гарантии, что форма уже в DOM
-        requestAnimationFrame(() => {
-        const form = document.getElementById('hall-price-form');
+        // Используем setTimeout для гарантии, что форма уже в DOM
+        setTimeout(() => {
+            const form = document.getElementById('hall-price-form');
             if (!form) {
                 console.error('Form not found, retrying...');
                 // Повторная попытка через небольшую задержку
@@ -561,12 +567,12 @@ const admin = {
                         return;
                     }
                     self.attachHallPriceFormHandler(retryForm, id, hallId);
-                }, 50);
+                }, 100);
                 return;
             }
             
             self.attachHallPriceFormHandler(form, id, hallId);
-        });
+        }, 50);
     },
     
     attachHallPriceFormHandler(form, id, hallId) {
@@ -582,10 +588,16 @@ const admin = {
             return;
         }
         
-        console.log('Attaching submit handler to form');
-        updatedForm.addEventListener('submit', async function(e) {
+        console.log('Attaching submit handler to form', { id, hallId });
+        
+        // Удаляем все существующие обработчики submit перед добавлением нового
+        const submitHandler = async function(e) {
             e.preventDefault();
-                const formData = new FormData(updatedForm);
+            e.stopPropagation();
+            
+            console.log('Form submit triggered');
+            const formData = new FormData(updatedForm);
+            
             const data = {
                 weekday_10_22: parseFloat(formData.get('weekday_10_22')),
                 weekday_22_00: parseFloat(formData.get('weekday_22_00')),
@@ -617,6 +629,8 @@ const admin = {
                 const url = id ? `${API_BASE}/hall-prices/${id}` : `${API_BASE}/hall-prices`;
                 const method = id ? 'PUT' : 'POST';
                 
+                console.log('Sending request:', { url, method, data });
+                
                 const response = await fetch(url, {
                     method,
                     headers: { 'Content-Type': 'application/json' },
@@ -632,9 +646,21 @@ const admin = {
                 self.closeModal();
                 self.loadHallPrices();
             } catch (error) {
+                console.error('Error saving hall price:', error);
                 self.showMessage(error.message, 'error');
             }
-        });
+        };
+        
+        updatedForm.addEventListener('submit', submitHandler);
+        
+        // Также привязываем обработчик к кнопке submit напрямую (на случай проблем с формой)
+        const submitButton = updatedForm.querySelector('button[type="submit"]');
+        if (submitButton) {
+            submitButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                updatedForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+            });
+        }
     },
     
     // ==================== EXTRAS ====================
@@ -1086,7 +1112,10 @@ const admin = {
         
         this.openModal(id ? 'Редактировать правило' : 'Добавить правило', 
             this.getSeasonRuleFormHTML(rulesRes, priceSetsRes, dayNames, selectedDays));
-        this.setupSeasonRuleForm(id);
+        // Небольшая задержка для гарантии, что DOM обновлен
+        setTimeout(() => {
+            this.setupSeasonRuleForm(id);
+        }, 10);
     },
     
     getSeasonRuleFormHTML(rule, priceSets, dayNames, selectedDays) {
@@ -1135,15 +1164,55 @@ const admin = {
     },
     
     setupSeasonRuleForm(id) {
-        const form = document.getElementById('season-rule-form');
-        form.addEventListener('submit', async (e) => {
+        const self = this;
+        // Используем setTimeout для гарантии, что форма уже в DOM
+        setTimeout(() => {
+            const form = document.getElementById('season-rule-form');
+            if (!form) {
+                console.error('Season rule form not found, retrying...');
+                // Повторная попытка через небольшую задержку
+                setTimeout(() => {
+                    const retryForm = document.getElementById('season-rule-form');
+                    if (!retryForm) {
+                        console.error('Season rule form still not found after retry');
+                        return;
+                    }
+                    self.attachSeasonRuleFormHandler(retryForm, id);
+                }, 50);
+                return;
+            }
+            
+            self.attachSeasonRuleFormHandler(form, id);
+        }, 50);
+    },
+    
+    attachSeasonRuleFormHandler(form, id) {
+        const self = this;
+        // Удаляем старый обработчик через клонирование
+        const newForm = form.cloneNode(true);
+        form.parentNode.replaceChild(newForm, form);
+        
+        // Получаем обновленную форму из DOM
+        const updatedForm = document.getElementById('season-rule-form');
+        if (!updatedForm) {
+            console.error('Season rule form not found after replacement');
+            return;
+        }
+        
+        console.log('Attaching submit handler to season rule form', { id });
+        
+        // Удаляем все существующие обработчики submit перед добавлением нового
+        const submitHandler = async function(e) {
             e.preventDefault();
-            const formData = new FormData(form);
+            e.stopPropagation();
+            
+            console.log('Season rule form submit triggered');
+            const formData = new FormData(updatedForm);
             const days = Array.from(formData.getAll('days')).map(d => parseInt(d)).sort((a, b) => a - b);
             const daysOfWeekMask = days.join(',');
             
             if (days.length === 0) {
-                this.showMessage('Выберите хотя бы один день недели', 'error');
+                self.showMessage('Выберите хотя бы один день недели', 'error');
                 return;
             }
             
@@ -1155,6 +1224,8 @@ const admin = {
                 priority: parseInt(formData.get('priority')),
                 description: formData.get('description') || null
             };
+            
+            console.log('Sending request:', { url: id ? `${API_BASE}/season-rules/${id}` : `${API_BASE}/season-rules`, method: id ? 'PUT' : 'POST', data });
             
             try {
                 const url = id ? `${API_BASE}/season-rules/${id}` : `${API_BASE}/season-rules`;
@@ -1171,13 +1242,25 @@ const admin = {
                     throw new Error(error.error || 'Ошибка сохранения');
                 }
                 
-                this.showMessage('Правило сохранено успешно');
-                this.closeModal();
-                this.loadSeasonRules();
+                self.showMessage('Правило сохранено успешно');
+                self.closeModal();
+                self.loadSeasonRules();
             } catch (error) {
-                this.showMessage(error.message, 'error');
+                console.error('Error saving season rule:', error);
+                self.showMessage(error.message, 'error');
             }
-        });
+        };
+        
+        updatedForm.addEventListener('submit', submitHandler);
+        
+        // Также привязываем обработчик к кнопке submit напрямую (на случай проблем с формой)
+        const submitButton = updatedForm.querySelector('button[type="submit"]');
+        if (submitButton) {
+            submitButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                updatedForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+            });
+        }
     },
     
     async deleteSeasonRule(id) {

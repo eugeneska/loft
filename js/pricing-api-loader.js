@@ -70,38 +70,35 @@ function convertApiDataToCalculatorFormat(apiData) {
     const halls = {};
     const extras = {};
     
-    // Конвертация залов
+    // Конвертация залов - сохраняем ВСЕ прайс-сеты
     apiData.halls.forEach(hall => {
+        const priceSets = {};
+        
+        // Обрабатываем все прайс-сеты из API
+        Object.entries(hall.prices || {}).forEach(([priceSetCode, priceData]) => {
+            priceSets[priceSetCode] = {
+                weekday_price: priceData.weekday || priceData.weekday_10_22,
+                weekday_10_22: priceData.weekday_10_22 || priceData.weekday,
+                weekday_22_00: priceData.weekday_22_00 || priceData.weekday,
+                fri_sat_price: priceData.friSat,
+                sunday_price: priceData.sun,
+                cleaning_under_30: priceData.cleaningUpTo30,
+                cleaning_over_30: priceData.cleaningOver30,
+                after_hours_rate: priceData.afterHoursFee,
+                min_hours: priceData.minHours,
+                min_hours_saturday: priceData.minHoursSaturday || priceData.minHours,
+                food_alcohol_allowed: true
+            };
+        });
+        
         halls[hall.code] = {
             name: hall.name,
             capacity: hall.capacity,
-            // Для обратной совместимости создаем объекты standard и december
-            standard: hall.prices.standard ? {
-                weekday_price: hall.prices.standard.weekday || hall.prices.standard.weekday_10_22,
-                weekday_10_22: hall.prices.standard.weekday_10_22 || hall.prices.standard.weekday,
-                weekday_22_00: hall.prices.standard.weekday_22_00 || hall.prices.standard.weekday,
-                fri_sat_price: hall.prices.standard.friSat,
-                sunday_price: hall.prices.standard.sun,
-                cleaning_under_30: hall.prices.standard.cleaningUpTo30,
-                cleaning_over_30: hall.prices.standard.cleaningOver30,
-                after_hours_rate: hall.prices.standard.afterHoursFee,
-                min_hours: hall.prices.standard.minHours,
-                min_hours_saturday: hall.prices.standard.minHoursSaturday || hall.prices.standard.minHours,
-                food_alcohol_allowed: true
-            } : null,
-            december: hall.prices.december ? {
-                weekday_price: hall.prices.december.weekday || hall.prices.december.weekday_10_22,
-                weekday_10_22: hall.prices.december.weekday_10_22 || hall.prices.december.weekday,
-                weekday_22_00: hall.prices.december.weekday_22_00 || hall.prices.december.weekday,
-                fri_sat_price: hall.prices.december.friSat,
-                sunday_price: hall.prices.december.sun,
-                cleaning_under_30: hall.prices.december.cleaningUpTo30,
-                cleaning_over_30: hall.prices.december.cleaningOver30,
-                after_hours_rate: hall.prices.december.afterHoursFee,
-                min_hours: hall.prices.december.minHours,
-                min_hours_saturday: hall.prices.december.minHoursSaturday || hall.prices.december.minHours,
-                food_alcohol_allowed: true
-            } : null
+            // Сохраняем все прайс-сеты
+            priceSets: priceSets,
+            // Для обратной совместимости оставляем standard и december
+            standard: priceSets.standard || null,
+            december: priceSets.december || null
         };
     });
     
@@ -350,6 +347,7 @@ function convertApiDataToCalculatorFormat(apiData) {
  */
 function getPriceSetForDate(date, seasonRules) {
     if (!seasonRules || seasonRules.length === 0) {
+        console.log('🔍 getPriceSetForDate: нет сезонных правил, возвращаю standard');
         return 'standard'; // По умолчанию
     }
     
@@ -357,20 +355,30 @@ function getPriceSetForDate(date, seasonRules) {
     const dayOfWeek = targetDate.getDay();
     const dateStr = targetDate.toISOString().split('T')[0];
     
+    console.log('🔍 getPriceSetForDate:', { date: dateStr, dayOfWeek, seasonRulesCount: seasonRules.length });
+    
     // Фильтруем правила, которые подходят для этой даты
     const matchingRules = seasonRules.filter(rule => {
-        if (dateStr < rule.startDate || dateStr > rule.endDate) {
-            return false;
-        }
+        const dateMatch = dateStr >= rule.startDate && dateStr <= rule.endDate;
+        const dayMatch = rule.daysOfWeek && rule.daysOfWeek.includes(dayOfWeek);
         
-        if (!rule.daysOfWeek.includes(dayOfWeek)) {
-            return false;
-        }
+        console.log(`  Проверка правила ${rule.priceSetCode}:`, {
+            startDate: rule.startDate,
+            endDate: rule.endDate,
+            dateStr,
+            dateMatch,
+            dayOfWeek,
+            ruleDays: rule.daysOfWeek,
+            dayMatch
+        });
         
-        return true;
+        return dateMatch && dayMatch;
     });
     
+    console.log('🔍 Подходящие правила:', matchingRules.length, matchingRules);
+    
     if (matchingRules.length === 0) {
+        console.log('🔍 Нет подходящих правил, возвращаю standard');
         return 'standard';
     }
     
@@ -379,6 +387,7 @@ function getPriceSetForDate(date, seasonRules) {
         return current.priority > best.priority ? current : best;
     });
     
+    console.log('🔍 Выбранное правило:', bestRule, 'код прайс-сета:', bestRule.priceSetCode);
     return bestRule.priceSetCode;
 }
 
@@ -402,15 +411,40 @@ async function initPricingApiLoader() {
         const apiData = await loadPricingData();
         
         if (apiData && apiData.halls && apiData.halls.length > 0) {
+            console.log('📊 Данные из API загружены:', {
+                hallsCount: apiData.halls.length,
+                seasonRulesCount: apiData.seasonRules?.length || 0,
+                seasonRules: apiData.seasonRules
+            });
+            
             const convertedData = convertApiDataToCalculatorFormat(apiData);
+            
+            // Выводим информацию о доступных прайс-сетах для каждого зала
+            Object.entries(convertedData.halls || {}).forEach(([hallCode, hall]) => {
+                console.log(`🏛️ Зал ${hallCode} (${hall.name}):`, {
+                    availablePriceSets: hall.priceSets ? Object.keys(hall.priceSets) : [],
+                    priceSetsDetails: hall.priceSets
+                });
+            });
             
             // Сохраняем API данные для использования
             if (typeof window !== 'undefined') {
                 window.PricingDataAPI = {
                     raw: apiData,
                     converted: convertedData,
-                    getPriceSetForDate: (date) => getPriceSetForDate(date, apiData.seasonRules),
+                    getPriceSetForDate: (date) => {
+                        const result = getPriceSetForDate(date, apiData.seasonRules);
+                        console.log('🔍 getPriceSetForDate вызвана:', { date, result });
+                        return result;
+                    },
                     isLoaded: true
+                };
+                
+                // Функция для очистки кэша (для отладки)
+                window.PricingDataAPI.clearCache = function() {
+                    pricingDataCache = null;
+                    pricingDataPromise = null;
+                    console.log('Кэш очищен, перезагрузите страницу');
                 };
                 
                 // Обновляем калькулятор, если он уже загружен
