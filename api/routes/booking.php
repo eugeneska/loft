@@ -254,6 +254,7 @@ function createYClientsBooking($bookingData) {
     // Вычисляем длительность в минутах и часах
     $duration = calculateDuration($timeFrom, $timeTo);
     $durationHours = round($duration / 60); // Длительность в часах (округление)
+    $durationSeconds = $duration * 60; // Длительность в секундах для seance_length
     
     // Создаем одну запись на весь период бронирования
     $appointments = [
@@ -262,6 +263,7 @@ function createYClientsBooking($bookingData) {
             'services' => [(int)$serviceId], // Массив ID услуг - ОБЯЗАТЕЛЬНО должен содержать хотя бы одну услугу
             'staff_id' => (int)$staffId,
             'datetime' => $dateTimeFrom, // Формат: YYYY-MM-DD HH:MM:SS - время начала бронирования
+            'seance_length' => (int)$durationSeconds, // Длительность записи в секундах
             'custom_fields' => [] // Кастомные поля записи (пустой объект)
         ]
     ];
@@ -280,7 +282,7 @@ function createYClientsBooking($bookingData) {
         'notify_by_email' => 0, // Уведомления по email (0 = отключено)
         'api_id' => $orderId, // ID заказа для отслеживания
         'custom_fields' => [], // Кастомные поля клиента (пустой объект)
-        'appointments' => $appointments // Массив записей (по одной на каждый час)
+        'appointments' => $appointments // Массив записей (одна запись на весь период бронирования)
     ];
     
     // Добавляем комментарий, если API поддерживает (может быть в другом месте или не поддерживаться)
@@ -307,8 +309,8 @@ function createYClientsBooking($bookingData) {
     error_log("🎯 Service ID: {$serviceId} (обязательная услуга)");
     error_log("📅 Дата: {$bookingDate}");
     error_log("⏰ Время: {$timeFromClean} - {$timeToClean}");
-    error_log("📆 Дата/время для API: {$dateTimeFrom}");
-    error_log("⏱️  Длительность: {$duration} минут");
+    error_log("📆 Дата/время начала: {$dateTimeFrom}");
+    error_log("⏱️  Длительность: {$duration} минут ({$durationHours} часов) = {$durationSeconds} секунд");
     error_log("👤 Клиент: {$clientName}");
     error_log("📞 Телефон: {$clientPhone}");
     error_log("📧 Email: {$clientEmail}");
