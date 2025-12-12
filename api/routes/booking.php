@@ -255,38 +255,16 @@ function createYClientsBooking($bookingData) {
     $duration = calculateDuration($timeFrom, $timeTo);
     $durationHours = round($duration / 60); // Длительность в часах (округление)
     
-    // Для длительных бронирований (2+ часа) создаем несколько записей в YClients
-    // Каждая запись = 1 час, начиная с указанного времени
-    $appointments = [];
-    $appointmentId = 1;
-    
-    // Создаем DateTime объект для начала бронирования
-    $startDateTime = new DateTime($dateTimeFrom);
-    
-    // Создаем записи по одной на каждый час
-    for ($hour = 0; $hour < $durationHours; $hour++) {
-        $appointmentDateTime = clone $startDateTime;
-        $appointmentDateTime->modify("+{$hour} hours");
-        
-        $appointments[] = [
-            'id' => $appointmentId++, // ОБЯЗАТЕЛЬНО! Уникальный ID для каждой записи
+    // Создаем одну запись на весь период бронирования
+    $appointments = [
+        [
+            'id' => 1, // ОБЯЗАТЕЛЬНО! Уникальный ID для записи
             'services' => [(int)$serviceId], // Массив ID услуг - ОБЯЗАТЕЛЬНО должен содержать хотя бы одну услугу
-        'staff_id' => (int)$staffId,
-            'datetime' => $appointmentDateTime->format('Y-m-d H:i:s'), // Формат: YYYY-MM-DD HH:MM:SS
-            'custom_fields' => [] // Кастомные поля записи (пустой объект)
-        ];
-    }
-    
-    // Если длительность меньше часа или не кратна часу, создаем одну запись с точным временем
-    if (empty($appointments)) {
-        $appointments[] = [
-            'id' => 1, // ОБЯЗАТЕЛЬНО! Уникальный ID для каждой записи
-            'services' => [(int)$serviceId],
             'staff_id' => (int)$staffId,
-            'datetime' => $dateTimeFrom, // Формат: YYYY-MM-DD HH:MM:SS
-            'custom_fields' => []
-        ];
-    }
+            'datetime' => $dateTimeFrom, // Формат: YYYY-MM-DD HH:MM:SS - время начала бронирования
+            'custom_fields' => [] // Кастомные поля записи (пустой объект)
+        ]
+    ];
     
     // Формируем данные для YClients API согласно правильному формату
     $orderId = $bookingData['orderId'] ?? 'N/A';
