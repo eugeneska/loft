@@ -910,9 +910,12 @@ const admin = {
             fetch(`${API_BASE}/extras-prices/${id}`)
                 .then(r => r.json())
                 .then(price => {
-                    this.openModal(`Редактировать цены: ${price.extra_name} (${price.price_set_name})`, 
+                    this.openModal(`Редактировать цену: ${price.extra_name}`, 
                         this.getExtraPriceFormHTML(price, id));
-                    this.setupExtraPriceForm(id);
+                    // Небольшая задержка для гарантии, что DOM обновлен
+                    setTimeout(() => {
+                        this.setupExtraPriceForm(id);
+                    }, 10);
                 })
                 .catch(err => {
                     this.showMessage('Ошибка загрузки данных', 'error');
@@ -921,15 +924,13 @@ const admin = {
         } else {
             // Создание новой цены
             try {
-                const [extrasRes, priceSetsRes, existingPricesRes] = await Promise.all([
+                const [extrasRes, priceSetsRes] = await Promise.all([
                     fetch(`${API_BASE}/extras`),
-                    fetch(`${API_BASE}/price-sets`),
-                    fetch(`${API_BASE}/extras-prices?extra_id=${extraId}`)
+                    fetch(`${API_BASE}/price-sets`)
                 ]);
                 
                 const extras = await extrasRes.json();
                 const priceSets = await priceSetsRes.json();
-                const existingPrices = await existingPricesRes.json();
                 
                 const extra = extras.find(e => e.id == extraId);
                 if (!extra) {
@@ -937,20 +938,12 @@ const admin = {
                     return;
                 }
                 
-                // Получаем существующие прайс-сеты для этой услуги
-                const existingPriceSetIds = existingPrices.map(p => p.price_set_id);
-                
-                // Фильтруем прайс-сеты, оставляя только те, для которых еще нет цен
-                const availablePriceSets = priceSets.filter(ps => !existingPriceSetIds.includes(ps.id));
-                
-                if (availablePriceSets.length === 0) {
-                    this.showMessage('Для этой услуги уже созданы цены для всех прайс-сетов', 'error');
-                    return;
-                }
+                // Находим стандартный прайс-сет (по коду "standard")
+                const standardPriceSet = priceSets.find(ps => ps.code === 'standard');
                 
                 this.openModal(`Добавить цену: ${extra.name}`, 
-                    this.getExtraPriceFormHTML(null, null, extra, availablePriceSets));
-                this.setupExtraPriceForm(null, extraId);
+                    this.getExtraPriceFormHTML(null, null, extra));
+                this.setupExtraPriceForm(null, extraId, standardPriceSet?.id);
             } catch (error) {
                 this.showMessage('Ошибка загрузки данных', 'error');
                 console.error(error);
@@ -958,21 +951,9 @@ const admin = {
         }
     },
     
-    getExtraPriceFormHTML(price, id = null, extra = null, availablePriceSets = null) {
-        const isNew = id === null;
-        const priceSetSelect = isNew && availablePriceSets ? `
-            <div class="form-group">
-                <label>Прайс-сет:</label>
-                <select name="price_set_id" required>
-                    <option value="">-- Выберите прайс-сет --</option>
-                    ${availablePriceSets.map(ps => `<option value="${ps.id}">${ps.name}</option>`).join('')}
-                </select>
-            </div>
-        ` : '';
-        
+    getExtraPriceFormHTML(price, id = null, extra = null) {
         return `
             <form id="extra-price-form">
-                ${priceSetSelect}
                 <div class="form-group">
                     <label>Базовая цена (₽):</label>
                     <input type="number" step="0.01" name="base_price" value="${price?.base_price || ''}">
@@ -994,53 +975,95 @@ const admin = {
         `;
     },
     
-    setupExtraPriceForm(id, extraId = null) {
-        const form = document.getElementById('extra-price-form');
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(form);
-            const data = {
-                base_price: formData.get('base_price') ? parseFloat(formData.get('base_price')) : null,
-                additional_unit_price: formData.get('additional_unit_price') ? parseFloat(formData.get('additional_unit_price')) : null,
-                unit_description: formData.get('unit_description') || null
-            };
-            
-            // Если создается новая цена, добавляем extra_id и price_set_id
-            if (id === null) {
-                const selectedExtraId = extraId || document.getElementById('extra-select').value;
-                const priceSetId = formData.get('price_set_id');
-                
-                if (!selectedExtraId || !priceSetId) {
-                    this.showMessage('Необходимо выбрать услугу и прайс-сет', 'error');
-                    return;
-                }
-                
-                data.extra_id = parseInt(selectedExtraId);
-                data.price_set_id = parseInt(priceSetId);
+    setupExtraPriceForm(id, extraId = null, defaultPriceSetId = null) {
+        const self = this;
+        setTimeout(() => {
+            const form = document.getElementById('extra-price-form');
+            if (!form) {
+                setTimeout(() => self.setupExtraPriceForm(id, extraId, defaultPriceSetId), 50);
+                return;
             }
             
-            try {
-                const url = id ? `${API_BASE}/extras-prices/${id}` : `${API_BASE}/extras-prices`;
-                const method = id ? 'PUT' : 'POST';
+            // Удаляем старый обработчик
+            const newForm = form.cloneNode(true);
+            form.parentNode.replaceChild(newForm, form);
+            const updatedForm = document.getElementById('extra-price-form');
+            
+            updatedForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 
-                const response = await fetch(url, {
-                    method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
+                const formData = new FormData(updatedForm);
+                const data = {
+                    base_price: formData.get('base_price') ? parseFloat(formData.get('base_price')) : null,
+                    additional_unit_price: formData.get('additional_unit_price') ? parseFloat(formData.get('additional_unit_price')) : null,
+                    unit_description: formData.get('unit_description') || null
+                };
+                
+                // Если создается новая цена, добавляем extra_id и price_set_id (используем стандартный)
+                if (id === null) {
+                    const selectedExtraId = extraId || document.getElementById('extra-select').value;
+                    
+                    if (!selectedExtraId) {
+                        self.showMessage('Необходимо выбрать услугу', 'error');
+                        return;
+                    }
+                    
+                    // Если не передан defaultPriceSetId, загружаем прайс-сет "standard"
+                    let priceSetId = defaultPriceSetId;
+                    if (!priceSetId) {
+                        try {
+                            const priceSetsRes = await fetch(`${API_BASE}/price-sets`);
+                            const priceSets = await priceSetsRes.json();
+                            const standardPriceSet = priceSets.find(ps => ps.code === 'standard');
+                            if (!standardPriceSet) {
+                                self.showMessage('Стандартный прайс-сет не найден', 'error');
+                                return;
+                            }
+                            priceSetId = standardPriceSet.id;
+                        } catch (error) {
+                            self.showMessage('Ошибка загрузки прайс-сетов', 'error');
+                            console.error(error);
+                            return;
+                        }
+                    }
+                    
+                    data.extra_id = parseInt(selectedExtraId);
+                    data.price_set_id = parseInt(priceSetId);
+                }
+                
+                try {
+                    const url = id ? `${API_BASE}/extras-prices/${id}` : `${API_BASE}/extras-prices`;
+                    const method = id ? 'PUT' : 'POST';
+                    
+                    const response = await fetch(url, {
+                        method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error || 'Ошибка сохранения');
+                    }
+                    
+                    self.showMessage(id ? 'Цены сохранены успешно' : 'Цена создана успешно');
+                    self.closeModal();
+                    self.loadExtraPrices();
+                } catch (error) {
+                    self.showMessage(error.message, 'error');
+                }
+            });
+            
+            // Также привязываем обработчик к кнопке submit напрямую
+            const submitButton = updatedForm.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    updatedForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
                 });
-                
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Ошибка сохранения');
-                }
-                
-                this.showMessage(id ? 'Цены сохранены успешно' : 'Цена создана успешно');
-                this.closeModal();
-                this.loadExtraPrices();
-            } catch (error) {
-                this.showMessage(error.message, 'error');
             }
-        });
+        }, 50);
     },
     
     async deleteExtraPrice(id) {
