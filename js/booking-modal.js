@@ -9,6 +9,7 @@ class BookingModal {
         this.bookingData = {};
         this.pricingData = null;
         this.usePaymentModule = true; // По умолчанию включено
+        this.paymentCompleted = false; // Флаг успешной оплаты
         this.paymentPercent = 50; // По умолчанию 50%
         this.paymentTermsText = ''; // Текст условий оплаты
         this.init();
@@ -80,14 +81,12 @@ class BookingModal {
                     </div>
                 </div>
 
-                <!-- Шаг 3: Успешная оплата -->
+                <!-- Шаг 3: Успешная оплата/отправка заявки -->
                 <div class="booking-modal-step" data-step="3">
                     <div class="booking-modal-success">
                         <div class="booking-modal-success-icon">✓</div>
-                        <h3 class="booking-modal-success-title">Бронирование подтверждено!</h3>
-                        <p class="booking-modal-success-text">
-                            Ваша заявка успешно отправлена. Мы свяжемся с вами в ближайшее время для подтверждения бронирования.
-                        </p>
+                        <h3 class="booking-modal-success-title"></h3>
+                        <p class="booking-modal-success-text"></p>
                         <div class="booking-modal-buttons" style="margin-top: 30px;">
                             <button type="button" class="booking-modal-button booking-modal-button-primary" data-action="close">Закрыть</button>
                         </div>
@@ -155,6 +154,8 @@ class BookingModal {
     }
 
     async open(bookingData, pricingData) {
+        // Сбрасываем флаг успешной оплаты при открытии модального окна
+        this.paymentCompleted = false;
         this.bookingData = { ...bookingData };
         this.pricingData = pricingData;
         this.currentStep = 1;
@@ -190,6 +191,28 @@ class BookingModal {
             // Показываем текст условий сразу, до инициализации платежной системы
             this.showPaymentTerms();
             this.initPayment();
+        }
+        
+        if (step === 3) {
+            // Устанавливаем текст в зависимости от того, включена ли оплата
+            this.updateSuccessMessage();
+        }
+    }
+    
+    updateSuccessMessage() {
+        const titleEl = this.modal.querySelector('.booking-modal-success-title');
+        const textEl = this.modal.querySelector('.booking-modal-success-text');
+        
+        if (!titleEl || !textEl) return;
+        
+        if (this.usePaymentModule && this.paymentCompleted) {
+            // Если оплата включена и успешно завершена - это подтвержденное бронирование
+            titleEl.textContent = 'Бронирование подтверждено!';
+            textEl.textContent = 'Ваша заявка успешно отправлена. Мы свяжемся с вами в ближайшее время для подтверждения бронирования.';
+        } else {
+            // Если оплата отключена или не завершена - это только заявка, не бронирование
+            titleEl.textContent = '✅ Мы приняли вашу заявку';
+            textEl.textContent = '⚠️ Обратите внимание - это не окончательное бронирование. Для бронирования необходимо внести аванс, в ближайшее время мы свяжемся с вами для согласования формы оплаты.';
         }
     }
     
@@ -1118,6 +1141,9 @@ class BookingModal {
     }
 
     async handlePaymentSuccess(orderId) {
+        // Устанавливаем флаг успешной оплаты
+        this.paymentCompleted = true;
+        
         // Отправляем данные в Telegram
         try {
             const response = await fetch('/api/booking/send-telegram', {

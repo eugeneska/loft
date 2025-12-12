@@ -138,17 +138,17 @@ function createYClientsBooking($bookingData) {
     // Маппинг залов на service_id в YClients (ID услуги для бронирования)
     // Если услуга не указана для зала, используется дефолтная
     $hallServiceMapping = [
-        'armaloft' => '1456577', // ID услуги "Бронирование студии 1 час" или другая услуга для этого зала
-        'mercury' => '1456577',
-        'merkuri' => '1456577',
-        'airplane' => '1456577',
-        'samolet' => '1456577',
-        'rufer' => '1456577',
-        'pulka' => '1456577'
+        'armaloft' => '25829928', // ID услуги для бронирования зала
+        'mercury' => '25829928',
+        'merkuri' => '25829928',
+        'airplane' => '25829928',
+        'samolet' => '25829928',
+        'rufer' => '25829928',
+        'pulka' => '25829928'
     ];
     
     // Дефолтный service_id, если не найден в маппинге
-    $defaultServiceId = '1456577'; // "Бронирование студии 1 час"
+    $defaultServiceId = '25829928'; // ID услуги для бронирования зала
     
     $hall = $bookingData['hall'] ?? '';
     $hallLower = strtolower(trim($hall));
@@ -949,10 +949,11 @@ switch ($_SERVER['REQUEST_METHOD']) {
             // Создаем запись в YClients независимо от результата Telegram
             // Вызываем только если:
             // 1. Оплата успешна (success) - после успешной оплаты
-            // 2. Оплата отключена (no_payment или paymentDisabled) - сразу при отправке формы
-            // НЕ создаем при pending (ожидание оплаты)
+            // НЕ создаем при:
+            // - pending (ожидание оплаты)
+            // - no_payment или paymentDisabled (оплата отключена) - это только заявка, не бронирование
             $paymentDisabled = $data['paymentDisabled'] ?? false;
-            $shouldCreateBooking = ($paymentStatus === 'success' || $paymentStatus === 'no_payment' || $paymentDisabled);
+            $shouldCreateBooking = ($paymentStatus === 'success');
             
             if ($shouldCreateBooking) {
                 error_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
