@@ -49,13 +49,27 @@ function updatePricingDataFromAPI(apiData) {
         // Добавляем услуги из API
         Object.keys(converted.extras).forEach(extraCode => {
             const extra = converted.extras[extraCode];
+            console.log(`🔍 Проверка услуги ${extraCode} перед добавлением в EXTRA_SERVICES:`, extra);
+            
             // Добавляем только если у услуги есть валидная цена
             if (extra && extra.price != null && extra.price !== undefined && !isNaN(extra.price) && extra.price > 0) {
                 EXTRA_SERVICES[extraCode] = extra;
+                console.log(`✅ Услуга ${extraCode} (${extra.name}) добавлена в EXTRA_SERVICES с ценой ${extra.price}`);
+            } else {
+                console.warn(`❌ Услуга ${extraCode} (${extra?.name || 'unknown'}) НЕ добавлена в EXTRA_SERVICES:`, {
+                    hasExtra: !!extra,
+                    price: extra?.price,
+                    priceType: typeof extra?.price,
+                    isNull: extra?.price == null,
+                    isUndefined: extra?.price === undefined,
+                    isNaN: isNaN(extra?.price),
+                    isZeroOrLess: extra?.price <= 0
+                });
             }
         });
         
-        console.log('EXTRA_SERVICES полностью заменены данными из API:', Object.keys(EXTRA_SERVICES));
+        console.log('📋 EXTRA_SERVICES полностью заменены данными из API:', Object.keys(EXTRA_SERVICES));
+        console.log('📋 Все услуги в EXTRA_SERVICES:', EXTRA_SERVICES);
     } else {
         console.log('Нет данных из API для доп. услуг, используем захардкоженные');
     }
@@ -294,9 +308,12 @@ function getPricingSeason(date) {
     }
     
     // Fallback на старую логику
+    // Только декабрь (кроме 1-7) использует декабрьские цены
+    // Январь и все остальные месяцы используют стандартные цены
     if (isDecember(date) && !isEarlyDecember(date)) {
         return 'december';
     }
+    // Январь и все остальные месяцы используют стандартные цены
     return 'standard';
 }
 
@@ -336,7 +353,8 @@ function getHallPricing(hallId, date) {
  * @returns {string} 'weekday' | 'fri_sat' | 'sunday'
  */
 function getDayCategoryWithDecemberRules(date, startTime) {
-    // Для декабря: Пн-Вт используют weekday_price, остальные дни - fri_sat_price/sunday_price
+    // Для декабря: будние дни (Пн-Чт до 17:00, Пт до 17:00) используют weekday_price,
+    // Пт с 17:00, Сб, Вс используют fri_sat_price/sunday_price
     if (isDecember(date) && !isEarlyDecember(date)) {
         const [hours, minutes] = startTime.split(':').map(Number);
         const dayOfWeek = date.getDay();
@@ -352,12 +370,23 @@ function getDayCategoryWithDecemberRules(date, startTime) {
             return 'sunday';
         }
         
-        // Понедельник и вторник декабря - используем weekday_price
-        if (effectiveDay === 1 || effectiveDay === 2) {
+        // Пятница с 17:00 -> fri_sat
+        if (effectiveDay === 5 && hours >= 17) {
+            return 'fri_sat';
+        }
+        
+        // Суббота весь день -> fri_sat
+        if (effectiveDay === 6) {
+            return 'fri_sat';
+        }
+        
+        // Понедельник, вторник, среда, четверг, пятница до 17:00 -> weekday
+        // (используем weekday_10_22 для времени 10:00-22:00)
+        if (effectiveDay >= 1 && effectiveDay <= 5) {
             return 'weekday';
         }
         
-        // Остальные дни декабря (Ср-Чт-Пт-Сб) - используем fri_sat_price
+        // Остальные случаи - fri_sat
         return 'fri_sat';
     }
     

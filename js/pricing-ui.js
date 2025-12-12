@@ -65,6 +65,9 @@ class PricingUI {
         if (!this.extraServicesContainer) return;
         
         const services = window.PricingCalculator.getExtraServices();
+        console.log('📋 Все услуги из калькулятора:', Object.keys(services));
+        console.log('📋 Детали услуг:', services);
+        
         let html = '<div class="pricing-extra-services-title">Дополнительные услуги:</div>';
         html += '<div class="pricing-extra-services-list">';
         
@@ -72,18 +75,29 @@ class PricingUI {
         const shownNames = new Set();
         
         Object.entries(services).forEach(([id, service]) => {
+            console.log(`🔍 Проверка услуги ${id}:`, service);
+            
             // Пропускаем услуги без цены или с некорректной ценой
             if (!service || service.price == null || service.price === undefined || isNaN(service.price) || service.price <= 0) {
-                console.warn(`Skipping extra service ${id} (${service?.name || 'unknown'}): invalid price`, service);
+                console.warn(`❌ Пропуск услуги ${id} (${service?.name || 'unknown'}): невалидная цена`, {
+                    service,
+                    price: service?.price,
+                    priceType: typeof service?.price,
+                    isNaN: isNaN(service?.price),
+                    isNull: service?.price == null,
+                    isUndefined: service?.price === undefined
+                });
                 return;
             }
             
             // Пропускаем услуги с дублирующимися названиями (оставляем первую)
             if (shownNames.has(service.name)) {
-                console.warn(`Skipping duplicate extra service ${id} with name "${service.name}"`);
+                console.warn(`⚠️ Пропуск услуги ${id} с дублирующимся названием "${service.name}"`);
                 return;
             }
             shownNames.add(service.name);
+            
+            console.log(`✅ Услуга ${id} (${service.name}) будет отображена`);
             
             const checkboxId = `service-${id}`;
             const price = parseFloat(service.price) || 0;

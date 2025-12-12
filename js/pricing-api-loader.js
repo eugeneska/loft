@@ -8,6 +8,15 @@ const PRICING_API_URL = '/api/pricing/halls-pricing';
 let pricingDataCache = null;
 let pricingDataPromise = null;
 
+// Функция для очистки кэша (для отладки)
+if (typeof window !== 'undefined') {
+    window.clearPricingCache = function() {
+        pricingDataCache = null;
+        pricingDataPromise = null;
+        console.log('Кэш данных о ценах очищен');
+    };
+}
+
 /**
  * Загрузка данных о ценах из API
  */
@@ -98,31 +107,100 @@ function convertApiDataToCalculatorFormat(apiData) {
     
     // Конвертация дополнительных услуг
     // Сохраняем все прайс-сеты, выбор будет происходить динамически при расчете
+    console.log('📦 Начало обработки доп. услуг из API. Всего услуг:', Object.keys(apiData.extras || {}).length);
+    console.log('📦 Коды всех услуг из API:', Object.keys(apiData.extras || {}));
     Object.entries(apiData.extras || {}).forEach(([code, extra]) => {
-        // Сохраняем все прайс-сеты для этой услуги
-        extras[code] = {
-            name: extra.name,
-            pricingType: extra.pricingType,
-            priceSets: extra.priceSets || {}
-        };
+        console.log(`🔍 Обработка услуги: ${code} (${extra.name}), тип: ${extra.pricingType}`);
         
-        // Для обратной совместимости используем standard как fallback
-        const standardPrice = extra.priceSets?.standard;
+        // Специальная проверка для услуги "Стул"
+        if (code === 'styl' || extra.name === 'Стул' || extra.name === 'стул') {
+            console.log('🎯 ОБНАРУЖЕНА УСЛУГА СТУЛ! Детали:', { code, extra, priceSets: extra.priceSets });
+        }
         
-        if (!standardPrice && Object.keys(extra.priceSets || {}).length === 0) return;
+        // Проверяем, что есть хотя бы один прайс-сет с ценой
+        const priceSets = extra.priceSets || {};
+        console.log(`  Прайс-сеты:`, Object.keys(priceSets));
         
-        if (extra.pricingType === 'fixed' && standardPrice) {
-            const basePrice = standardPrice.basePrice != null ? parseFloat(standardPrice.basePrice) : 0;
+        const hasAnyPrice = Object.values(priceSets).some(priceSet => {
+            const basePrice = priceSet?.basePrice != null ? parseFloat(priceSet.basePrice) : 0;
+            const additionalPrice = priceSet?.additionalUnitPrice != null ? parseFloat(priceSet.additionalUnitPrice) : 0;
+            const hasPrice = basePrice > 0 || additionalPrice > 0;
+            if (hasPrice) {
+                console.log(`  ✅ Найдена цена в прайс-сете: basePrice=${basePrice}, additionalPrice=${additionalPrice}`);
+            }
+            return hasPrice;
+        });
+        
+        if (!hasAnyPrice) {
+            console.warn(`❌ Услуга ${code} (${extra.name}) не имеет цен ни в одном прайс-сете, пропускаем`);
+            console.warn(`  Доступные прайс-сеты:`, Object.keys(priceSets));
+            Object.entries(priceSets).forEach(([psCode, ps]) => {
+                console.warn(`    ${psCode}: basePrice=${ps?.basePrice}, additionalUnitPrice=${ps?.additionalUnitPrice}`);
+            });
+            return;
+        }
+        
+        // Ищем прайс-сет с ценой (приоритет: standard, затем первый доступный с ценой)
+        let selectedPriceSet = null;
+        let selectedPriceSetKey = null;
+        
+        // Сначала пробуем найти 'standard'
+        if (priceSets.standard) {
+            const basePrice = priceSets.standard.basePrice != null ? parseFloat(priceSets.standard.basePrice) : 0;
+            if (basePrice > 0) {
+                selectedPriceSet = priceSets.standard;
+                selectedPriceSetKey = 'standard';
+                console.log(`  ✅ Найден прайс-сет 'standard' с ценой ${basePrice}`);
+            }
+        }
+        
+        // Если standard не подошел, ищем первый доступный прайс-сет с ценой > 0
+        if (!selectedPriceSet) {
+            for (const [psKey, ps] of Object.entries(priceSets)) {
+                const basePrice = ps?.basePrice != null ? parseFloat(ps.basePrice) : 0;
+                if (basePrice > 0) {
+                    selectedPriceSet = ps;
+                    selectedPriceSetKey = psKey;
+                    console.log(`  ✅ Найден прайс-сет '${psKey}' с ценой ${basePrice} (используем вместо standard)`);
+                    break;
+                }
+            }
+        }
+        
+        if (!selectedPriceSet) {
+            console.warn(`❌ Услуга ${code} (${extra.name}) не имеет цен в прайс-сетах, пропускаем`);
+            console.warn(`  Доступные прайс-сеты:`, Object.keys(priceSets));
+            Object.entries(priceSets).forEach(([psCode, ps]) => {
+                console.warn(`    ${psCode}: basePrice=${ps?.basePrice}, additionalUnitPrice=${ps?.additionalUnitPrice}`);
+            });
+            return;
+        }
+        
+        console.log(`  Используем прайс-сет '${selectedPriceSetKey}' для конвертации:`, selectedPriceSet);
+        
+        // Обработка fixed услуг
+        if (extra.pricingType === 'fixed') {
+            if (!selectedPriceSet) {
+                console.warn(`⚠️ Услуга ${code} (${extra.name}) типа 'fixed' не имеет выбранного прайс-сета`);
+                return;
+            }
+            
+            const basePrice = selectedPriceSet.basePrice != null ? parseFloat(selectedPriceSet.basePrice) : 0;
+            console.log(`  Проверка fixed услуги ${code}: basePrice=${basePrice}, selectedPriceSet=`, selectedPriceSet);
+            
             if (basePrice > 0) {
                 extras[code] = {
                     name: extra.name,
                     price: basePrice,
                     type: 'fixed'
                 };
+                console.log(`✅ Услуга ${code} (${extra.name}) добавлена: цена ${basePrice} руб из прайс-сета '${selectedPriceSetKey}'`);
+            } else {
+                console.warn(`⚠️ Услуга ${code} (${extra.name}) пропущена: цена = ${basePrice} (должна быть > 0) в прайс-сете '${selectedPriceSetKey}'`);
             }
         } else if (extra.pricingType === 'per_unit') {
             // Для per_unit нужно определить per (например, из unitDescription "за каждые 10 человек")
-            const unitDesc = (standardPrice.unitDescription || '').toLowerCase();
+            const unitDesc = (selectedPriceSet.unitDescription || '').toLowerCase();
             
             // Проверяем, не является ли это на самом деле fixed услугой
             // "за бокал", "за штуку" и т.п. должны быть fixed
@@ -132,7 +210,7 @@ function convertApiDataToCalculatorFormat(apiData) {
                 unitDesc.includes('за экземпляр') ||
                 (!unitDesc.includes('человек') && !unitDesc.includes('чел'))) {
                 // Обрабатываем как fixed
-                const basePrice = standardPrice.basePrice != null ? parseFloat(standardPrice.basePrice) : 0;
+                const basePrice = selectedPriceSet.basePrice != null ? parseFloat(selectedPriceSet.basePrice) : 0;
                 if (basePrice > 0) {
                     extras[code] = {
                         name: extra.name,
@@ -147,7 +225,7 @@ function convertApiDataToCalculatorFormat(apiData) {
             // Ищем паттерны: "за каждые N человек", "за N человек", "+ N чел", "по N человек" и т.д.
             // НЕ берем число, если перед ним есть "руб", "₽", "цена" и т.д.
             let perMatch = null;
-            const unitDesc = standardPrice.unitDescription || '';
+            // unitDesc уже объявлена выше, используем её
             
             // Вариант 1: Ищем число перед словами "человек" или "чел"
             // Это самый надежный способ - число должно быть непосредственно перед словом о людях
@@ -175,7 +253,7 @@ function convertApiDataToCalculatorFormat(apiData) {
                 }
             }
             
-            const basePrice = standardPrice.basePrice != null ? parseFloat(standardPrice.basePrice) : 0;
+            const basePrice = selectedPriceSet.basePrice != null ? parseFloat(selectedPriceSet.basePrice) : 0;
             
             if (!perMatch) {
                 // Если не нашли число, но это per_unit для людей - по умолчанию per = 1
@@ -206,9 +284,9 @@ function convertApiDataToCalculatorFormat(apiData) {
             }
         } else if (extra.pricingType === 'complex') {
             // Для complex создаем hookah_1 и hookah_2
-            if (code === 'hookah' && standardPrice) {
-                const basePrice = standardPrice.basePrice != null ? parseFloat(standardPrice.basePrice) : 0;
-                const additionalPrice = standardPrice.additionalUnitPrice != null ? parseFloat(standardPrice.additionalUnitPrice) : null;
+            if (code === 'hookah' && selectedPriceSet) {
+                const basePrice = selectedPriceSet.basePrice != null ? parseFloat(selectedPriceSet.basePrice) : 0;
+                const additionalPrice = selectedPriceSet.additionalUnitPrice != null ? parseFloat(selectedPriceSet.additionalUnitPrice) : null;
                 
                 if (basePrice > 0) {
                     extras['hookah_1'] = {
@@ -216,6 +294,7 @@ function convertApiDataToCalculatorFormat(apiData) {
                         price: basePrice,
                         type: 'fixed'
                     };
+                    console.log(`✅ Услуга hookah_1 добавлена: цена ${basePrice} руб из прайс-сета '${selectedPriceSetKey}'`);
                 }
                 
                 if (additionalPrice != null && additionalPrice > 0) {
@@ -224,19 +303,40 @@ function convertApiDataToCalculatorFormat(apiData) {
                         price: additionalPrice,
                         type: 'fixed'
                     };
+                    console.log(`✅ Услуга hookah_2 добавлена: цена ${additionalPrice} руб из прайс-сета '${selectedPriceSetKey}'`);
                 }
-            } else if (standardPrice) {
-                const basePrice = standardPrice.basePrice != null ? parseFloat(standardPrice.basePrice) : 0;
+            } else if (selectedPriceSet) {
+                const basePrice = selectedPriceSet.basePrice != null ? parseFloat(selectedPriceSet.basePrice) : 0;
                 if (basePrice > 0) {
                     extras[code] = {
                         name: extra.name,
                         price: basePrice,
                         type: 'fixed'
                     };
+                    console.log(`✅ Услуга ${code} (${extra.name}) добавлена: цена ${basePrice} руб из прайс-сета '${selectedPriceSetKey}'`);
+                }
+            }
+        } else {
+            // Неизвестный тип ценообразования
+            console.warn(`⚠️ Услуга ${code} (${extra.name}) имеет неизвестный тип ценообразования: ${extra.pricingType}`);
+            // Пытаемся обработать как fixed, если есть цена
+            if (selectedPriceSet) {
+                const basePrice = selectedPriceSet.basePrice != null ? parseFloat(selectedPriceSet.basePrice) : 0;
+                if (basePrice > 0) {
+                    extras[code] = {
+                        name: extra.name,
+                        price: basePrice,
+                        type: 'fixed'
+                    };
+                    console.log(`✅ Услуга ${code} (${extra.name}) добавлена как fixed (fallback): цена ${basePrice} руб`);
                 }
             }
         }
     });
+    
+    console.log('📦 Обработка доп. услуг завершена. Итого обработано услуг:', Object.keys(extras).length);
+    console.log('📦 Коды обработанных услуг:', Object.keys(extras));
+    console.log('📦 Детали всех обработанных услуг:', extras);
     
     return {
         halls,

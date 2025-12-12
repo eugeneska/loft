@@ -1914,8 +1914,7 @@
                     if (option.value && option.value !== '') {
                         option.disabled = false;
                         const hour = parseInt(option.value.split(':')[0]);
-                        const hoursArray = Array.isArray(busyHours) ? busyHours : (busyHours?.hours || []);
-                        if (hoursArray.includes(hour)) {
+                        if (busyHours.includes(hour)) {
                             option.disabled = true;
                         }
                     }
@@ -1939,9 +1938,8 @@
                     if (option.value && option.value !== '') {
                         option.disabled = false;
                         const hour = parseInt(option.value.split(':')[0]);
-                        const hoursArray = Array.isArray(busyHours) ? busyHours : (busyHours?.hours || []);
                         // Отключаем занятые часы И час окончания
-                        if (hoursArray.includes(hour) || endHours.has(hour)) {
+                        if (busyHours.includes(hour) || endHours.has(hour)) {
                             option.disabled = true;
                         }
                     }
@@ -1974,16 +1972,15 @@
             disableBusyHours(busyHours, busyIntervals);
 
             // Сбрасываем выбранное время, если оно стало недоступным
-            const hoursArray = Array.isArray(busyHours) ? busyHours : (busyHours?.hours || []);
             if (timeFromSelect && selectedFrom) {
                 const selectedHour = parseInt(selectedFrom.split(':')[0]);
-                if (hoursArray.includes(selectedHour)) {
+                if (busyHours.includes(selectedHour)) {
                     timeFromSelect.value = '';
                 }
             }
             if (timeToSelect && selectedTo) {
                 const selectedHour = parseInt(selectedTo.split(':')[0]);
-                if (hoursArray.includes(selectedHour)) {
+                if (busyHours.includes(selectedHour)) {
                     timeToSelect.value = '';
                 }
             }

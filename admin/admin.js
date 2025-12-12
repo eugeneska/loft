@@ -723,13 +723,6 @@ const admin = {
                     <label>Порядок сортировки:</label>
                     <input type="number" name="sort_order" value="${extra?.sort_order || 0}">
                 </div>
-                ${!extra ? `
-                <div class="form-group">
-                    <label>Базовая цена (для стандартного прайс-сета, ₽):</label>
-                    <input type="number" step="0.01" name="base_price">
-                    <small style="color: #666; font-size: 12px;">Если указана, будет автоматически создана цена для стандартного прайс-сета</small>
-                </div>
-                ` : ''}
                 <div class="form-actions">
                     <button type="button" class="btn" onclick="admin.closeModal()">Отмена</button>
                     <button type="submit" class="btn btn-primary">Сохранить</button>
@@ -768,46 +761,6 @@ const admin = {
                 }
                 
                 const savedExtra = await response.json();
-                
-                // Если создается новая услуга и указана базовая цена, создаем цену для стандартного прайс-сета
-                if (!id) {
-                    const basePrice = formData.get('base_price');
-                    if (basePrice && parseFloat(basePrice) > 0) {
-                        try {
-                            // Получаем список прайс-сетов
-                            const priceSetsRes = await fetch(`${API_BASE}/price-sets`);
-                            if (priceSetsRes.ok) {
-                                const priceSets = await priceSetsRes.json();
-                                // Ищем стандартный прайс-сет (code='standard')
-                                const standardPriceSet = priceSets.find(ps => ps.code === 'standard');
-                                
-                                if (standardPriceSet) {
-                                    // Создаем цену для стандартного прайс-сета
-                                    const priceData = {
-                                        extra_id: savedExtra.id,
-                                        price_set_id: standardPriceSet.id,
-                                        base_price: parseFloat(basePrice),
-                                        additional_unit_price: null,
-                                        unit_description: null
-                                    };
-                                    
-                                    const priceResponse = await fetch(`${API_BASE}/extras-prices`, {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify(priceData)
-                                    });
-                                    
-                                    if (!priceResponse.ok) {
-                                        console.warn('Не удалось создать цену для стандартного прайс-сета');
-                                    }
-                                }
-                            }
-                        } catch (priceError) {
-                            console.warn('Ошибка при создании базовой цены:', priceError);
-                            // Не прерываем процесс, просто логируем ошибку
-                        }
-                    }
-                }
                 
                 this.showMessage('Услуга сохранена успешно');
                 this.closeModal();
@@ -875,10 +828,15 @@ const admin = {
     
     async loadExtraPrices() {
         const extraId = document.getElementById('extra-select').value;
+        const addBtn = document.getElementById('add-extra-price-btn');
+        
         if (!extraId) {
             document.getElementById('extras-prices-table').style.display = 'none';
+            if (addBtn) addBtn.style.display = 'none';
             return;
         }
+        
+        if (addBtn) addBtn.style.display = 'block';
         
         const loadingEl = document.getElementById('extras-prices-loading');
         const tableEl = document.getElementById('extras-prices-table');
@@ -901,6 +859,7 @@ const admin = {
                     <td>${price.unit_description || '-'}</td>
                     <td>
                         <button class="btn btn-secondary" onclick="admin.openExtraPriceModal(${price.id})">Редактировать</button>
+                        <button class="btn btn-danger" onclick="admin.deleteExtraPrice(${price.id})">Удалить</button>
                     </td>
                 </tr>
             `).join('');
@@ -913,30 +872,92 @@ const admin = {
         }
     },
     
-    openExtraPriceModal(id) {
-        fetch(`${API_BASE}/extras-prices/${id}`)
-            .then(r => r.json())
-            .then(price => {
-                this.openModal(`Редактировать цены: ${price.extra_name} (${price.price_set_name})`, 
-                    this.getExtraPriceFormHTML(price));
-                this.setupExtraPriceForm(id);
-            });
+    async openExtraPriceModal(id = null) {
+        const extraId = document.getElementById('extra-select').value;
+        if (!extraId && !id) {
+            this.showMessage('Сначала выберите услугу', 'error');
+            return;
+        }
+        
+        if (id) {
+            // Редактирование существующей цены
+            fetch(`${API_BASE}/extras-prices/${id}`)
+                .then(r => r.json())
+                .then(price => {
+                    this.openModal(`Редактировать цены: ${price.extra_name} (${price.price_set_name})`, 
+                        this.getExtraPriceFormHTML(price, id));
+                    this.setupExtraPriceForm(id);
+                })
+                .catch(err => {
+                    this.showMessage('Ошибка загрузки данных', 'error');
+                    console.error(err);
+                });
+        } else {
+            // Создание новой цены
+            try {
+                const [extrasRes, priceSetsRes, existingPricesRes] = await Promise.all([
+                    fetch(`${API_BASE}/extras`),
+                    fetch(`${API_BASE}/price-sets`),
+                    fetch(`${API_BASE}/extras-prices?extra_id=${extraId}`)
+                ]);
+                
+                const extras = await extrasRes.json();
+                const priceSets = await priceSetsRes.json();
+                const existingPrices = await existingPricesRes.json();
+                
+                const extra = extras.find(e => e.id == extraId);
+                if (!extra) {
+                    this.showMessage('Услуга не найдена', 'error');
+                    return;
+                }
+                
+                // Получаем существующие прайс-сеты для этой услуги
+                const existingPriceSetIds = existingPrices.map(p => p.price_set_id);
+                
+                // Фильтруем прайс-сеты, оставляя только те, для которых еще нет цен
+                const availablePriceSets = priceSets.filter(ps => !existingPriceSetIds.includes(ps.id));
+                
+                if (availablePriceSets.length === 0) {
+                    this.showMessage('Для этой услуги уже созданы цены для всех прайс-сетов', 'error');
+                    return;
+                }
+                
+                this.openModal(`Добавить цену: ${extra.name}`, 
+                    this.getExtraPriceFormHTML(null, null, extra, availablePriceSets));
+                this.setupExtraPriceForm(null, extraId);
+            } catch (error) {
+                this.showMessage('Ошибка загрузки данных', 'error');
+                console.error(error);
+            }
+        }
     },
     
-    getExtraPriceFormHTML(price) {
+    getExtraPriceFormHTML(price, id = null, extra = null, availablePriceSets = null) {
+        const isNew = id === null;
+        const priceSetSelect = isNew && availablePriceSets ? `
+            <div class="form-group">
+                <label>Прайс-сет:</label>
+                <select name="price_set_id" required>
+                    <option value="">-- Выберите прайс-сет --</option>
+                    ${availablePriceSets.map(ps => `<option value="${ps.id}">${ps.name}</option>`).join('')}
+                </select>
+            </div>
+        ` : '';
+        
         return `
             <form id="extra-price-form">
+                ${priceSetSelect}
                 <div class="form-group">
                     <label>Базовая цена (₽):</label>
-                    <input type="number" step="0.01" name="base_price" value="${price.base_price || ''}">
+                    <input type="number" step="0.01" name="base_price" value="${price?.base_price || ''}">
                 </div>
                 <div class="form-group">
                     <label>Цена доп. единицы (₽):</label>
-                    <input type="number" step="0.01" name="additional_unit_price" value="${price.additional_unit_price || ''}">
+                    <input type="number" step="0.01" name="additional_unit_price" value="${price?.additional_unit_price || ''}">
                 </div>
                 <div class="form-group">
                     <label>Описание единицы:</label>
-                    <input type="text" name="unit_description" value="${price.unit_description || ''}" 
+                    <input type="text" name="unit_description" value="${price?.unit_description || ''}" 
                         placeholder="например: за каждые 10 человек">
                 </div>
                 <div class="form-actions">
@@ -947,7 +968,7 @@ const admin = {
         `;
     },
     
-    setupExtraPriceForm(id) {
+    setupExtraPriceForm(id, extraId = null) {
         const form = document.getElementById('extra-price-form');
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -958,9 +979,26 @@ const admin = {
                 unit_description: formData.get('unit_description') || null
             };
             
+            // Если создается новая цена, добавляем extra_id и price_set_id
+            if (id === null) {
+                const selectedExtraId = extraId || document.getElementById('extra-select').value;
+                const priceSetId = formData.get('price_set_id');
+                
+                if (!selectedExtraId || !priceSetId) {
+                    this.showMessage('Необходимо выбрать услугу и прайс-сет', 'error');
+                    return;
+                }
+                
+                data.extra_id = parseInt(selectedExtraId);
+                data.price_set_id = parseInt(priceSetId);
+            }
+            
             try {
-                const response = await fetch(`${API_BASE}/extras-prices/${id}`, {
-                    method: 'PUT',
+                const url = id ? `${API_BASE}/extras-prices/${id}` : `${API_BASE}/extras-prices`;
+                const method = id ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method,
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
@@ -970,13 +1008,27 @@ const admin = {
                     throw new Error(error.error || 'Ошибка сохранения');
                 }
                 
-                this.showMessage('Цены сохранены успешно');
+                this.showMessage(id ? 'Цены сохранены успешно' : 'Цена создана успешно');
                 this.closeModal();
                 this.loadExtraPrices();
             } catch (error) {
                 this.showMessage(error.message, 'error');
             }
         });
+    },
+    
+    async deleteExtraPrice(id) {
+        if (!confirm('Вы уверены, что хотите удалить эту цену?')) return;
+        
+        try {
+            const response = await fetch(`${API_BASE}/extras-prices/${id}`, { method: 'DELETE' });
+            if (!response.ok) throw new Error('Ошибка удаления');
+            
+            this.showMessage('Цена удалена успешно');
+            this.loadExtraPrices();
+        } catch (error) {
+            this.showMessage('Ошибка удаления цены', 'error');
+        }
     },
     
     // ==================== SEASON RULES ====================

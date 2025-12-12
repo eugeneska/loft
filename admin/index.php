@@ -161,6 +161,7 @@ $user = [
                         <option value="">-- Выберите услугу --</option>
                     </select>
                 </div>
+                <button class="btn btn-primary" id="add-extra-price-btn" onclick="admin.openExtraPriceModal(null)" style="display: none; margin-bottom: 20px;">+ Добавить цену</button>
                 <div id="extras-prices-loading" class="loading" style="display: none;">Загрузка...</div>
                 <table class="table" id="extras-prices-table" style="display: none;">
                     <thead>
