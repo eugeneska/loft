@@ -1189,15 +1189,66 @@ document.addEventListener('DOMContentLoaded', () => {
     // Перехватываем отправку формы бронирования
     // Обрабатываем все формы бронирования на странице
     document.querySelectorAll('.booking-form').forEach(form => {
+        // Добавляем обработчики для автоматической очистки ошибки при изменении полей
+        const clearErrorOnChange = () => {
+            const errorElement = form.querySelector('.booking-form-error');
+            if (errorElement) {
+                errorElement.remove();
+            }
+        };
+        
+        const timeFromSelect = form.querySelector('[name="time-from"]');
+        const timeToSelect = form.querySelector('[name="time-to"]');
+        const dateInput = form.querySelector('[name="date"]');
+        
+        [timeFromSelect, timeToSelect, dateInput].forEach(field => {
+            if (field) {
+                field.addEventListener('change', clearErrorOnChange);
+            }
+        });
+        
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             e.stopImmediatePropagation(); // Останавливаем другие обработчики
+            
+            const formElement = e.target; // Получаем форму
+            
+            // Функция для показа ошибки рядом с кнопкой
+            const showError = (message) => {
+                const submitButton = formElement.querySelector('.booking-form-button');
+                if (!submitButton) return;
+                
+                // Удаляем предыдущую ошибку, если есть
+                let errorElement = formElement.querySelector('.booking-form-error');
+                if (errorElement) {
+                    errorElement.remove();
+                }
+                
+                // Создаем элемент для ошибки
+                errorElement = document.createElement('div');
+                errorElement.className = 'booking-form-error';
+                errorElement.textContent = message;
+                
+                // Вставляем ошибку перед кнопкой
+                submitButton.parentNode.insertBefore(errorElement, submitButton);
+                
+                // Прокручиваем к ошибке
+                errorElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            };
+            
+            // Удаление ошибки при успешной валидации
+            const clearError = () => {
+                const errorElement = formElement.querySelector('.booking-form-error');
+                if (errorElement) {
+                    errorElement.remove();
+                }
+            };
             
             // Валидация формы через pricingIntegration, если доступен
             if (window.pricingIntegration && typeof window.pricingIntegration.validateForm === 'function') {
                 const validation = window.pricingIntegration.validateForm();
                 if (!validation.valid) {
-                    alert(validation.error);
+                    showError(validation.error);
                     return;
                 }
             }
@@ -1210,9 +1261,32 @@ document.addEventListener('DOMContentLoaded', () => {
             const timeTo = formData.get('time-to');
             
             if (!date || !timeFrom || !timeTo) {
-                alert('Пожалуйста, заполните все обязательные поля (дата и время)');
+                showError('Пожалуйста, заполните все обязательные поля (дата и время)');
                 return;
             }
+            
+            // Проверка максимальной длительности бронирования (12 часов)
+            const [fromH, fromM] = timeFrom.split(':').map(Number);
+            const [toH, toM] = timeTo.split(':').map(Number);
+            let fromTotalMinutes = fromH * 60 + (fromM || 0);
+            let toTotalMinutes = toH * 60 + (toM || 0);
+            
+            // Если время окончания меньше времени начала, считаем что это следующий день
+            if (toTotalMinutes < fromTotalMinutes) {
+                toTotalMinutes += 24 * 60;
+            }
+            
+            const durationMinutes = toTotalMinutes - fromTotalMinutes;
+            const durationHours = Math.round(durationMinutes / 60);
+            const maxDurationHours = 12;
+            
+            if (durationHours > maxDurationHours) {
+                showError(`Максимальная длительность бронирования через сайт составляет ${maxDurationHours} часов. Для бронирования на ${durationHours} часов пожалуйста, обратитесь к менеджеру`);
+                return;
+            }
+            
+            // Очищаем ошибку если валидация прошла успешно
+            clearError();
             
             // Получаем hall-id из контейнера формы или из URL
             const formContainer = e.target.closest('.booking-form-container');

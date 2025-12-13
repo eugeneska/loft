@@ -150,6 +150,22 @@ function createYClientsBooking($bookingData) {
     // Дефолтный service_id, если не найден в маппинге
     $defaultServiceId = '25829928'; // ID услуги для бронирования зала
     
+    // Маппинг количества часов на service_id в YClients (ID услуги для бронирования)
+    $hoursServiceMapping = [
+        1 => '1456577',   // 1 час
+        2 => '1647652',   // 2 часа
+        3 => '1647658',   // 3 часа
+        4 => '1647663',   // 4 часа
+        5 => '1647666',   // 5 часов
+        6 => '1647678',   // 6 часов
+        7 => '1647702',   // 7 часов
+        8 => '1647710',   // 8 часов
+        9 => '1647714',   // 9 часов
+        10 => '25869594', // 10 часов
+        11 => '25869618', // 11 часов
+        12 => '25869672'  // 12 часов
+    ];
+    
     $hall = $bookingData['hall'] ?? '';
     $hallLower = strtolower(trim($hall));
     
@@ -176,10 +192,6 @@ function createYClientsBooking($bookingData) {
     
     error_log("✅ YClients: Hall '{$hall}' matched to key '{$matchedKey}' → staff_id: {$staffId}");
     
-    // Получаем service_id для зала
-    $serviceId = $hallServiceMapping[$matchedKey] ?? $defaultServiceId;
-    error_log("✅ YClients: Service ID for hall '{$matchedKey}': {$serviceId}");
-    
     // Парсим дату и время
     $bookingDate = $bookingData['date'] ?? '';
     $timeFrom = $bookingData['timeFrom'] ?? '';
@@ -199,7 +211,20 @@ function createYClientsBooking($bookingData) {
         return ['success' => false, 'error' => $validation['error']];
     }
     
+    // Вычисляем количество часов бронирования
     $durationHours = round(calculateDuration($timeFrom, $timeTo) / 60);
+    
+    // ВАЛИДАЦИЯ: Проверяем максимальную длительность бронирования (12 часов)
+    $maxDurationHours = 12;
+    if ($durationHours > $maxDurationHours) {
+        $errorMessage = "Максимальная длительность бронирования через сайт составляет {$maxDurationHours} часов. Для бронирования на {$durationHours} часов пожалуйста, обратитесь к менеджеру";
+        error_log("❌ YClients: Booking duration exceeds maximum: {$durationHours} hours > {$maxDurationHours} hours");
+        return ['success' => false, 'error' => $errorMessage];
+    }
+    
+    // Получаем service_id на основе количества часов
+    $serviceId = $hoursServiceMapping[$durationHours] ?? $defaultServiceId;
+    error_log("✅ YClients: Duration: {$durationHours} hours → Service ID: {$serviceId}");
     
     // Форматируем дату и время для YClients API
     // YClients ожидает формат: YYYY-MM-DD HH:MM:SS

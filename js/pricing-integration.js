@@ -619,6 +619,31 @@ class PricingIntegration {
      */
     validateForm() {
         const formValues = this.getFormValues();
+        
+        // Проверка максимальной длительности бронирования (12 часов) - делаем ДО calculate()
+        if (formValues.startTime && formValues.endTime) {
+            const [fromH, fromM] = formValues.startTime.split(':').map(Number);
+            const [toH, toM] = formValues.endTime.split(':').map(Number);
+            let fromTotalMinutes = fromH * 60 + fromM;
+            let toTotalMinutes = toH * 60 + toM;
+            
+            // Если время окончания меньше времени начала, считаем что это следующий день
+            if (toTotalMinutes < fromTotalMinutes) {
+                toTotalMinutes += 24 * 60;
+            }
+            
+            const durationMinutes = toTotalMinutes - fromTotalMinutes;
+            const durationHours = Math.round(durationMinutes / 60);
+            const maxDurationHours = 12;
+            
+            if (durationHours > maxDurationHours) {
+                return {
+                    valid: false,
+                    error: `Максимальная длительность бронирования через сайт составляет ${maxDurationHours} часов. Для бронирования на ${durationHours} часов пожалуйста, обратитесь к менеджеру`
+                };
+            }
+        }
+        
         const result = this.calculate();
         
         if (!result || !result.valid) {
@@ -633,6 +658,16 @@ class PricingIntegration {
             return {
                 valid: false,
                 error: 'Минимальная аренда 2 часа'
+            };
+        }
+        
+        // Дополнительная проверка максимального количества часов (на случай если calculate вернет другое значение)
+        const maxDurationHours = 12;
+        if (result.hours > maxDurationHours) {
+            const durationHours = Math.round(result.hours);
+            return {
+                valid: false,
+                error: `Максимальная длительность бронирования через сайт составляет ${maxDurationHours} часов. Для бронирования на ${durationHours} часов пожалуйста, обратитесь к менеджеру`
             };
         }
         
