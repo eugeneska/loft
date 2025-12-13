@@ -875,6 +875,12 @@ switch ($_SERVER['REQUEST_METHOD']) {
             $message .= "Зал: *" . ($pricing['hall'] ?? 'N/A') . "*\n";
             $message .= "Дата: *" . ($booking['date'] ?? 'N/A') . "*\n";
             $message .= "Время: *" . ($booking['timeFrom'] ?? '') . " - " . ($booking['timeTo'] ?? '') . "*\n";
+            
+            // Добавляем сумму бронирования
+            $totalPrice = $pricing['totalPrice'] ?? 0;
+            if ($totalPrice > 0) {
+                $message .= "💰 Сумма: *" . number_format($totalPrice, 0, ',', ' ') . " ₽*\n";
+            }
             if (!empty($booking['guests'])) {
                 $message .= "Гостей: *" . $booking['guests'] . "*\n";
             }
